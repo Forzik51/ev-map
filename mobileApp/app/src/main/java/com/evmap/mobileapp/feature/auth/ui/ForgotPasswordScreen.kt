@@ -43,7 +43,7 @@ fun ForgotPasswordScreen(
             modifier = Modifier.fillMaxWidth()
             //modifier = Modifier.align(Alignment.CenterHorizontally)
         )
-        Spacer(modifier = Modifier.height(Spacing.s))
+        Spacer(modifier = Modifier.height(Spacing.m))
         
         // Subtitle
         Text(
@@ -55,9 +55,9 @@ fun ForgotPasswordScreen(
             //modifier = Modifier.align(Alignment.CenterHorizontally)
         )
         
-        Spacer(modifier = Modifier.height(Spacing.l))
+        Spacer(modifier = Modifier.height(Spacing.m))
         
-        // Email field
+        // Email field0
         AuthTextField(
             value = email,
             onValueChange = onEmailChange,

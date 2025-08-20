@@ -72,7 +72,9 @@ fun LoginScreen(
                 onNext = { focusManager.moveFocus(FocusDirection.Down) }
             )
         )
-        
+        Spacer(modifier = Modifier.height(Spacing.m))
+
+
         // Password field with forgot password link
         Column(
             verticalArrangement = Arrangement.spacedBy(Spacing.xs)

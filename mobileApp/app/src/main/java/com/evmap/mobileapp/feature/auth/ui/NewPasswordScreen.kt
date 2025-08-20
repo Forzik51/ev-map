@@ -81,7 +81,7 @@ fun NewPasswordScreen(
             )
         )
 
-        Spacer(modifier = Modifier.height(Spacing.s))
+        Spacer(modifier = Modifier.height(Spacing.m))
         
         // Confirm password field
         PasswordTextField(

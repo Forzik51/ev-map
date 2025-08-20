@@ -10,6 +10,7 @@ import core.navigation.FeatureEntry
 import feature.auth.ui.ForgotPasswordScreen
 import feature.auth.ui.LoginScreen
 import feature.auth.ui.NewPasswordScreen
+import feature.auth.ui.SignupScreen
 
 object AuthFeature : FeatureEntry {
     override val route = "auth/login"
@@ -55,6 +56,45 @@ object AuthFeature : FeatureEntry {
                 onContinue = {
                     // TODO: Implement forgot password logic
                     onNavigateToRoute("auth/new_password")
+                }
+            )
+        }
+
+        // Signup Screen
+        navGraphBuilder.composable(route = "auth/signup") {
+            var name by remember { mutableStateOf("") }
+            var surname by remember { mutableStateOf("") }
+            var email by remember { mutableStateOf("") }
+            var birthDate by remember { mutableStateOf("") }
+            var phone by remember { mutableStateOf("") }
+            var username by remember { mutableStateOf("") }
+            var password by remember { mutableStateOf("") }
+            var showPassword by remember { mutableStateOf(false) }
+
+            SignupScreen(
+                name = name,
+                surname = surname,
+                email = email,
+                birthDate = birthDate,
+                phone = phone,
+                username = username,
+                password = password,
+                showPassword = showPassword,
+                onNameChange = { name = it },
+                onSurnameChange = { surname = it },
+                onEmailChange = { email = it },
+                onPickBirthDate = {
+                    // TODO: Implement date picker logic
+                },
+                onPhoneChange = { phone = it },
+                onUsernameChange = { username = it },
+                onPasswordChange = { password = it },
+                onTogglePassword = { showPassword = !showPassword },
+                onSignup = {
+                    // TODO: Implement signup logic
+                },
+                onNavigateToLogin = {
+                    onNavigateToRoute(route)
                 }
             )
         }
