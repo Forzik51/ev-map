@@ -24,11 +24,11 @@ fun AppBottomBar(
     modifier: Modifier = Modifier
 ) {
     val navItems = listOf(
-        BottomNavItem(Icons.Outlined.Home, "Home", "home"),
+        BottomNavItem(Icons.Outlined.Home, "Feed", "feed"),
         BottomNavItem(Icons.Outlined.Map, "Map", "map"),
-        BottomNavItem(Icons.Outlined.Add, "Add", "add"),
-        BottomNavItem(Icons.Outlined.ChatBubbleOutline, "Messages", "messages"),
-        BottomNavItem(Icons.Outlined.Person, "Profile", "profile")
+        BottomNavItem(Icons.Outlined.Add, "Add", "events/create"),
+        BottomNavItem(Icons.Outlined.Search, "Explore", "explore"),
+        BottomNavItem(Icons.Outlined.Person, "Profile", "profile/me")
     )
 
     Surface(
