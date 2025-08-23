@@ -1,5 +1,10 @@
 package core.ui.model
 
+enum class ViewMode {
+    LIST,
+    GRID
+}
+
 data class FeedItemUi(
     val id: String,
     val event: EventUi,
@@ -20,3 +25,16 @@ data class EventDetailsUi(
     val organizerId: String? = null
 )
 
+data class SavedGroupUi(
+    val id: String,
+    val name: String,
+    val count: Int = 0,
+    val imageUrl: String? = null
+)
+
+data class GroupItemsUi(
+    val groupId: String,
+    val title: String,
+    val items: List<EventUi>,
+    val viewMode: ViewMode = ViewMode.LIST
+)
