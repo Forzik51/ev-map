@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import feature.auth.AuthFeature
+import feature.chat.ChatFeature
 import feature.events.EventsFeature
 import feature.feed.FeedFeature
 import feature.follow.FollowFeature
@@ -92,6 +93,16 @@ fun NavGraph(
         )
 
         SettingsFeature.registerGraph(
+            navGraphBuilder = this,
+            onNavigateToRoute = { route ->
+                navController.navigate(route)
+            },
+            onNavigateUp = {
+                navController.navigateUp()
+            }
+        )
+
+        ChatFeature.registerGraph(
             navGraphBuilder = this,
             onNavigateToRoute = { route ->
                 navController.navigate(route)
