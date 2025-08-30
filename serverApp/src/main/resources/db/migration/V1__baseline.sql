@@ -1,97 +1,92 @@
--- Created by Vertabelo (http://vertabelo.com)
--- Last modification date: 2025-08-30 11:19:52.08
+-- Last modification date: 2025-08-30 18:44:53.416
 
 -- tables
 -- Table: Chat
 CREATE TABLE Chat (
-                      id serial  NOT NULL,
+                      id bigint  NOT NULL,
                       nazwa varchar(20)  NOT NULL,
                       CONSTRAINT Chat_pk PRIMARY KEY (id)
 );
 
 -- Table: Decyzja
 CREATE TABLE Decyzja (
-                         Skarga_id serial  NOT NULL,
-                         id serial  NOT NULL,
+                         Skarga_id bigint  NOT NULL,
+                         id bigint  NOT NULL,
                          opis varchar(100)  NOT NULL,
                          blokowanie timestamp  NOT NULL,
-                         Moderator_Osoba_id serial  NOT NULL,
+                         Moderator_Osoba_id bigint  NOT NULL,
                          CONSTRAINT Decyzja_pk PRIMARY KEY (id)
 );
 
 -- Table: Firma
 CREATE TABLE Firma (
-                       id serial  NOT NULL,
+                       id bigint  NOT NULL,
                        nazwa varchar(30)  NOT NULL,
                        link varchar(50)  NOT NULL,
-                       Uzytkownik_id serial  NOT NULL,
+                       Uzytkownik_id bigint  NOT NULL,
                        CONSTRAINT Firma_pk PRIMARY KEY (id)
 );
 
 -- Table: Kategoria
 CREATE TABLE Kategoria (
-                           id serial  NOT NULL,
+                           id bigint  NOT NULL,
                            nazwa varchar(20)  NOT NULL,
                            CONSTRAINT Kategoria_pk PRIMARY KEY (id)
 );
 
 -- Table: Kategoria_Skarga
 CREATE TABLE Kategoria_Skarga (
-                                  id serial  NOT NULL,
+                                  id bigint  NOT NULL,
                                   nazwa varchar(30)  NOT NULL,
                                   CONSTRAINT Kategoria_Skarga_pk PRIMARY KEY (id)
 );
 
 -- Table: Kategoria_lokalizacji
 CREATE TABLE Kategoria_lokalizacji (
-                                       id integer  NOT NULL,
+                                       id bigint  NOT NULL,
                                        nazwa varchar(20)  NOT NULL,
                                        CONSTRAINT Kategoria_lokalizacji_pk PRIMARY KEY (id)
 );
 
 -- Table: Kategoria_wydarzenie
 CREATE TABLE Kategoria_wydarzenie (
-                                      id serial  NOT NULL,
-                                      Kategoria_id serial  NOT NULL,
-                                      Wydarzenie_id serial  NOT NULL,
+                                      id bigint  NOT NULL,
+                                      Kategoria_id bigint  NOT NULL,
+                                      Wydarzenie_id bigint  NOT NULL,
                                       CONSTRAINT Kategoria_wydarzenie_pk PRIMARY KEY (id)
 );
 
 -- Table: Komentarz
 CREATE TABLE Komentarz (
-                           id serial  NOT NULL,
+                           id bigint  NOT NULL,
                            text varchar(100)  NOT NULL,
-                           Wydarzenie_id serial  NOT NULL,
-                           Komentarz_id serial  NOT NULL,
-                           Uzytkownik_id serial  NOT NULL,
+                           Wydarzenie_id bigint  NOT NULL,
+                           Komentarz_id bigint  NOT NULL,
+                           Uzytkownik_id bigint  NOT NULL,
                            CONSTRAINT Komentarz_pk PRIMARY KEY (id)
 );
 
 -- Table: Lista_upodobanych
 CREATE TABLE Lista_upodobanych (
-                                   id serial  NOT NULL,
+                                   id bigint  NOT NULL,
                                    nazwa varchar(20)  NOT NULL,
-                                   Wydarzenie_id serial  NOT NULL,
-                                   Uzytkownik_id serial  NOT NULL,
+                                   Wydarzenie_id bigint  NOT NULL,
+                                   Uzytkownik_id bigint  NOT NULL,
                                    CONSTRAINT Lista_upodobanych_pk PRIMARY KEY (id)
 );
 
 -- Table: Lokalizacja
 CREATE TABLE Lokalizacja (
-                             id serial  NOT NULL,
-                             loklizacja_punkt geometry(Point, 4326) NOT NULL,
-                             loklizacja_obszar geometry(Polygon, 4326) NOT NULL,
-                             Kategoria_lokalizacji_id serial  NOT NULL,
+                             id bigint  NOT NULL,
+                             loklizacja_punkt geometry(Point, 4326)  NOT NULL,
+                             loklizacja_obszar geometry(Polygon, 4326)  NOT NULL,
+                             Kategoria_lokalizacji_id bigint  NOT NULL,
                              CONSTRAINT Lokalizacja_pk PRIMARY KEY (id)
 );
 
--- indeksy przestrzenne
-CREATE INDEX idx_lok_punkt_gist  ON Lokalizacja USING gist (loklizacja_punkt);
-CREATE INDEX idx_lok_obszar_gist ON Lokalizacja USING gist (loklizacja_obszar);
-
 -- Table: Moderator
 CREATE TABLE Moderator (
-                           Osoba_id serial  NOT NULL,
+                           Osoba_id bigint  NOT NULL,
                            login varchar(20)  NOT NULL,
                            haslo varchar(20)  NOT NULL,
                            iloszcz_decyzij smallint  NOT NULL,
@@ -100,24 +95,24 @@ CREATE TABLE Moderator (
 
 -- Table: Obserwowanie
 CREATE TABLE Obserwowanie (
-                              id serial  NOT NULL,
-                              Uzytkownik_id serial  NOT NULL,
-                              Uzytkownik_2_id serial  NOT NULL,
+                              id bigint  NOT NULL,
+                              Uzytkownik_id bigint  NOT NULL,
+                              Uzytkownik_2_id bigint  NOT NULL,
                               CONSTRAINT Obserwowanie_pk PRIMARY KEY (id)
 );
 
 -- Table: Ocena
 CREATE TABLE Ocena (
-                       id serial  NOT NULL,
+                       id bigint  NOT NULL,
                        ocena decimal(2,1)  NOT NULL,
-                       Wydarzenie_id serial  NOT NULL,
-                       Uzytkownik_id serial  NOT NULL,
+                       Wydarzenie_id bigint  NOT NULL,
+                       Uzytkownik_id bigint  NOT NULL,
                        CONSTRAINT Ocena_pk PRIMARY KEY (id)
 );
 
 -- Table: Osoba
 CREATE TABLE Osoba (
-                       id serial  NOT NULL,
+                       id bigint  NOT NULL,
                        imie varchar(20)  NOT NULL,
                        nazwisko varchar(20)  NOT NULL,
                        email varchar(30)  NOT NULL,
@@ -128,8 +123,8 @@ CREATE TABLE Osoba (
 
 -- Table: Powiadomienie
 CREATE TABLE Powiadomienie (
-                               id serial  NOT NULL,
-                               Uzytkownik_Chat_id serial  NOT NULL,
+                               id bigint  NOT NULL,
+                               Uzytkownik_Chat_id bigint  NOT NULL,
                                text varchar(50)  NOT NULL,
                                data timestamp  NOT NULL,
                                CONSTRAINT Powiadomienie_pk PRIMARY KEY (id)
@@ -137,35 +132,35 @@ CREATE TABLE Powiadomienie (
 
 -- Table: Promowanie
 CREATE TABLE Promowanie (
-                            id serial  NOT NULL,
+                            id bigint  NOT NULL,
                             data_poczatku timestamp  NOT NULL,
                             data_konca timestamp  NOT NULL,
-                            Wydarzenie_id serial  NOT NULL,
-                            Firma_id serial  NOT NULL,
+                            Wydarzenie_id bigint  NOT NULL,
+                            Firma_id bigint  NOT NULL,
                             CONSTRAINT Promowanie_pk PRIMARY KEY (id)
 );
 
 -- Table: Repost
 CREATE TABLE Repost (
-                        id serial  NOT NULL,
-                        Wydarzenie_id serial  NOT NULL,
-                        Uzytkownik_id serial  NOT NULL,
+                        id bigint  NOT NULL,
+                        Wydarzenie_id bigint  NOT NULL,
+                        Uzytkownik_id bigint  NOT NULL,
                         CONSTRAINT Repost_pk PRIMARY KEY (id)
 );
 
 -- Table: Skarga
 CREATE TABLE Skarga (
-                        id serial  NOT NULL,
+                        id bigint  NOT NULL,
                         opis varchar(100)  NOT NULL,
-                        Kategoria_Skarga_id serial  NOT NULL,
-                        Wydarzenie_id serial  NOT NULL,
-                        Uzytkownik_id serial  NOT NULL,
+                        Kategoria_Skarga_id bigint  NOT NULL,
+                        Wydarzenie_id bigint  NOT NULL,
+                        Uzytkownik_id bigint  NOT NULL,
                         CONSTRAINT Skarga_pk PRIMARY KEY (id)
 );
 
 -- Table: Uzytkownik
 CREATE TABLE Uzytkownik (
-                            Osoba_id serial  NOT NULL,
+                            Osoba_id bigint  NOT NULL,
                             username varchar(20)  NOT NULL,
                             opis_strony varchar(100)  NOT NULL,
                             haslo varchar(30)  NOT NULL,
@@ -174,28 +169,28 @@ CREATE TABLE Uzytkownik (
 
 -- Table: Uzytkownik_Chat
 CREATE TABLE Uzytkownik_Chat (
-                                 id serial  NOT NULL,
-                                 Chat_id serial  NOT NULL,
-                                 Uzytkownik_id2 serial  NOT NULL,
-                                 Uzytkownik_id1 serial  NOT NULL,
+                                 id bigint  NOT NULL,
+                                 Chat_id bigint  NOT NULL,
+                                 Uzytkownik_id2 bigint  NOT NULL,
+                                 Uzytkownik_id1 bigint  NOT NULL,
                                  CONSTRAINT Uzytkownik_Chat_pk PRIMARY KEY (id)
 );
 
 -- Table: Wydarzenie
 CREATE TABLE Wydarzenie (
-                            id serial  NOT NULL,
+                            id bigint  NOT NULL,
                             nazwa varchar(30)  NOT NULL,
                             kiedy timestamp  NOT NULL,
                             opis varchar(500)  NOT NULL,
-                            Lokalizacja_id serial  NOT NULL,
+                            Lokalizacja_id bigint  NOT NULL,
                             CONSTRAINT Wydarzenie_pk PRIMARY KEY (id)
 );
 
 -- Table: Zdjecie
 CREATE TABLE Zdjecie (
-                         id serial  NOT NULL,
+                         id bigint  NOT NULL,
                          image_path varchar(255)  NOT NULL,
-                         Wydarzenie_id serial  NOT NULL,
+                         Wydarzenie_id bigint  NOT NULL,
                          CONSTRAINT Zdjecie_pk PRIMARY KEY (id)
 );
 
