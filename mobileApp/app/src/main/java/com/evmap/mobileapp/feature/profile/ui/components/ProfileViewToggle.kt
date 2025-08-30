@@ -34,7 +34,7 @@ fun ProfileViewToggle(
                 ) {
                     TabRow(
                         selectedTabIndex = if (isGrid) 1 else 0,
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth() .height(48.dp),
                         containerColor = Color.Transparent,
                         indicator = { tabPositions ->
                             if (tabPositions.isNotEmpty()) {
@@ -58,6 +58,7 @@ fun ProfileViewToggle(
                                 tint = if (!isGrid) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.size(24.dp)
                             )
+                            Spacer(modifier = Modifier.height(Spacing.s))
                         }
 
                         Tab(
@@ -71,6 +72,7 @@ fun ProfileViewToggle(
                                 tint = if (isGrid) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.size(24.dp)
                             )
+                            Spacer(modifier = Modifier.height(Spacing.s))
                         }
                     }
                 }

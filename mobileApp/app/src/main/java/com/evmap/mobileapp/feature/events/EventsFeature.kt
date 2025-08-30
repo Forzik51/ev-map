@@ -45,7 +45,6 @@ object EventsFeature : FeatureEntry {
             
             composable(eventDetailsRoute) { backStackEntry ->
                 val eventId = backStackEntry.arguments?.getString("eventId")
-                // TODO: Implement with ViewModel
                 // val viewModel: EventDetailsViewModel = hiltViewModel()
                 // val state by viewModel.state.collectAsState()
 
@@ -138,7 +137,6 @@ object EventsFeature : FeatureEntry {
                     onCategoriesQueryChange = { query ->
                         currentDraft = currentDraft.copy(categoriesQuery = query)
                         // TODO: viewModel::updateCategoriesQuery(query)
-                        // This could also trigger a search API call in real implementation
                     },
                     onToggleCategory = { category ->
                         val updatedCategories = if (category in currentDraft.categories) {

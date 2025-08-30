@@ -24,7 +24,7 @@ object FollowFeature : FeatureEntry {
         navGraphBuilder.composable(route = "profile/{userId}/followers") { backStackEntry ->
             val userId = backStackEntry.arguments?.getString("userId") ?: return@composable
             
-            // TODO: Replace with actual ViewModel when available
+
             var followersState by remember { 
                 mutableStateOf(
                     listOf(
@@ -94,7 +94,7 @@ object FollowFeature : FeatureEntry {
         navGraphBuilder.composable(route = "profile/{userId}/following") { backStackEntry ->
             val userId = backStackEntry.arguments?.getString("userId") ?: return@composable
 
-            // TODO: Replace with actual ViewModel when available
+
             var followingState by remember {
                 mutableStateOf(
                     listOf(

@@ -34,10 +34,9 @@ object AuthFeature : FeatureEntry {
                 onPasswordChange = { password = it },
                 onTogglePassword = { showPassword = !showPassword },
                 onLogin = {
-                    // TODO: Implement login logic
+                    onNavigateToRoute("feed")
                 },
                 onNavigateToSignup = {
-                    // TODO: Navigate to signup
                     onNavigateToRoute("auth/signup")
                 },
                 onNavigateToForgot = {
@@ -54,7 +53,6 @@ object AuthFeature : FeatureEntry {
                 email = email,
                 onEmailChange = { email = it },
                 onContinue = {
-                    // TODO: Implement forgot password logic
                     onNavigateToRoute("auth/new_password")
                 }
             )
@@ -91,7 +89,7 @@ object AuthFeature : FeatureEntry {
                 onPasswordChange = { password = it },
                 onTogglePassword = { showPassword = !showPassword },
                 onSignup = {
-                    // TODO: Implement signup logic
+                    onNavigateToRoute("feed")
                 },
                 onNavigateToLogin = {
                     onNavigateToRoute(route)
@@ -116,7 +114,6 @@ object AuthFeature : FeatureEntry {
                 onToggleShowNew = { showNew = !showNew },
                 onToggleShowConfirm = { showConfirm = !showConfirm },
                 onCreate = {
-                    // TODO: Implement create password logic
                     onNavigateUp()
                 }
             )

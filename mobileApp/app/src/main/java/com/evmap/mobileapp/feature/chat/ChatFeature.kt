@@ -51,7 +51,6 @@ object ChatFeature : FeatureEntry {
                     uiState = uiState.copy(selection = newSelection)
                 },
                 onDeleteSelected = {
-                    // TODO: Implement delete logic
                     val remainingItems = uiState.items.filterNot { chat ->
                         uiState.selection.contains(chat.id)
                     }

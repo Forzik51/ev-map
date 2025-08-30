@@ -22,7 +22,6 @@ object ProfileFeature : FeatureEntry {
     ) {
         // My Profile
         navGraphBuilder.composable(route = "profile/me") {
-            // TODO: Replace with actual ViewModel when available
             var selectedViewIsGrid by remember { mutableStateOf(false) }
             
             val sampleEvents = listOf(

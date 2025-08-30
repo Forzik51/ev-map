@@ -11,15 +11,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import core.designsystem.AppTheme
-import core.designsystem.Spacing
+import core.ui.components.AppBottomBar
 import core.ui.components.UserListItem
 import core.ui.model.ProfileUserUi
 import core.ui.model.UserFollowUi
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import core.ui.components.AppBottomBar
 
 @Preview(showBackground = true, widthDp = 412, heightDp = 892)
 @Composable
@@ -27,30 +24,43 @@ private fun FollowersScreenPreview() {
     val sampleUsers = listOf(
         UserFollowUi(
             user = ProfileUserUi(
-                id = "1",
-                username = "user1",
+                id = "user1",
+                username = "List item",
                 title = "List item",
-                bio = "Supporting line text lorem ipsum dolor sit amet, consectetur."
+                bio = "Supporting line text lorem ipsum dolor sit amet, consectetur.",
+                avatarUrl = null
             ),
             isFollowing = false
         ),
         UserFollowUi(
             user = ProfileUserUi(
-                id = "2", 
-                username = "user2",
-                title = "List item",
-                bio = "Supporting line text lorem ipsum dolor sit amet, consectetur."
+                id = "user2",
+                username = "List item",
+                title = "List item", 
+                bio = "Supporting line text lorem ipsum dolor sit amet, consectetur.",
+                avatarUrl = null
             ),
             isFollowing = true
         ),
         UserFollowUi(
             user = ProfileUserUi(
-                id = "3",
-                username = "user3", 
+                id = "user3",
+                username = "List item",
                 title = "List item",
-                bio = "Supporting line text lorem ipsum dolor sit amet, consectetur."
+                bio = "Supporting line text lorem ipsum dolor sit amet, consectetur.",
+                avatarUrl = null
             ),
             isFollowing = false
+        ),
+        UserFollowUi(
+            user = ProfileUserUi(
+                id = "user4",
+                username = "List item",
+                title = "List item",
+                bio = "Supporting line text lorem ipsum dolor sit amet, consectetur.",
+                avatarUrl = null
+            ),
+            isFollowing = true
         )
     )
 
@@ -75,32 +85,14 @@ fun FollowersScreen(
 ) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        bottomBar = {
-            AppBottomBar(
-                currentRoute = "profile",
-                onNavigate = { /* TODO: Implement navigation */ }
-            )
-        },
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "Back",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "Followers",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
+            TopAppBar(
+                title = { 
+                    Text(
+                        text = "Followers",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
@@ -111,9 +103,17 @@ fun FollowersScreen(
                         )
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface
                 )
+            )
+        },
+        bottomBar = {
+            AppBottomBar(
+                currentRoute = "follow",
+                onNavigate = { /* TODO: Implement navigation */ }
             )
         },
         containerColor = MaterialTheme.colorScheme.surface
@@ -122,7 +122,7 @@ fun FollowersScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            contentPadding = PaddingValues(horizontal = Spacing.s)
+            contentPadding = PaddingValues(vertical = 4.dp)
         ) {
             items(
                 items = users,
@@ -135,16 +135,22 @@ fun FollowersScreen(
                     onClick = { onUserClick(userFollow.user.id) },
                     trailing = {
                         if (userFollow.isFollowing) {
-                            AssistChip(
+                            // Following - Outlined button
+                            OutlinedButton(
                                 onClick = { onToggleFollow(userFollow.user.id) },
-                                label = { Text("Followers", style = MaterialTheme.typography.labelLarge) },
-                                colors = AssistChipDefaults.assistChipColors(
+                                colors = ButtonDefaults.outlinedButtonColors(
                                     containerColor = Color.Transparent,
-                                    labelColor = MaterialTheme.colorScheme.primary
+                                    contentColor = MaterialTheme.colorScheme.primary
                                 ),
-                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
-                            )
+                                shape = MaterialTheme.shapes.large
+                            ) {
+                                Text(
+                                    text = "Following",
+                                    style = MaterialTheme.typography.labelLarge
+                                )
+                            }
                         } else {
+                            // Follow - Filled button
                             Button(
                                 onClick = { onToggleFollow(userFollow.user.id) },
                                 colors = ButtonDefaults.buttonColors(

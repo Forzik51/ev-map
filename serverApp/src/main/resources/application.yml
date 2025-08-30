@@ -1,0 +1,15 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/evmap
+    username: evmap
+    password: evmap
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate.default_schema: evmap
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 1
+    schemas: evmap

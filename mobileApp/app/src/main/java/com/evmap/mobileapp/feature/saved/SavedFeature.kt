@@ -23,7 +23,6 @@ object SavedFeature : FeatureEntry {
         onNavigateUp: () -> Unit
     ) {
         navGraphBuilder.composable(route = route) {
-            // TODO: Replace with actual ViewModel when available
             val savedGroups = remember {
                 listOf(
                     SavedGroupUi(

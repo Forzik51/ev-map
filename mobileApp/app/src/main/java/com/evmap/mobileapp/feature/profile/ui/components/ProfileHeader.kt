@@ -4,9 +4,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Chat
-import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -42,42 +41,7 @@ fun ProfileHeader(
             .fillMaxWidth()
             .padding(horizontal = Spacing.m, vertical = Spacing.s)
     ) {
-        // Top row with username and icons
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = username,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.weight(1f)
-            )
-
-            if (isMe) {
-                Row {
-                    IconButton(onClick = { /* notifications */ }) {
-                        Icon(
-                            imageVector = Icons.Default.Notifications,
-                            contentDescription = "Notifications",
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                    IconButton(onClick = { /* settings */ }) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Settings",
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(Spacing.s))
-
-        // Profile info row
+        // Profile info row with avatar and stats
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.Top
@@ -97,7 +61,7 @@ fun ProfileHeader(
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Filled.Chat,
+                                imageVector = Icons.Default.Person,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.onPrimaryContainer,
                                 modifier = Modifier.size(40.dp)
@@ -120,22 +84,25 @@ fun ProfileHeader(
 
             // Username and stats
             Column {
-                Spacer(modifier = Modifier.height(Spacing.m))
-                Text(
-                    text = username,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                
-                Spacer(modifier = Modifier.height(Spacing.l))
+                // Username (only show for "me" profile since others show in top bar)
+                if (isMe) {
+                    Text(
+                        text = username,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(Spacing.s))
+                } else {
+                    Spacer(modifier = Modifier.height(Spacing.m))
+                }
 
                 Row {
                     Column(
                         modifier = Modifier.clickable { onOpenFollowers() }
                     ) {
                         Text(
-                            text = followers.toString(),
-                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                            text = String.format("%03d", followers),
+                            style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
@@ -151,8 +118,8 @@ fun ProfileHeader(
                         modifier = Modifier.clickable { onOpenFollowing() }
                     ) {
                         Text(
-                            text = following.toString(),
-                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                            text = String.format("%03d", following),
+                            style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
@@ -208,41 +175,54 @@ fun ProfileHeader(
         if (!isMe) {
             Spacer(modifier = Modifier.height(Spacing.m))
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(Spacing.s)
-            ) {
-                Button(
-                    onClick = onFollowToggle,
-                    modifier = Modifier.weight(1f),
-                    colors = if (isFollowing) {
-                        ButtonDefaults.outlinedButtonColors(
+            if (isFollowing) {
+                // When following, show "Following" (outlined) + "Message" (filled) buttons
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.s)
+                ) {
+                    OutlinedButton(
+                        onClick = onFollowToggle,
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.outlinedButtonColors(
                             containerColor = Color.Transparent,
                             contentColor = MaterialTheme.colorScheme.primary
+                        ),
+                        shape = MaterialTheme.shapes.large
+                    ) {
+                        Text(
+                            text = "Following",
+                            style = MaterialTheme.typography.labelLarge
                         )
-                    } else {
-                        ButtonDefaults.buttonColors(
+                    }
+
+                    Button(
+                        onClick = onMessage,
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary,
                             contentColor = MaterialTheme.colorScheme.onPrimary
+                        ),
+                        shape = MaterialTheme.shapes.large
+                    ) {
+                        Text(
+                            text = "Message",
+                            style = MaterialTheme.typography.labelLarge
                         )
-                    },
-                    shape = MaterialTheme.shapes.large
-                ) {
-                    Text(
-                        text = if (isFollowing) "Following" else "Follow",
-                        style = MaterialTheme.typography.labelLarge
-                    )
+                    }
                 }
-
-                OutlinedButton(
-                    onClick = onMessage,
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        containerColor = Color.Transparent,
-                        contentColor = MaterialTheme.colorScheme.primary
+            } else {
+                // When not following, show single primary "Follow" button
+                Button(
+                    onClick = onFollowToggle,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
                     ),
                     shape = MaterialTheme.shapes.large
                 ) {
                     Text(
-                        text = "Message",
+                        text = "Follow",
                         style = MaterialTheme.typography.labelLarge
                     )
                 }

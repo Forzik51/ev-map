@@ -53,7 +53,7 @@ private fun ConversationScreenPreview() {
         text = null,
         timestamp = now - 1000L * 60 * 5, // 5 min ago
         isMine = false,
-        mediaUrl = "https://picsum.photos/600/400" // image example
+        mediaUrl = "" // image example
     )
 
     // ----- sample UI state -----

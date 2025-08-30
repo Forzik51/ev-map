@@ -25,14 +25,14 @@ import feature.chat.ui.components.ChatRow
 @Preview(showBackground = true, widthDp = 412, heightDp = 892)
 @Composable
 private fun ChatsScreenPreview() {
-    // --- sample items (rename ChatItemUi to your actual item type) ---
+    // --- sample items ---
     val sampleItems = listOf(
         ChatUi(
             id = "1",
             avatarUrl = null,
             name = "Alice",
             lastMessage = "See you soon!",
-            lastMessageTime = "12:45",   // or Long/etc. – match your type
+            lastMessageTime = "12:45",
             unreadCount = 2
         ),
         ChatUi(
@@ -45,7 +45,7 @@ private fun ChatsScreenPreview() {
         )
     )
 
-    // --- sample UI state (rename fields to match your ChatsUiState) ---
+    // --- sample UI state ---
     val ui = ChatsUiState(
         items = sampleItems,
         selection = setOf("2"),
