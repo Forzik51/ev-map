@@ -10,8 +10,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.filled.Apps
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ViewList
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -32,7 +30,8 @@ private fun GroupItemsScreenPreview() {
         EventUi(
             id = "1",
             title = "Title",
-            subtitle = "Subtitle",
+            location = "Subtitle",
+            startsAt = "stAt",
             description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor",
             imageUrl = null,
             rating = 5.0f,
@@ -41,7 +40,8 @@ private fun GroupItemsScreenPreview() {
         EventUi(
             id = "2",
             title = "Title",
-            subtitle = "Subtitle", 
+            location = "Subtitle",
+            startsAt = "stAt",
             description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor",
             imageUrl = null,
             rating = 4.5f,

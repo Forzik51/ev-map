@@ -2,7 +2,7 @@ package core.ui.model
 
 data class ProfileUiState(
     val user: ProfileUserUi? = null,
-    val list: List<EventUi> = emptyList(),
+    val list: List<FeedItemUi> = emptyList(),
     val isMe: Boolean = false,
     val isFollowing: Boolean = false,
     val selectedViewIsGrid: Boolean = false,

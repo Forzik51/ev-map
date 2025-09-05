@@ -27,8 +27,8 @@ fun AppBottomBar(
         BottomNavItem(Icons.Outlined.Home, "Feed", "feed"),
         BottomNavItem(Icons.Outlined.Map, "Map", "map"),
         BottomNavItem(Icons.Outlined.Add, "Add", "events/create"),
-        BottomNavItem(Icons.Outlined.Search, "Explore", "explore"),
-        BottomNavItem(Icons.Outlined.Person, "Profile", "profile/me")
+        BottomNavItem(Icons.Outlined.ChatBubbleOutline, "Chat", "chats"),
+        BottomNavItem(Icons.Outlined.Person, "Profile", "profile")
     )
 
     Surface(

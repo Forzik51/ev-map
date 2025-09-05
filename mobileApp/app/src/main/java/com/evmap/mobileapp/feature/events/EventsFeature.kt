@@ -5,22 +5,25 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavType
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import core.navigation.FeatureEntry
+import core.ui.model.EventDetailsUi
 import core.ui.model.EventDraftUi
+import core.ui.model.EventUi
 import feature.events.ui.EventCreateScreen
 import feature.events.ui.EventDetailsScreen
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.util.*
 
 object EventsFeature : FeatureEntry {
     override val route = "events"
     
-    const val eventsListRoute = "events/list"
-    const val eventDetailsRoute = "events/{eventId}"
-    const val createEventRoute = "events/create"
+    const val List = "events/list"
+    const val Details = "events/{eventId}?preview={preview}"
+    const val Create = "events/create"
     
     override fun registerGraph(
         navGraphBuilder: NavGraphBuilder,
@@ -28,10 +31,10 @@ object EventsFeature : FeatureEntry {
         onNavigateUp: () -> Unit
     ) {
         navGraphBuilder.navigation(
-            startDestination = eventsListRoute,
+            startDestination = List,
             route = route
         ) {
-            composable(eventsListRoute) {
+            composable(List) {
                 // TODO: Implement EventsListScreen
                 // EventsListScreen(
                 //     onNavigateToDetails = { eventId ->
@@ -42,33 +45,46 @@ object EventsFeature : FeatureEntry {
                 //     }
                 // )
             }
-            
-            composable(eventDetailsRoute) { backStackEntry ->
-                val eventId = backStackEntry.arguments?.getString("eventId")
-                // val viewModel: EventDetailsViewModel = hiltViewModel()
-                // val state by viewModel.state.collectAsState()
 
-                // EventDetailsScreen(
-                //     ui = state.eventDetails,
-                //     currentRoute = "events",
-                //     onBack = onNavigateUp,
-                //     onShare = {
-                //         // TODO: Implement sharing
-                //     },
-                //     onOpenMap = {
-                //         onNavigateToRoute("map")
-                //     },
-                //     onOpenOrganizer = {
-                //         // TODO: Navigate to organizer profile
-                //     },
-                //     onOpenCategory = { category ->
-                //         // TODO: Navigate to category search/filter
-                //     },
-                //     onNavigate = onNavigateToRoute
-                // )
+            composable(
+                route = Details,
+                arguments = listOf(navArgument("eventId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val eventId = checkNotNull(backStackEntry.arguments?.getString("eventId"))
+
+                EventDetailsScreen(
+                    ui = EventDetailsUi(
+                        event = EventUi(
+                            id = eventId,
+                            title = "Event $eventId",
+                            location = "—",
+                            startsAt = "—",
+                            description = "—",
+                            imageUrl = null,
+                            rating = 5.0f,
+                            reviewCount = 0
+                        ),
+                        gallery = emptyList(),
+                        fullDescription = null,
+                        location = null,
+                        date = null,
+                        categories = emptyList(),
+                        viewCount = null,
+                        likeCount = null,
+                        organizerName = null,
+                        organizerId = null
+                    ),
+                    currentRoute = EventsFeature.route,
+                    onBack = onNavigateUp,
+                    onShare = {},
+                    onOpenMap = {},
+                    onOpenOrganizer = {},
+                    onOpenCategory = {},
+                    onNavigate = onNavigateToRoute
+                )
             }
             
-            composable(createEventRoute) {
+            composable(Create) {
                 // TODO: Implement with ViewModel
                 // val viewModel: EventCreateViewModel = hiltViewModel()
                 // val state by viewModel.state.collectAsState()

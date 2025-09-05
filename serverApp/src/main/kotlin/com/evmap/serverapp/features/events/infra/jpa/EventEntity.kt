@@ -6,6 +6,7 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+import java.time.OffsetDateTime
 
 @Entity
 @Table(name = "Wydarzenie")
@@ -23,5 +24,5 @@ class EventEntity(
     var startsAt: java.time.Instant,
 
     @Column(name = "Lokalizacja_id", nullable = false)
-    var locationId: Long
+    var locationId: Long,
 )

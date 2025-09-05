@@ -20,6 +20,7 @@ private fun SettingsScreenPreview() {
             onOpenProfileEdit = {},
             onOpenSaved = {},
             onOpenOthers = {},
+            onLogOut = {},
             onBack = {}
         )
     }
@@ -31,6 +32,7 @@ fun SettingsScreen(
     onOpenProfileEdit: () -> Unit,
     onOpenSaved: () -> Unit,
     onOpenOthers: () -> Unit,
+    onLogOut: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -97,6 +99,10 @@ fun SettingsScreen(
             SettingsRow(
                 label = "Others",
                 onClick = onOpenOthers
+            )
+            SettingsRow(
+                label = "Log out",
+                onClick = onLogOut
             )
         }
     }

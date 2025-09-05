@@ -8,7 +8,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -19,6 +19,7 @@ import core.designsystem.AppTheme
 import core.designsystem.Spacing
 import core.ui.components.AppBottomBar
 import core.ui.model.EventUi
+import core.ui.model.FeedItemUi
 import core.ui.model.ProfileUiState
 import core.ui.model.ProfileUserUi
 import feature.events.ui.components.EventCard
@@ -29,34 +30,41 @@ import feature.profile.ui.components.ProfileViewToggle
 @Preview(showBackground = true, widthDp = 412, heightDp = 892)
 @Composable
 private fun ProfileScreenPreview() {
-    val sampleEvents = listOf(
-        EventUi(
+    val e1 = EventUi(
             id = "1",
             title = "Sample Event 1",
-            subtitle = "Subtitle",
+            location = "Subtitle",
+            startsAt = "stAt",
             description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor",
             imageUrl = null,
             rating = 5.0f,
             reviewCount = 50
-        ),
-        EventUi(
+        )
+    val e2 = EventUi(
             id = "2",
             title = "Sample Event 2",
-            subtitle = "Subtitle",
+            location = "Subtitle",
+            startsAt = "stAt",
             description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor",
             imageUrl = null,
             rating = 4.5f,
             reviewCount = 32
-        ),
-        EventUi(
+        )
+    val e3 = EventUi(
             id = "3",
             title = "Sample Event 3",
-            subtitle = "Subtitle",
+            location = "Subtitle",
+            startsAt = "stAt",
             description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor",
             imageUrl = null,
             rating = 4.8f,
             reviewCount = 18
         )
+
+    val sampleItems = listOf(
+        FeedItemUi(id = "1", event = e1, timestamp = System.currentTimeMillis(), isPromoted = true),
+        FeedItemUi(id = "2", event = e2),
+        FeedItemUi(id = "2", event = e3)
     )
     
     val sampleUser = ProfileUserUi(
@@ -71,8 +79,8 @@ private fun ProfileScreenPreview() {
     
     val sampleState = ProfileUiState(
         user = sampleUser,
-        list = sampleEvents,
-        isMe = false,
+        list = sampleItems,
+        isMe = true,
         isFollowing = true,
         selectedViewIsGrid = true // Preview grid mode
     )
@@ -102,12 +110,14 @@ fun ProfileScreen(
     onOpenFollowing: () -> Unit,
     onToggleView: () -> Unit,
     onNavigateUp: () -> Unit,
+    currentRoute: String? = "profile",
+    onNavigate: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Scaffold(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize().statusBarsPadding(),
         topBar = {
-            if (!ui.isMe) {
+            //if (!ui.isMe) {
                 TopAppBar(
                     title = { 
                         Text(
@@ -117,12 +127,27 @@ fun ProfileScreen(
                         )
                     },
                     navigationIcon = {
-                        IconButton(onClick = onNavigateUp) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                tint = MaterialTheme.colorScheme.onSurface
-                            )
+                        if (!ui.isMe) {
+                            IconButton(onClick = onNavigateUp) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Back",
+                                    tint = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+                    },
+                    actions = {
+                        if (ui.isMe) {
+                            IconButton(onClick = { onNavigate("settings") },
+                                modifier = modifier.padding(start = Spacing.s),
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Settings,
+                                    contentDescription = "Settings",
+                                    tint = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -131,12 +156,12 @@ fun ProfileScreen(
                         navigationIconContentColor = MaterialTheme.colorScheme.onSurface
                     )
                 )
-            }
+            //}
         },
         bottomBar = {
             AppBottomBar(
-                currentRoute = "profile",
-                onNavigate = { /* TODO: Implement navigation */ }
+                currentRoute = currentRoute,
+                onNavigate = onNavigate
             )
         },
         containerColor = MaterialTheme.colorScheme.surface
@@ -184,10 +209,10 @@ fun ProfileScreen(
                         items(
                             items = ui.list,
                             key = { it.id }
-                        ) { event ->
+                        ) { feedItem ->
                             EventGridCard(
-                                event = event,
-                                onClick = { onOpenItem(event.id) }
+                                event = feedItem.event,
+                                onClick = { onOpenItem(feedItem.event.id) }
                             )
                         }
                     }
@@ -201,10 +226,10 @@ fun ProfileScreen(
                         items(
                             items = ui.list,
                             key = { it.id }
-                        ) { event ->
+                        ) { feedItem ->
                             EventCard(
-                                event = event,
-                                onClick = { onOpenItem(event.id) }
+                                event = feedItem.event,
+                                onClick = { onOpenItem(feedItem.event.id) }
                             )
                         }
                     }

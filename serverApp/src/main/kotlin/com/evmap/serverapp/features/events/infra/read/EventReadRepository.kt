@@ -2,6 +2,9 @@ package com.evmap.serverapp.features.events.infra.read
 
 import com.evmap.serverapp.features.events.api.dto.EventView
 import org.jooq.DSLContext
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
 import java.sql.Timestamp
 
@@ -32,7 +35,7 @@ class EventReadRepository(private val dsl: DSLContext) {
             SELECT w.id, w.nazwa, w.opis, w.kiedy, k.nazwa AS location_name
             FROM wydarzenie w
             LEFT JOIN Lokalizacja l ON l.id = w.Lokalizacja_id
-			LEFT JOIN Kategoria_lokalizacji k ON k.id = l.id
+			LEFT JOIN Kategoria_lokalizacji k ON k.id = l.Kategoria_lokalizacji_id
             ORDER BY w.kiedy DESC
             """.trimIndent()
         ).map {
@@ -44,4 +47,41 @@ class EventReadRepository(private val dsl: DSLContext) {
                 locationName = it.get("nazwa", String::class.java)
             )
         }
+
+
+    fun findAllViewsV2(pageable: Pageable): Page<EventView> {
+
+        val sql = """
+            SELECT w.id, w.nazwa, w.opis, w.kiedy, k.nazwa AS location_name
+            FROM wydarzenie w
+            LEFT JOIN Lokalizacja l ON l.id = w.Lokalizacja_id
+			LEFT JOIN Kategoria_lokalizacji k ON k.id = l.Kategoria_lokalizacji_id
+            ORDER BY w.kiedy DESC
+            LIMIT ? OFFSET ?
+        """.trimIndent()
+
+        val recs = dsl.resultQuery(sql, pageable.pageSize, pageable.offset).fetch()
+
+        val items = recs.map {
+            EventView(
+                id = it.get("id", Long::class.java),
+                name = it.get("nazwa", String::class.java),
+                description = it.get("opis", String::class.java),
+                startsAt = it.get("kiedy", Timestamp::class.java).toInstant().toString(),
+                locationName = it.get("nazwa", String::class.java)
+            )
+        }
+
+        // liczba rekordów do Page<>
+        val total = dsl.fetchOne(
+            """
+            SELECT COUNT(*) 
+            FROM wydarzenie w
+            LEFT JOIN Lokalizacja l ON l.id = w.Lokalizacja_id
+            LEFT JOIN Kategoria_lokalizacji k ON k.id = l.Kategoria_lokalizacji_id
+            """.trimIndent()
+        )?.get(0).toString().toLong()
+
+        return PageImpl(items, pageable, total)
+    }
 }

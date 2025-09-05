@@ -8,7 +8,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import core.designsystem.AppTheme
 import core.designsystem.Spacing
 import core.ui.components.AppBottomBar
@@ -34,7 +33,8 @@ private fun SearchMapScreenPreview() {
     val sampleEvent = EventUi(
         id = "e1",
         title = "Sample Event",
-        subtitle = "Warsaw",
+        location = "Warsaw",
+        startsAt = "startat",
         description = "A short description used only for preview.",
         imageUrl = null,
         rating = 4.7F,

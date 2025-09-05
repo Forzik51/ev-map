@@ -79,7 +79,8 @@ object SavedFeature : FeatureEntry {
                             EventUi(
                                 id = "event1",
                                 title = "Title",
-                                subtitle = "Subtitle",
+                                location = "Subtitle",
+                                startsAt = "stAt",
                                 description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor",
                                 imageUrl = null,
                                 rating = 5.0f,
@@ -88,7 +89,8 @@ object SavedFeature : FeatureEntry {
                             EventUi(
                                 id = "event2",
                                 title = "Title",
-                                subtitle = "Subtitle",
+                                location = "Subtitle",
+                                startsAt = "stAt",
                                 description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor",
                                 imageUrl = null,
                                 rating = 4.5f,

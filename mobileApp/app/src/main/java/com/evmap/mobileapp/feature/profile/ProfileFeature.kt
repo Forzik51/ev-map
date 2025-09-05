@@ -8,8 +8,10 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import core.navigation.FeatureEntry
 import core.ui.model.EventUi
+import core.ui.model.FeedItemUi
 import core.ui.model.ProfileUiState
 import core.ui.model.ProfileUserUi
+import feature.map.MapFeature
 import feature.profile.ui.ProfileScreen
 
 object ProfileFeature : FeatureEntry {
@@ -21,30 +23,36 @@ object ProfileFeature : FeatureEntry {
         onNavigateUp: () -> Unit
     ) {
         // My Profile
-        navGraphBuilder.composable(route = "profile/me") {
+        navGraphBuilder.composable(route) {backStackEntry ->
+            val userId = "me"
             var selectedViewIsGrid by remember { mutableStateOf(false) }
-            
-            val sampleEvents = listOf(
-                EventUi(
+
+                val e1 = EventUi(
                     id = "1",
                     title = "Sample Event 1",
-                    subtitle = "Event subtitle",
+                    location = "Event subtitle",
+                    startsAt = "stAt",
                     description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor",
                     imageUrl = null,
                     rating = 5.0f,
                     reviewCount = 50
-                ),
-                EventUi(
-                    id = "2", 
+                )
+            val e2 = EventUi(
+                    id = "2",
                     title = "Sample Event 2",
-                    subtitle = "Another subtitle",
+                    location = "Another subtitle",
+                    startsAt = "stAt",
                     description = "Another description here",
                     imageUrl = null,
                     rating = 4.8f,
                     reviewCount = 32
                 )
+
+            val sampleItems = listOf(
+                FeedItemUi(id = "1", event = e1, timestamp = System.currentTimeMillis(), isPromoted = true),
+                FeedItemUi(id = "2", event = e2),
             )
-            
+
             val sampleUser = ProfileUserUi(
                 id = "me",
                 username = "username",
@@ -54,10 +62,10 @@ object ProfileFeature : FeatureEntry {
                 followers = 123,
                 following = 456
             )
-            
+
             val uiState = ProfileUiState(
                 user = sampleUser,
-                list = sampleEvents,
+                list = sampleItems,
                 isMe = true,
                 isFollowing = false,
                 selectedViewIsGrid = selectedViewIsGrid,
@@ -76,15 +84,17 @@ object ProfileFeature : FeatureEntry {
                     onNavigateToRoute("events/$eventId")
                 },
                 onOpenFollowers = {
-                    onNavigateToRoute("profile/followers")
+                    onNavigateToRoute("profile/$userId/followers")
                 },
                 onOpenFollowing = {
-                    onNavigateToRoute("profile/following")
+                    onNavigateToRoute("profile/$userId/following")
                 },
                 onToggleView = {
                     selectedViewIsGrid = !selectedViewIsGrid
                 },
-                onNavigateUp = onNavigateUp
+                onNavigateUp = onNavigateUp,
+                currentRoute = MapFeature.route,
+                onNavigate = onNavigateToRoute
             )
         }
 
@@ -96,16 +106,20 @@ object ProfileFeature : FeatureEntry {
             var isFollowing by remember { mutableStateOf(false) }
             var selectedViewIsGrid by remember { mutableStateOf(false) }
             
-            val sampleEvents = listOf(
-                EventUi(
+
+                val e1 = EventUi(
                     id = "1",
                     title = "User Event 1", 
-                    subtitle = "Event subtitle",
+                    location = "Event subtitle",
+                    startsAt = "stAt",
                     description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit",
                     imageUrl = null,
                     rating = 4.5f,
                     reviewCount = 25
                 )
+
+            val sampleItems = listOf(
+                FeedItemUi(id = "1", event = e1, timestamp = System.currentTimeMillis(), isPromoted = true),
             )
             
             val sampleUser = ProfileUserUi(
@@ -120,7 +134,7 @@ object ProfileFeature : FeatureEntry {
             
             val uiState = ProfileUiState(
                 user = sampleUser,
-                list = sampleEvents,
+                list = sampleItems,
                 isMe = false,
                 isFollowing = isFollowing,
                 selectedViewIsGrid = selectedViewIsGrid,
@@ -147,7 +161,9 @@ object ProfileFeature : FeatureEntry {
                 onToggleView = {
                     selectedViewIsGrid = !selectedViewIsGrid
                 },
-                onNavigateUp = onNavigateUp
+                onNavigateUp = onNavigateUp,
+                currentRoute = MapFeature.route,
+                onNavigate = onNavigateToRoute
             )
         }
     }

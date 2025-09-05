@@ -14,6 +14,11 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
+import org.springframework.data.web.PageableDefault
+
 @RestController
 @RequestMapping("/api/events")
 class EventController(
@@ -28,6 +33,15 @@ class EventController(
     @GetMapping("/{id}")
     fun get(@PathVariable id: Long): EventView = getEventById.handle(id)
 
+    //@GetMapping
+    //fun getAll(): List<EventView> = getAllEvents.handle()
+
     @GetMapping
-    fun getAll(): List<EventView> = getAllEvents.handle()
+    fun getAll(
+        @PageableDefault(
+            size = 20
+            //, sort = ["createdAt"], direction = Sort.Direction.DESC
+        )
+        pageable: Pageable
+    ): Page<EventView> = getAllEvents.handle(pageable)
 }

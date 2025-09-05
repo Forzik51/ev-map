@@ -7,8 +7,8 @@ import androidx.compose.runtime.setValue
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import core.navigation.FeatureEntry
-import feature.settings.ui.SettingsScreen
 import feature.settings.ui.ProfileEditScreen
+import feature.settings.ui.SettingsScreen
 
 object SettingsFeature : FeatureEntry {
     override val route = "settings"
@@ -29,6 +29,9 @@ object SettingsFeature : FeatureEntry {
                 onOpenOthers = {
                     // TODO: Navigate to others screen
                     // onNavigateToRoute("others")
+                },
+                onLogOut = {
+                    onNavigateToRoute("auth/login")
                 },
                 onBack = onNavigateUp
             )

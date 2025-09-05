@@ -9,7 +9,6 @@ import androidx.navigation.compose.composable
 import core.navigation.FeatureEntry
 import core.ui.model.EventUi
 import core.ui.model.ProfileUserUi
-import core.ui.model.UserUi
 import feature.explore.ui.ExploreScreen
 
 object ExploreFeature : FeatureEntry {
@@ -35,7 +34,8 @@ object ExploreFeature : FeatureEntry {
                             EventUi(
                                 id = "1",
                                 title = "List item",
-                                subtitle = "Category • ",
+                                location = "loc • ",
+                                startsAt = "startat",
                                 description = "Supporting line text lorem ipsum dolor sit amet, consectetur.",
                                 rating = 5.0f,
                                 imageUrl = "https://picsum.photos/200/300"
@@ -43,7 +43,8 @@ object ExploreFeature : FeatureEntry {
                             EventUi(
                                 id = "2", 
                                 title = "List item",
-                                subtitle = "Category • ",
+                                location = "loc • ",
+                                startsAt = "startat",
                                 description = "Supporting line text lorem ipsum dolor sit amet, consectetur.",
                                 rating = 5.0f,
                                 imageUrl = "https://picsum.photos/200/300"
@@ -51,7 +52,8 @@ object ExploreFeature : FeatureEntry {
                             EventUi(
                                 id = "3",
                                 title = "List item",
-                                subtitle = "Category • ", 
+                                location = "loc • ",
+                                startsAt = "startat",
                                 description = "Supporting line text lorem ipsum dolor sit amet, consectetur.",
                                 rating = 5.0f,
                                 imageUrl = "https://picsum.photos/200/300"
