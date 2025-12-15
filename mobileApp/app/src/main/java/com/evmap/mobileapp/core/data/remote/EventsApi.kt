@@ -3,6 +3,7 @@ package com.evmap.mobileapp.core.data.remote
 import com.evmap.mobileapp.core.data.dto.EventDto
 import com.evmap.mobileapp.core.data.dto.PageResponse
 import retrofit2.http.GET
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface EventsApi {
@@ -12,4 +13,9 @@ interface EventsApi {
         @Query("size") size: Int = 20,
         //@Query("sort") sort: String = "startsAt,desc"
     ): PageResponse<EventDto>
+
+    @GET("api/events/{id}")
+    suspend fun getEvent(
+        @Path("id") id: Long,
+    ): EventDto
 }

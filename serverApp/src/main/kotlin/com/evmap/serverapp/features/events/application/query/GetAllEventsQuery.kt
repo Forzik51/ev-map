@@ -13,5 +13,5 @@ class GetAllEventsQuery(
     //fun handle(): List<EventView> = readRepo.findAllViews()
 
     fun handle(pageable: Pageable): Page<EventView> =
-        readRepo.findAllViewsV2(pageable)
+        readRepo.findAllViews(pageable)
 }

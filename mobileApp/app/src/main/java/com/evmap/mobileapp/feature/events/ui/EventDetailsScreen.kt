@@ -10,77 +10,25 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import core.designsystem.AppTheme
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.evmap.mobileapp.feature.events.ui.EventViewModel
 import core.designsystem.Spacing
 import core.ui.components.AppBottomBar
-import core.ui.components.CategoryChip
-import core.ui.components.ChipsFlowRow
-import core.ui.model.EventDetailsUi
-import core.ui.model.EventUi
 import feature.events.ui.components.MediaHeader
-
-
-@Preview(showBackground = true, widthDp = 412, heightDp = 892)
-@Composable
-private fun EventDetailsScreenPreview() {
-    // Minimal sample EventUi – adjust if your EventUi has more required fields
-    val sampleEvent = EventUi(
-        id = "e1",
-        title = "Jazz in the Park",
-        location = "Łazienki Królewskie",
-        startsAt = "startat",
-        description = "An evening of live jazz under the stars.",
-        imageUrl = "https://picsum.photos/800/400",
-        rating = 4.7F,
-        reviewCount = 256
-    )
-
-    val sampleUi = EventDetailsUi(
-        event = sampleEvent,
-        gallery = listOf(
-            "https://picsum.photos/900/600?1",
-            "https://picsum.photos/900/600?2",
-            "https://picsum.photos/900/600?3"
-        ),
-        fullDescription = "Longer description for preview purposes. " +
-                "Bring a blanket and enjoy live performances from local artists.",
-        location = "Warsaw, Poland",
-        date = "Aug 24, 2025 • 19:00",
-        categories = listOf("Music", "Outdoor", "Family"),
-        viewCount = 1342,
-        likeCount = 240,
-        organizerName = "City of Warsaw",
-        organizerId = "org_waw"
-    )
-
-    AppTheme {
-        EventDetailsScreen(
-            ui = sampleUi,
-            currentRoute = "events",
-            onBack = {},
-            onShare = {},
-            onOpenMap = {},
-            onOpenOrganizer = {},
-            onOpenCategory = {},
-            onNavigate = {},
-            modifier = Modifier
-        )
-    }
-}
-
-
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventDetailsScreen(
-    ui: EventDetailsUi,
+    eventId: Long,
+    //ui: EventDetailsUi,
     currentRoute: String?,
     onBack: () -> Unit,
     onShare: () -> Unit,
@@ -88,8 +36,21 @@ fun EventDetailsScreen(
     onOpenOrganizer: () -> Unit,
     onOpenCategory: (String) -> Unit,
     onNavigate: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    vm: EventViewModel = hiltViewModel()
 ) {
+    val state by vm.state.collectAsState()
+
+    LaunchedEffect(eventId) {
+        vm.load(eventId)
+    }
+
+    when {
+        state.loading -> Text("Loading...")
+        state.error != null -> Text("Error: ${state.error}")
+        state.event != null -> Text("Title: ${state.event!!.description}")
+    }
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
@@ -136,7 +97,7 @@ fun EventDetailsScreen(
             // Media Header (read-only gallery)
             item {
                 MediaHeader(
-                    media = ui.gallery,
+                    media = emptyList(),
                     onAddClick = null, // Read-only, no add functionality
                     onRemoveAt = null, // Read-only, no remove functionality
                     modifier = Modifier.padding(horizontal = Spacing.s)
@@ -151,17 +112,17 @@ fun EventDetailsScreen(
                         .padding(horizontal = Spacing.m)
                 ) {
                     Text(
-                        text = ui.event.title,
+                        text = "Error: ${state.error}",
                         style = MaterialTheme.typography.headlineSmall,
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
 
-                    ui.event.location.let { subtitle ->
+                    state.event?.locationName.let { subtitle ->
                         Spacer(modifier = Modifier.height(Spacing.xs))
                         Text(
-                            text = subtitle,
+                            text = subtitle ?: "none subtitle",
                             style = MaterialTheme.typography.titleSmall,
                             color = MaterialTheme.colorScheme.onSurface,
                             maxLines = 1,
@@ -190,7 +151,7 @@ fun EventDetailsScreen(
                     Spacer(modifier = Modifier.width(Spacing.s))
                     
                     Text(
-                        text = ui.event.rating?.toString() ?: "5.0",
+                        text = /*state.event.rating?.toString() ?:*/ "5.0",
                         style = MaterialTheme.typography.labelLarge,
                         color = Color.Black
                     )
@@ -218,7 +179,7 @@ fun EventDetailsScreen(
                     Spacer(modifier = Modifier.width(Spacing.s))
                     
                     Text(
-                        text = ui.event.reviewCount?.toString() ?: "50",
+                        text = /*state.event.reviewCount?.toString() ?:*/ "50",
                         style = MaterialTheme.typography.labelLarge,
                         color = Color.Black
                     )
@@ -226,7 +187,7 @@ fun EventDetailsScreen(
                     Spacer(modifier = Modifier.width(Spacing.m))
                     
                     // Views/Likes if present
-                    ui.viewCount?.let { views ->
+                    state.event?.id.let { views ->
                         Text(
                             text = "$views views",
                             style = MaterialTheme.typography.bodyMedium,
@@ -234,8 +195,8 @@ fun EventDetailsScreen(
                         )
                         Spacer(modifier = Modifier.width(Spacing.s))
                     }
-                    
-                    ui.likeCount?.let { likes ->
+
+                    state.event?.id.let { likes ->
                         Text(
                             text = "$likes likes",
                             style = MaterialTheme.typography.bodyMedium,
@@ -252,7 +213,7 @@ fun EventDetailsScreen(
                         .fillMaxWidth()
                         .padding(horizontal = Spacing.m)
                 ) {
-                    ui.location?.let { location ->
+                    state.event?.locationName.let { location ->
                         Row(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -264,14 +225,14 @@ fun EventDetailsScreen(
                             )
                             Spacer(modifier = Modifier.width(Spacing.xs))
                             Text(
-                                text = location,
+                                text = location.toString(),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
                     
-                    ui.date?.let { date ->
+                    state.event?.startsAt.let { date ->
                         Spacer(modifier = Modifier.height(Spacing.xs))
                         Text(
                             text = "Date $date",
@@ -283,7 +244,7 @@ fun EventDetailsScreen(
             }
             
             // Categories
-            if (ui.categories.isNotEmpty()) {
+            /*if (state.event.categories.isNotEmpty()) {
                 item {
                     Column(
                         modifier = Modifier
@@ -309,7 +270,7 @@ fun EventDetailsScreen(
                         }
                     }
                 }
-            }
+            }*/
             
             // Long Description
             item {
@@ -318,7 +279,7 @@ fun EventDetailsScreen(
                         .fillMaxWidth()
                         .padding(horizontal = Spacing.m)
                 ) {
-                    val description = ui.fullDescription ?: ui.event.description
+                    val description = state.event?.description ?: "ui.event.description"
                     description.let {
                         Text(
                             text = "Description",

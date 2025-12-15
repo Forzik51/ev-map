@@ -10,9 +10,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import core.navigation.FeatureEntry
-import core.ui.model.EventDetailsUi
 import core.ui.model.EventDraftUi
-import core.ui.model.EventUi
 import feature.events.ui.EventCreateScreen
 import feature.events.ui.EventDetailsScreen
 import java.text.SimpleDateFormat
@@ -22,7 +20,7 @@ object EventsFeature : FeatureEntry {
     override val route = "events"
     
     const val List = "events/list"
-    const val Details = "events/{eventId}?preview={preview}"
+    const val Details = "events/{eventId}"
     const val Create = "events/create"
     
     override fun registerGraph(
@@ -48,12 +46,13 @@ object EventsFeature : FeatureEntry {
 
             composable(
                 route = Details,
-                arguments = listOf(navArgument("eventId") { type = NavType.StringType })
+                arguments = listOf(navArgument("eventId") { type = NavType.LongType })
             ) { backStackEntry ->
-                val eventId = checkNotNull(backStackEntry.arguments?.getString("eventId"))
+                val eventId = checkNotNull(backStackEntry.arguments?.getLong("eventId"))
 
                 EventDetailsScreen(
-                    ui = EventDetailsUi(
+                    eventId = eventId,
+                    /*ui = EventDetailsUi(
                         event = EventUi(
                             id = eventId,
                             title = "Event $eventId",
@@ -73,7 +72,7 @@ object EventsFeature : FeatureEntry {
                         likeCount = null,
                         organizerName = null,
                         organizerId = null
-                    ),
+                    ),*/
                     currentRoute = EventsFeature.route,
                     onBack = onNavigateUp,
                     onShare = {},

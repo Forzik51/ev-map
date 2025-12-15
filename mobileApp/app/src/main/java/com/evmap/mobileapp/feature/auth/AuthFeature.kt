@@ -114,7 +114,7 @@ object AuthFeature : FeatureEntry {
                 onToggleShowNew = { showNew = !showNew },
                 onToggleShowConfirm = { showConfirm = !showConfirm },
                 onCreate = {
-                    onNavigateUp()
+                    onNavigateToRoute(route)
                 }
             )
         }
