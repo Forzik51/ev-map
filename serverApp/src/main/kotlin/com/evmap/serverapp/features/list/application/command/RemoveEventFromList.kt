@@ -1,4 +1,13 @@
 package com.evmap.serverapp.features.list.application.command
 
-class RemoveEventFromList {
+import com.evmap.serverapp.features.list.domian.ListRepositoryPort
+import org.springframework.stereotype.Service
+
+@Service
+class RemoveEventFromList(
+    private val repo: ListRepositoryPort,
+) {
+    fun handle(listId: Long, eventId: Long) {
+        repo.removeEvent(listId, eventId)
+    }
 }

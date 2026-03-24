@@ -1,9 +1,9 @@
-package com.evmap.serverapp.features.user.domian
+package com.evmap.serverapp.features.report.domian
 
-data class Report (
+data class Report(
     val id: Long? = null,
-    val username: String,
     val description: String,
-    val followers: Int,
-    val following: Int,
+    val eventId: Long,
+    val categoryId: Long,
+    val userId: Long,
 )

@@ -1,9 +1,6 @@
-package com.evmap.serverapp.features.user.domian
+package com.evmap.serverapp.features.chat.domian
 
-data class Chat (
+data class Chat(
     val id: Long? = null,
-    val username: String,
-    val description: String,
-    val followers: Int,
-    val following: Int,
+    val name: String,
 )

@@ -1,14 +1,37 @@
 package com.evmap.serverapp.features.user.api.dto
 
-import java.time.Instant
+import jakarta.validation.constraints.Email
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Pattern
+import jakarta.validation.constraints.Size
+import java.time.LocalDate
 
-data class CreateUser (
+data class CreateUser(
+    @field:NotBlank
+    @field:Size(max = 20)
     val name: String,
-    val surname: String,
+
+    @field:Size(max = 20)
+    val surname: String?,
+
+    @field:Email
+    @field:Size(max = 254)
     val email: String,
+
+    @field:Pattern(regexp = "^[+0-9 ()-]{7,15}$")
     val phone: String,
-    val dateOfBirth: Instant,
+
+    val dateOfBirth: LocalDate,
+
+    @field:NotBlank
+    @field:Size(max = 20)
     val username: String,
-    val description: String,
-    val passwd: String,
+
+    @field:NotBlank
+    @field:Size(max = 150)
+    val pageDescription: String,
+
+    @field:NotBlank
+    @field:Size(min = 6, max = 255)
+    val password: String,
 )

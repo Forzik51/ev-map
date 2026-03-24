@@ -1,8 +1,14 @@
-package com.evmap.serverapp.features.user.api.dto
+package com.evmap.serverapp.features.list.api.dto
 
-data class CreateList (
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Positive
+import jakarta.validation.constraints.Size
 
-    val username: String,
-    val description: String,
-    val passwd: String,
+data class CreateList(
+    @field:NotBlank
+    @field:Size(max = 20)
+    val name: String,
+
+    @field:Positive
+    val userId: Long,
 )

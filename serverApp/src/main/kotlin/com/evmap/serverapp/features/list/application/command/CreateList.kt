@@ -1,21 +1,17 @@
-package com.evmap.serverapp.features.user.application.command
+package com.evmap.serverapp.features.list.application.command
 
-import com.evmap.serverapp.features.user.domian.Chat
-import com.evmap.serverapp.features.user.domian.ChatRepositoryPort
+import com.evmap.serverapp.features.list.api.dto.CreateList as CreateListRequest
+import com.evmap.serverapp.features.list.domian.ListRepositoryPort
+import com.evmap.serverapp.features.list.domian.UserList
 import org.springframework.stereotype.Service
-import java.time.Instant
-
 
 @Service
-class CreateList(private val repo: ChatRepositoryPort) {
-    fun handle(dto: CreateChat): Long =
+class CreateList(private val repo: ListRepositoryPort) {
+    fun handle(dto: CreateListRequest): Long =
         repo.save(
-            Chat(
-
+            UserList(
                 name = dto.name,
-                description = dto.description,
-                startsAt = Instant.parse(dto.startsAt),
-                locationId = dto.locationId
+                userId = dto.userId,
             )
         )
 }

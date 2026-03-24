@@ -1,6 +1,7 @@
-package com.evmap.serverapp.features.user.domian
-
+package com.evmap.serverapp.features.report.domian
 
 interface ReportRepositoryPort {
-    fun save(event: Chat): Long
+    fun save(report: Report): Long
+    fun delete(reportId: Long)
+    fun updateStatus(reportId: Long, status: String)
 }

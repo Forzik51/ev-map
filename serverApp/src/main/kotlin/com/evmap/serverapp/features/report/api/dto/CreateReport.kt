@@ -1,14 +1,20 @@
-package com.evmap.serverapp.features.user.api.dto
+package com.evmap.serverapp.features.report.api.dto
 
-import java.time.Instant
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Positive
+import jakarta.validation.constraints.Size
 
-data class CreateReport (
-    val name: String,
-    val surname: String,
-    val email: String,
-    val phone: String,
-    val dateOfBirth: Instant,
-    val username: String,
+data class CreateReport(
+    @field:NotBlank
+    @field:Size(max = 100)
     val description: String,
-    val passwd: String,
+
+    @field:Positive
+    val eventId: Long,
+
+    @field:Positive
+    val categoryId: Long,
+
+    @field:Positive
+    val userId: Long,
 )

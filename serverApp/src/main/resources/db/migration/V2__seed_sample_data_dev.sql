@@ -123,26 +123,45 @@ INSERT INTO decyzja (id, opis, blokowanie, moderator_osoba_id, skarga_id) VALUES
     (1, 'Zablokowano komentarze pod wydarzeniem na 7 dni.', '2025-09-01 12:00:00', 5, 1);
 
 -- MAX(id) w każdej tabeli z kolumną serial
-SELECT setval(pg_get_serial_sequence('chat','id'),                 COALESCE((SELECT MAX(id) FROM chat), 1), true);
-SELECT setval(pg_get_serial_sequence('kategoria','id'),           COALESCE((SELECT MAX(id) FROM kategoria), 1), true);
-SELECT setval(pg_get_serial_sequence('kategoria_skarga','id'),    COALESCE((SELECT MAX(id) FROM kategoria_skarga), 1), true);
-SELECT setval(pg_get_serial_sequence('kategoria_wydarzenie','id'),COALESCE((SELECT MAX(id) FROM kategoria_wydarzenie), 1), true);
-SELECT setval(pg_get_serial_sequence('komentarz','id'),           COALESCE((SELECT MAX(id) FROM komentarz), 1), true);
-SELECT setval(pg_get_serial_sequence('lista_upodobanych','id'),   COALESCE((SELECT MAX(id) FROM lista_upodobanych), 1), true);
-SELECT setval(pg_get_serial_sequence('lokalizacja','id'),         COALESCE((SELECT MAX(id) FROM lokalizacja), 1), true);
-SELECT setval(pg_get_serial_sequence('moderator','osoba_id'),     COALESCE((SELECT MAX(osoba_id) FROM moderator), 1), true);
-SELECT setval(pg_get_serial_sequence('obserwowanie','id'),        COALESCE((SELECT MAX(id) FROM obserwowanie), 1), true);
-SELECT setval(pg_get_serial_sequence('ocena','id'),               COALESCE((SELECT MAX(id) FROM ocena), 1), true);
-SELECT setval(pg_get_serial_sequence('osoba','id'),               COALESCE((SELECT MAX(id) FROM osoba), 1), true);
-SELECT setval(pg_get_serial_sequence('powiadomienie','id'),       COALESCE((SELECT MAX(id) FROM powiadomienie), 1), true);
-SELECT setval(pg_get_serial_sequence('promowanie','id'),          COALESCE((SELECT MAX(id) FROM promowanie), 1), true);
-SELECT setval(pg_get_serial_sequence('repost','id'),              COALESCE((SELECT MAX(id) FROM repost), 1), true);
-SELECT setval(pg_get_serial_sequence('skarga','id'),              COALESCE((SELECT MAX(id) FROM skarga), 1), true);
-SELECT setval(pg_get_serial_sequence('uzytkownik_chat','id'),     COALESCE((SELECT MAX(id) FROM uzytkownik_chat), 1), true);
-SELECT setval(pg_get_serial_sequence('uzytkownik','osoba_id'),    COALESCE((SELECT MAX(osoba_id) FROM uzytkownik), 1), true);
-SELECT setval(pg_get_serial_sequence('wydarzenie','id'),          COALESCE((SELECT MAX(id) FROM wydarzenie), 1), true);
-SELECT setval(pg_get_serial_sequence('zdjecie','id'),             COALESCE((SELECT MAX(id) FROM zdjecie), 1), true);
-SELECT setval(pg_get_serial_sequence('firma','id'),               COALESCE((SELECT MAX(id) FROM firma), 1), true);
-SELECT setval(pg_get_serial_sequence('decyzja','id'),             COALESCE((SELECT MAX(id) FROM decyzja), 1), true);
+DO $$
+DECLARE
+    seq_name text;
+    max_id bigint;
+    rec record;
+BEGIN
+    FOR rec IN
+        SELECT * FROM (
+            VALUES
+                ('chat', 'id'),
+                ('kategoria', 'id'),
+                ('kategoria_skarga', 'id'),
+                ('kategoria_wydarzenie', 'id'),
+                ('komentarz', 'id'),
+                ('lista_upodobanych', 'id'),
+                ('lokalizacja', 'id'),
+                ('moderator', 'osoba_id'),
+                ('obserwowanie', 'id'),
+                ('ocena', 'id'),
+                ('osoba', 'id'),
+                ('powiadomienie', 'id'),
+                ('promowanie', 'id'),
+                ('repost', 'id'),
+                ('skarga', 'id'),
+                ('uzytkownik_chat', 'id'),
+                ('uzytkownik', 'osoba_id'),
+                ('wydarzenie', 'id'),
+                ('zdjecie', 'id'),
+                ('firma', 'id'),
+                ('decyzja', 'id')
+        ) AS t(table_name, column_name)
+    LOOP
+        seq_name := pg_get_serial_sequence(rec.table_name, rec.column_name);
+        IF seq_name IS NOT NULL THEN
+            EXECUTE format('SELECT COALESCE(MAX(%I), 1) FROM %I', rec.column_name, rec.table_name) INTO max_id;
+            EXECUTE format('SELECT setval(%L, %s, true)', seq_name, max_id);
+        END IF;
+    END LOOP;
+END
+$$;
 
 COMMIT;

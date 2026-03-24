@@ -1,4 +1,8 @@
-package com.evmap.serverapp.features.user.api.dto
+package com.evmap.serverapp.features.chat.api.dto
 
-class ViewChat {
-}
+data class ViewChat(
+    val id: Long,
+    val name: String,
+    val usersCount: Int,
+    val lastMessageAt: String?,
+)

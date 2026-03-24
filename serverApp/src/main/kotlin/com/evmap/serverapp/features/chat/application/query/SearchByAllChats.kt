@@ -1,4 +1,12 @@
 package com.evmap.serverapp.features.chat.application.query
 
-class SearchByAllChats {
+import com.evmap.serverapp.features.chat.api.dto.ViewChat
+import com.evmap.serverapp.features.chat.infra.read.ChatReadRepository
+import org.springframework.stereotype.Service
+
+@Service
+class SearchByAllChats(
+    private val readRepo: ChatReadRepository,
+) {
+    fun handle(query: String): List<ViewChat> = readRepo.searchByAllChats(query)
 }

@@ -1,4 +1,8 @@
-package com.evmap.serverapp.features.user.api.dto
+package com.evmap.serverapp.features.list.api.dto
 
-class ViewList {
-}
+data class ViewList(
+    val id: Long,
+    val name: String,
+    val userId: Long,
+    val eventsCount: Int,
+)

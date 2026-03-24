@@ -1,4 +1,13 @@
-package com.evmap.serverapp.features.user.application.command
+package com.evmap.serverapp.features.chat.application.command
 
-class DeleteChat {
+import com.evmap.serverapp.features.chat.domian.ChatRepositoryPort
+import org.springframework.stereotype.Service
+
+@Service
+class DeleteChat(
+    private val repo: ChatRepositoryPort,
+) {
+    fun handle(chatId: Long) {
+        repo.delete(chatId)
+    }
 }

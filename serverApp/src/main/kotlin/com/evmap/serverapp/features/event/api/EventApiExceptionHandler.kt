@@ -1,5 +1,6 @@
 package com.evmap.serverapp.features.event.api
 
+import com.evmap.serverapp.features.event.api.controller.EventController
 import com.evmap.serverapp.features.event.application.EventNotFoundException
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.ExceptionHandler

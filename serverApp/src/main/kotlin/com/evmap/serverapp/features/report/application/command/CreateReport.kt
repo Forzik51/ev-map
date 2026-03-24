@@ -1,21 +1,19 @@
-package com.evmap.serverapp.features.user.application.command
+package com.evmap.serverapp.features.report.application.command
 
-import com.evmap.serverapp.features.user.domian.Chat
-import com.evmap.serverapp.features.user.domian.ChatRepositoryPort
+import com.evmap.serverapp.features.report.api.dto.CreateReport as CreateReportRequest
+import com.evmap.serverapp.features.report.domian.Report
+import com.evmap.serverapp.features.report.domian.ReportRepositoryPort
 import org.springframework.stereotype.Service
-import java.time.Instant
-
 
 @Service
-class CreateReport(private val repo: ChatRepositoryPort) {
-    fun handle(dto: CreateChat): Long =
+class CreateReport(private val repo: ReportRepositoryPort) {
+    fun handle(dto: CreateReportRequest): Long =
         repo.save(
-            Chat(
-
-                name = dto.name,
+            Report(
                 description = dto.description,
-                startsAt = Instant.parse(dto.startsAt),
-                locationId = dto.locationId
+                eventId = dto.eventId,
+                categoryId = dto.categoryId,
+                userId = dto.userId,
             )
         )
 }

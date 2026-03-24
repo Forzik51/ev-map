@@ -1,9 +1,7 @@
-package com.evmap.serverapp.features.user.domian
+package com.evmap.serverapp.features.list.domian
 
-data class List (
+data class UserList(
     val id: Long? = null,
-    val username: String,
-    val description: String,
-    val followers: Int,
-    val following: Int,
+    val name: String,
+    val userId: Long,
 )

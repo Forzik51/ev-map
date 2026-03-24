@@ -1,23 +1,33 @@
 package com.evmap.serverapp.features.event.api
 
-import com.evmap.serverapp.features.event.api.dto.CreateEvent
+import com.evmap.serverapp.features.event.api.controller.EventController
+import com.evmap.serverapp.features.event.api.dto.CreateEvent as CreateEventRequest
 import com.evmap.serverapp.features.event.application.EventNotFoundException
-import com.evmap.serverapp.features.event.application.command.CreateEvent
+import com.evmap.serverapp.features.event.application.command.AddComment
+import com.evmap.serverapp.features.event.application.command.AddReaction
+import com.evmap.serverapp.features.event.application.command.AddShare
+import com.evmap.serverapp.features.event.application.command.CreateEvent as CreateEventCommand
+import com.evmap.serverapp.features.event.application.command.DeleteEvent
+import com.evmap.serverapp.features.event.application.command.RemoveShare
+import com.evmap.serverapp.features.event.application.command.UpdateEvent
 import com.evmap.serverapp.features.event.application.query.GetAllEventsByUser
 import com.evmap.serverapp.features.event.application.query.GetEventById
+import com.evmap.serverapp.features.event.application.query.GetEventsLine
 import org.junit.jupiter.api.Test
-import org.mockito.ArgumentMatchers
 import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import java.time.Instant
 
 @WebMvcTest(controllers = [EventController::class])
 @Import(EventApiExceptionHandler::class)
@@ -27,19 +37,45 @@ class EventControllerTest {
     lateinit var mockMvc: MockMvc
 
     @MockBean
-    lateinit var createEvent: CreateEvent
+    lateinit var createEvent: CreateEventCommand
 
     @MockBean
     lateinit var getEventById: GetEventById
 
     @MockBean
-    lateinit var getAllEvents: GetAllEventsByUser
+    lateinit var getAllEventsByUser: GetAllEventsByUser
+
+    @MockBean
+    lateinit var getEventsLine: GetEventsLine
+
+    @MockBean
+    lateinit var updateEvent: UpdateEvent
+
+    @MockBean
+    lateinit var deleteEvent: DeleteEvent
+
+    @MockBean
+    lateinit var addComment: AddComment
+
+    @MockBean
+    lateinit var addReaction: AddReaction
+
+    @MockBean
+    lateinit var addShare: AddShare
+
+    @MockBean
+    lateinit var removeShare: RemoveShare
 
     @Test
     fun `create should return 201 for valid payload`() {
-        Mockito.doReturn(123L)
-            .`when`(createEvent)
-            .handle(ArgumentMatchers.any(CreateEvent::class.java))
+        val expected = CreateEventRequest(
+            name = "Test event",
+            description = "Test description",
+            startsAt = Instant.parse("2026-03-22T10:00:00Z"),
+            locationId = 1L
+        )
+
+        Mockito.`when`(createEvent.handle(expected)).thenReturn(123L)
 
         val body = """
             {
@@ -52,6 +88,8 @@ class EventControllerTest {
 
         mockMvc.perform(
             post("/api/events")
+                .with(user("test-user"))
+                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body)
         )
@@ -71,6 +109,8 @@ class EventControllerTest {
 
         mockMvc.perform(
             post("/api/events")
+                .with(user("test-user"))
+                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body)
         )
@@ -90,6 +130,8 @@ class EventControllerTest {
 
         mockMvc.perform(
             post("/api/events")
+                .with(user("test-user"))
+                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body)
         )
@@ -102,7 +144,7 @@ class EventControllerTest {
             .`when`(getEventById)
             .handle(99L)
 
-        mockMvc.perform(get("/api/events/99"))
+        mockMvc.perform(get("/api/events/99").with(user("test-user")))
             .andExpect(status().isNotFound)
             .andExpect(jsonPath("$.message").value("Event 99 not found"))
     }

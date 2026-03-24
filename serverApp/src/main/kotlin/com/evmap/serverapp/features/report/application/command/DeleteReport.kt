@@ -1,4 +1,13 @@
-package com.evmap.serverapp.features.user.application.command
+package com.evmap.serverapp.features.report.application.command
 
-class DeleteReport {
+import com.evmap.serverapp.features.report.domian.ReportRepositoryPort
+import org.springframework.stereotype.Service
+
+@Service
+class DeleteReport(
+    private val repo: ReportRepositoryPort,
+) {
+    fun handle(reportId: Long) {
+        repo.delete(reportId)
+    }
 }
