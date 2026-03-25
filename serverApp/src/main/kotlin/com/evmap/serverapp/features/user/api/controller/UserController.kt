@@ -2,11 +2,13 @@ package com.evmap.serverapp.features.user.api.controller
 
 import com.evmap.serverapp.features.user.api.dto.CreateUser
 import com.evmap.serverapp.features.user.api.dto.ViewUser
+import com.evmap.serverapp.features.user.api.dto.ViewUserShort
 import com.evmap.serverapp.features.user.application.command.CreateUser as CreateUserCommand
 import com.evmap.serverapp.features.user.application.command.DeleteUser
 import com.evmap.serverapp.features.user.application.command.EditUserInfo
 import com.evmap.serverapp.features.user.application.command.FollowUser
 import com.evmap.serverapp.features.user.application.command.UnfollowUser
+import com.evmap.serverapp.features.user.application.query.GetAllUsers
 import com.evmap.serverapp.features.user.application.query.GetFollowedUserById
 import com.evmap.serverapp.features.user.application.query.GetFollowingUserById
 import com.evmap.serverapp.features.user.application.query.GetUserById
@@ -31,6 +33,7 @@ class UserController(
     private val editUserInfo: EditUserInfo,
     private val followUser: FollowUser,
     private val unfollowUser: UnfollowUser,
+    private val getAllUsers: GetAllUsers,
     private val getUserById: GetUserById,
     private val getFollowedUserById: GetFollowedUserById,
     private val getFollowingUserById: GetFollowingUserById,
@@ -39,14 +42,17 @@ class UserController(
     @ResponseStatus(HttpStatus.CREATED)
     fun create(@Valid @RequestBody dto: CreateUser): Long = createUser.handle(dto)
 
+    @GetMapping
+    fun getAll(): List<ViewUser> = getAllUsers.handle()
+
     @GetMapping("/{userId}")
     fun getById(@PathVariable userId: Long): ViewUser = getUserById.handle(userId)
 
     @GetMapping("/{userId}/followers")
-    fun getFollowers(@PathVariable userId: Long): List<ViewUser> = getFollowedUserById.handle(userId)
+    fun getFollowers(@PathVariable userId: Long): List<ViewUserShort> = getFollowedUserById.handle(userId)
 
     @GetMapping("/{userId}/following")
-    fun getFollowing(@PathVariable userId: Long): List<ViewUser> = getFollowingUserById.handle(userId)
+    fun getFollowing(@PathVariable userId: Long): List<ViewUserShort> = getFollowingUserById.handle(userId)
 
     @PatchMapping("/{userId}/description")
     @ResponseStatus(HttpStatus.NO_CONTENT)

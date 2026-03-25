@@ -1,10 +1,12 @@
 package com.evmap.serverapp.features.report.api.controller
 
 import com.evmap.serverapp.features.report.api.dto.CreateReport
+import com.evmap.serverapp.features.report.api.dto.ViewReportCategory
 import com.evmap.serverapp.features.report.api.dto.ViewReport
 import com.evmap.serverapp.features.report.application.command.CreateReport as CreateReportCommand
 import com.evmap.serverapp.features.report.application.command.DeleteReport
 import com.evmap.serverapp.features.report.application.command.EditReportStatus
+import com.evmap.serverapp.features.report.application.query.GetAllReportCategories
 import com.evmap.serverapp.features.report.application.query.GetAllReports
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
@@ -25,11 +27,15 @@ class ReportController(
     private val createReport: CreateReportCommand,
     private val deleteReport: DeleteReport,
     private val editReportStatus: EditReportStatus,
+    private val getAllReportCategories: GetAllReportCategories,
     private val getAllReports: GetAllReports,
 ) {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     fun create(@Valid @RequestBody dto: CreateReport): Long = createReport.handle(dto)
+
+    @GetMapping("/categories")
+    fun getAllCategories(): List<ViewReportCategory> = getAllReportCategories.handle()
 
     @GetMapping
     fun getAll(): List<ViewReport> = getAllReports.handle()

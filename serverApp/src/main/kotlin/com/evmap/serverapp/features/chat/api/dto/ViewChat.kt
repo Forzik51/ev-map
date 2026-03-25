@@ -5,4 +5,5 @@ data class ViewChat(
     val name: String,
     val usersCount: Int,
     val lastMessageAt: String?,
+    val userIds: List<Long>,
 )

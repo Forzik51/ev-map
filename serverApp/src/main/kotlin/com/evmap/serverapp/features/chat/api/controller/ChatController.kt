@@ -8,6 +8,7 @@ import com.evmap.serverapp.features.chat.application.command.CreateChat as Creat
 import com.evmap.serverapp.features.chat.application.command.DeleteChat
 import com.evmap.serverapp.features.chat.application.command.DeleteUserFromChat
 import com.evmap.serverapp.features.chat.application.command.SendMessage
+import com.evmap.serverapp.features.chat.application.query.GetAllChats
 import com.evmap.serverapp.features.chat.application.query.GetAllChatsByUserId
 import com.evmap.serverapp.features.chat.application.query.GetChatInfo
 import com.evmap.serverapp.features.chat.application.query.GetMessagesByChatId
@@ -35,6 +36,7 @@ class ChatController(
     private val deleteChat: DeleteChat,
     private val deleteUserFromChat: DeleteUserFromChat,
     private val sendMessage: SendMessage,
+    private val getAllChats: GetAllChats,
     private val getAllChatsByUserId: GetAllChatsByUserId,
     private val getChatInfo: GetChatInfo,
     private val getMessagesByChatId: GetMessagesByChatId,
@@ -45,17 +47,20 @@ class ChatController(
     @ResponseStatus(HttpStatus.CREATED)
     fun create(@Valid @RequestBody dto: CreateChat): Long = createChat.handle(dto)
 
+    @GetMapping("/all")
+    fun getAll(): List<ViewChat> = getAllChats.handle()
+
     @GetMapping
-    fun getAllByUser(@RequestParam userId: Long): List<ViewChat> = getAllChatsByUserId.handle(userId)
+    fun getAllByUserId(@RequestParam userId: Long): List<ViewChat> = getAllChatsByUserId.handle(userId)
 
     @GetMapping("/{chatId}")
-    fun getById(@PathVariable chatId: Long): ViewChat = getChatInfo.handle(chatId)
+    fun getInfoById(@PathVariable chatId: Long): ViewChat = getChatInfo.handle(chatId)
 
     @GetMapping("/{chatId}/messages")
     fun getMessages(@PathVariable chatId: Long): List<String> = getMessagesByChatId.handle(chatId)
 
     @GetMapping("/search")
-    fun searchAll(@RequestParam query: String): List<ViewChat> = searchByAllChats.handle(query)
+    fun searchByChatName(@RequestParam query: String): List<ViewChat> = searchByAllChats.handle(query)
 
     @GetMapping("/{chatId}/search")
     fun searchInChat(

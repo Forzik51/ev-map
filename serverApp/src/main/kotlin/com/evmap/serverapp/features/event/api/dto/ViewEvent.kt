@@ -5,5 +5,10 @@ data class ViewEvent(
     val name: String,
     val description: String,
     val startsAt: String,
-    val locationName: String?
+    val endsAt: String?,
+    val locationName: String?,
+    val userId: Long,
+    val repostsCount: Int,
+    val ratingsCount: Int,
+    val commentsCount: Int,
 )

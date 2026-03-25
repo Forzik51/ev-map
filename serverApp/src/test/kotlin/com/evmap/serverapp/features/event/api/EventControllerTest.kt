@@ -10,9 +10,12 @@ import com.evmap.serverapp.features.event.application.command.CreateEvent as Cre
 import com.evmap.serverapp.features.event.application.command.DeleteEvent
 import com.evmap.serverapp.features.event.application.command.RemoveShare
 import com.evmap.serverapp.features.event.application.command.UpdateEvent
+import com.evmap.serverapp.features.event.application.query.GetAllEventCategories
 import com.evmap.serverapp.features.event.application.query.GetAllEventsByUser
+import com.evmap.serverapp.features.event.application.query.GetCommentsByEventId
 import com.evmap.serverapp.features.event.application.query.GetEventById
 import com.evmap.serverapp.features.event.application.query.GetEventsLine
+import com.evmap.serverapp.features.event.application.query.GetReactionsByEventId
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
@@ -40,6 +43,9 @@ class EventControllerTest {
     lateinit var createEvent: CreateEventCommand
 
     @MockBean
+    lateinit var getAllEventCategories: GetAllEventCategories
+
+    @MockBean
     lateinit var getEventById: GetEventById
 
     @MockBean
@@ -47,6 +53,12 @@ class EventControllerTest {
 
     @MockBean
     lateinit var getEventsLine: GetEventsLine
+
+    @MockBean
+    lateinit var getCommentsByEventId: GetCommentsByEventId
+
+    @MockBean
+    lateinit var getReactionsByEventId: GetReactionsByEventId
 
     @MockBean
     lateinit var updateEvent: UpdateEvent
@@ -72,7 +84,8 @@ class EventControllerTest {
             name = "Test event",
             description = "Test description",
             startsAt = Instant.parse("2026-03-22T10:00:00Z"),
-            locationId = 1L
+            locationId = 1L,
+            userId = 1L,
         )
 
         Mockito.`when`(createEvent.handle(expected)).thenReturn(123L)
@@ -82,7 +95,8 @@ class EventControllerTest {
               "name": "Test event",
               "description": "Test description",
               "startsAt": "2026-03-22T10:00:00Z",
-              "locationId": 1
+              "locationId": 1,
+              "userId": 1
             }
         """.trimIndent()
 
@@ -103,7 +117,8 @@ class EventControllerTest {
               "name": "   ",
               "description": "Test description",
               "startsAt": "2026-03-22T10:00:00Z",
-              "locationId": 1
+              "locationId": 1,
+              "userId": 1
             }
         """.trimIndent()
 
@@ -124,7 +139,8 @@ class EventControllerTest {
               "name": "Test event",
               "description": "Test description",
               "startsAt": "not-an-instant",
-              "locationId": 1
+              "locationId": 1,
+              "userId": 1
             }
         """.trimIndent()
 

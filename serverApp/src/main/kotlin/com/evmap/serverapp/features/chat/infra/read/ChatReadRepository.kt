@@ -16,7 +16,8 @@ class ChatReadRepository(
             SELECT c.id,
                    c.name,
                    COUNT(DISTINCT uc_all.user_id) AS users_count,
-                   MAX(m.sent_at) AS last_message_at
+                   MAX(m.sent_at) AS last_message_at,
+                   COALESCE(ARRAY_REMOVE(ARRAY_AGG(DISTINCT uc_all.user_id), NULL), ARRAY[]::bigint[]) AS user_ids
             FROM user_chat uc
             JOIN chat c ON c.id = uc.chat_id
             LEFT JOIN user_chat uc_all ON uc_all.chat_id = c.id
@@ -28,13 +29,30 @@ class ChatReadRepository(
             userId
         ).map { toViewChat(it) }
 
+    fun findAll(): List<ViewChat> =
+        dsl.fetch(
+            """
+            SELECT c.id,
+                   c.name,
+                   COUNT(DISTINCT uc.user_id) AS users_count,
+                   MAX(m.sent_at) AS last_message_at,
+                   COALESCE(ARRAY_REMOVE(ARRAY_AGG(DISTINCT uc.user_id), NULL), ARRAY[]::bigint[]) AS user_ids
+            FROM chat c
+            LEFT JOIN user_chat uc ON uc.chat_id = c.id
+            LEFT JOIN message m ON m.chat_id = c.id
+            GROUP BY c.id, c.name
+            ORDER BY MAX(m.sent_at) DESC NULLS LAST, c.id
+            """.trimIndent()
+        ).map { toViewChat(it) }
+
     fun findById(chatId: Long): ViewChat =
         dsl.fetchOne(
             """
             SELECT c.id,
                    c.name,
                    COUNT(DISTINCT uc.user_id) AS users_count,
-                   MAX(m.sent_at) AS last_message_at
+                   MAX(m.sent_at) AS last_message_at,
+                   COALESCE(ARRAY_REMOVE(ARRAY_AGG(DISTINCT uc.user_id), NULL), ARRAY[]::bigint[]) AS user_ids
             FROM chat c
             LEFT JOIN user_chat uc ON uc.chat_id = c.id
             LEFT JOIN message m ON m.chat_id = c.id
@@ -63,7 +81,8 @@ class ChatReadRepository(
             SELECT c.id,
                    c.name,
                    COUNT(DISTINCT uc.user_id) AS users_count,
-                   MAX(m.sent_at) AS last_message_at
+                   MAX(m.sent_at) AS last_message_at,
+                   COALESCE(ARRAY_REMOVE(ARRAY_AGG(DISTINCT uc.user_id), NULL), ARRAY[]::bigint[]) AS user_ids
             FROM chat c
             LEFT JOIN user_chat uc ON uc.chat_id = c.id
             LEFT JOIN message m ON m.chat_id = c.id
@@ -100,7 +119,19 @@ class ChatReadRepository(
             id = record.get("id", Long::class.java)!!,
             name = record.get("name", String::class.java)!!,
             usersCount = record.get("users_count", Int::class.java) ?: 0,
-            lastMessageAt = lastMessageTs?.toInstant()?.toString()
+            lastMessageAt = lastMessageTs?.toInstant()?.toString(),
+            userIds = extractUserIds(record),
         )
+    }
+
+    private fun extractUserIds(record: org.jooq.Record): List<Long> {
+        val raw = record.get("user_ids")
+        return when (raw) {
+            is java.sql.Array -> (raw.array as? Array<*>)?.mapNotNull { (it as? Number)?.toLong() } ?: emptyList()
+            is Array<*> -> raw.mapNotNull { (it as? Number)?.toLong() }
+            is LongArray -> raw.toList()
+            is Collection<*> -> raw.mapNotNull { (it as? Number)?.toLong() }
+            else -> emptyList()
+        }
     }
 }

@@ -1,11 +1,14 @@
 package com.evmap.serverapp.features.list.api.controller
 
 import com.evmap.serverapp.features.list.api.dto.CreateList
+import com.evmap.serverapp.features.list.api.dto.ViewList
 import com.evmap.serverapp.features.list.application.command.AddEventToList
 import com.evmap.serverapp.features.list.application.command.ChangeListName
 import com.evmap.serverapp.features.list.application.command.CreateList as CreateListCommand
 import com.evmap.serverapp.features.list.application.command.DeleteList
 import com.evmap.serverapp.features.list.application.command.RemoveEventFromList
+import com.evmap.serverapp.features.list.application.query.GetAllLists
+import com.evmap.serverapp.features.list.application.query.GetAllListsByUser
 import com.evmap.serverapp.features.list.application.query.GetEventsFromList
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
@@ -24,6 +27,8 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/lists")
 class ListController(
     private val createList: CreateListCommand,
+    private val getAllLists: GetAllLists,
+    private val getAllListsByUser: GetAllListsByUser,
     private val addEventToList: AddEventToList,
     private val changeListName: ChangeListName,
     private val deleteList: DeleteList,
@@ -33,6 +38,12 @@ class ListController(
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     fun create(@Valid @RequestBody dto: CreateList): Long = createList.handle(dto)
+
+    @GetMapping
+    fun getAll(): List<ViewList> = getAllLists.handle()
+
+    @GetMapping("/users/{userId}")
+    fun getAllByUser(@PathVariable userId: Long): List<ViewList> = getAllListsByUser.handle(userId)
 
     @GetMapping("/{listId}/events")
     fun getEvents(@PathVariable listId: Long): List<Long> = getEventsFromList.handle(listId)

@@ -16,6 +16,11 @@ data class CreateEvent(
 
     val startsAt: Instant,
 
+    val endsAt: Instant? = null,
+
     @field:Positive
-    val locationId: Long
+    val locationId: Long,
+
+    @field:Positive
+    val userId: Long,
 )

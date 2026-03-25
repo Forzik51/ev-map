@@ -5,5 +5,8 @@ data class Event(
     val name: String,
     val description: String,
     val startsAt: java.time.Instant,
-    val locationId: Long
+    val endsAt: java.time.Instant? = null,
+    val locationId: Long,
+    val userId: Long,
+    val createdAt: java.time.Instant = java.time.Instant.now(),
 )

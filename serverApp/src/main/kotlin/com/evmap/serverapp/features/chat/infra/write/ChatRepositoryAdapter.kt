@@ -7,6 +7,8 @@ import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 @Repository
 class ChatRepositoryAdapter(
@@ -29,12 +31,12 @@ class ChatRepositoryAdapter(
             dsl.execute(
                 """
                 INSERT INTO user_chat(chat_id, user_id, joined_at)
-                VALUES (?, ?, ?)
+                VALUES (?, ?, CAST(? AS timestamptz))
                 ON CONFLICT DO NOTHING
                 """.trimIndent(),
                 chatId,
                 userId,
-                Instant.now()
+                OffsetDateTime.now(ZoneOffset.UTC)
             )
         }
         return chatId
@@ -45,12 +47,12 @@ class ChatRepositoryAdapter(
         dsl.execute(
             """
             INSERT INTO user_chat(chat_id, user_id, joined_at)
-            VALUES (?, ?, ?)
+            VALUES (?, ?, CAST(? AS timestamptz))
             ON CONFLICT DO NOTHING
             """.trimIndent(),
             chatId,
             userId,
-            Instant.now()
+            OffsetDateTime.now(ZoneOffset.UTC)
         )
     }
 
@@ -79,10 +81,10 @@ class ChatRepositoryAdapter(
         dsl.execute(
             """
             INSERT INTO message(text, sent_at, chat_id, user_id)
-            VALUES (?, ?, ?, ?)
+            VALUES (?, CAST(? AS timestamptz), ?, ?)
             """.trimIndent(),
             message,
-            Instant.now(),
+            OffsetDateTime.now(ZoneOffset.UTC),
             chatId,
             userId
         )

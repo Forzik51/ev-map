@@ -13,7 +13,9 @@ class CreateEvent(private val repo: EventRepositoryPort) {
                 name = dto.name,
                 description = dto.description,
                 startsAt = dto.startsAt,
-                locationId = dto.locationId
+                endsAt = dto.endsAt,
+                locationId = dto.locationId,
+                userId = dto.userId,
             )
         )
 }

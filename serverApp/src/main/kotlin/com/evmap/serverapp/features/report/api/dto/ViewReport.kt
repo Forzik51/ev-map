@@ -5,7 +5,6 @@ data class ViewReport(
     val description: String,
     val eventId: Long,
     val categoryId: Long,
-    val categoryType: String,
+    val status: String,
     val userId: Long,
-    val username: String,
 )

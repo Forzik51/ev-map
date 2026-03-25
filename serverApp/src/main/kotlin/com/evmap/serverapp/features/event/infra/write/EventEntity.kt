@@ -8,20 +8,29 @@ import jakarta.persistence.Id
 import jakarta.persistence.Table
 
 @Entity
-@Table(name = "Wydarzenie")
+@Table(name = "event")
 class EventEntity(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null,
 
-    @Column(name = "nazwa", nullable = false)
+    @Column(name = "name", nullable = false, length = 30)
     var name: String,
 
-    @Column(name = "opis", nullable = false, length = 500)
+    @Column(name = "description", nullable = false, length = 500)
     var description: String,
 
-    @Column(name = "kiedy", nullable = false)
+    @Column(name = "start_at", nullable = false)
     var startsAt: java.time.Instant,
 
-    @Column(name = "Lokalizacja_id", nullable = false)
+    @Column(name = "end_at")
+    var endsAt: java.time.Instant? = null,
+
+    @Column(name = "location_id", nullable = false)
     var locationId: Long,
+
+    @Column(name = "user_id", nullable = false)
+    var userId: Long,
+
+    @Column(name = "created_at", nullable = false)
+    var createdAt: java.time.Instant,
 )
