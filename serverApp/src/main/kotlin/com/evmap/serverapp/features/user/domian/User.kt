@@ -12,4 +12,5 @@ data class User(
     val passwordHash: String,
     val username: String,
     val pageDescription: String,
+    val path: String? = null,
 )

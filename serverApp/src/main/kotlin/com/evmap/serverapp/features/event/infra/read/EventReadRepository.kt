@@ -41,11 +41,19 @@ class EventReadRepository(private val dsl: DSLContext) {
                    e.end_at,
                    e.user_id,
                    l.name AS location_name,
+                   ph.image_path AS image_path,
                    COALESCE(rp.reposts_count, 0) AS reposts_count,
                    COALESCE(rt.ratings_count, 0) AS ratings_count,
                    COALESCE(cm.comments_count, 0) AS comments_count
             FROM event e
             LEFT JOIN location l ON l.id = e.location_id
+            LEFT JOIN LATERAL (
+                SELECT p.image_path
+                FROM photo p
+                WHERE p.event_id = e.id
+                ORDER BY p.id
+                LIMIT 1
+            ) ph ON TRUE
             LEFT JOIN (
                 SELECT event_id, COUNT(*) AS reposts_count
                 FROM repost
@@ -76,6 +84,7 @@ class EventReadRepository(private val dsl: DSLContext) {
                 startsAt = startAt.toInstant().toString(),
                 endsAt = endAt?.toInstant()?.toString(),
                 locationName = r.get("location_name", String::class.java),
+                imagePath = r.get("image_path", String::class.java),
                 userId = requireNotNull(r.get("user_id", Long::class.java)) { "user_id is null for id=$id" },
                 repostsCount = countValue(r, "reposts_count"),
                 ratingsCount = countValue(r, "ratings_count"),
@@ -92,11 +101,19 @@ class EventReadRepository(private val dsl: DSLContext) {
                    e.end_at,
                    e.user_id,
                    l.name AS location_name,
+                   ph.image_path AS image_path,
                    COALESCE(rp.reposts_count, 0) AS reposts_count,
                    COALESCE(rt.ratings_count, 0) AS ratings_count,
                    COALESCE(cm.comments_count, 0) AS comments_count
             FROM event e
             LEFT JOIN location l ON l.id = e.location_id
+            LEFT JOIN LATERAL (
+                SELECT p.image_path
+                FROM photo p
+                WHERE p.event_id = e.id
+                ORDER BY p.id
+                LIMIT 1
+            ) ph ON TRUE
             LEFT JOIN (
                 SELECT event_id, COUNT(*) AS reposts_count
                 FROM repost
@@ -127,6 +144,7 @@ class EventReadRepository(private val dsl: DSLContext) {
                     .toInstant().toString(),
                 endsAt = it.get("end_at", Timestamp::class.java)?.toInstant()?.toString(),
                 locationName = it.get("location_name", String::class.java),
+                imagePath = it.get("image_path", String::class.java),
                 userId = requireNotNull(it.get("user_id", Long::class.java)) { "user_id is null for event row" },
                 repostsCount = countValue(it, "reposts_count"),
                 ratingsCount = countValue(it, "ratings_count"),

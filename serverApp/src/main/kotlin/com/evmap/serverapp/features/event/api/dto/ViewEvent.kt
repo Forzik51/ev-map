@@ -7,6 +7,7 @@ data class ViewEvent(
     val startsAt: String,
     val endsAt: String?,
     val locationName: String?,
+    val imagePath: String?,
     val userId: Long,
     val repostsCount: Int,
     val ratingsCount: Int,

@@ -20,11 +20,11 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
-import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
@@ -39,43 +39,43 @@ class EventControllerTest {
     @Autowired
     lateinit var mockMvc: MockMvc
 
-    @MockBean
+    @MockitoBean
     lateinit var createEvent: CreateEventCommand
 
-    @MockBean
+    @MockitoBean
     lateinit var getAllEventCategories: GetAllEventCategories
 
-    @MockBean
+    @MockitoBean
     lateinit var getEventById: GetEventById
 
-    @MockBean
+    @MockitoBean
     lateinit var getAllEventsByUser: GetAllEventsByUser
 
-    @MockBean
+    @MockitoBean
     lateinit var getEventsLine: GetEventsLine
 
-    @MockBean
+    @MockitoBean
     lateinit var getCommentsByEventId: GetCommentsByEventId
 
-    @MockBean
+    @MockitoBean
     lateinit var getReactionsByEventId: GetReactionsByEventId
 
-    @MockBean
+    @MockitoBean
     lateinit var updateEvent: UpdateEvent
 
-    @MockBean
+    @MockitoBean
     lateinit var deleteEvent: DeleteEvent
 
-    @MockBean
+    @MockitoBean
     lateinit var addComment: AddComment
 
-    @MockBean
+    @MockitoBean
     lateinit var addReaction: AddReaction
 
-    @MockBean
+    @MockitoBean
     lateinit var addShare: AddShare
 
-    @MockBean
+    @MockitoBean
     lateinit var removeShare: RemoveShare
 
     @Test

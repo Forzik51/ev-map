@@ -22,6 +22,7 @@ class UserReadRepository(
                    u.birthdate,
                    u.username,
                    u.page_description,
+                   u.path,
                    (SELECT COUNT(*) FROM follow f WHERE f.following_id = u.id) AS followers_count,
                    (SELECT COUNT(*) FROM follow f WHERE f.follower_id = u.id) AS following_count
             FROM app_user u
@@ -40,6 +41,7 @@ class UserReadRepository(
                    u.birthdate,
                    u.username,
                    u.page_description,
+                   u.path,
                    (SELECT COUNT(*) FROM follow f WHERE f.following_id = u.id) AS followers_count,
                    (SELECT COUNT(*) FROM follow f WHERE f.follower_id = u.id) AS following_count
             FROM app_user u
@@ -80,6 +82,28 @@ class UserReadRepository(
         ).map { toViewUserShort(it) }
     }
 
+    fun findAllEmails(): List<String> =
+        dsl.fetch(
+            """
+            SELECT u.email
+            FROM app_user u
+            ORDER BY u.id
+            """.trimIndent()
+        ).mapNotNull { it.get("email", String::class.java) }
+            .filter { it.isNotBlank() }
+
+    fun findEmailByUserId(userId: Long): String =
+        dsl.fetchOne(
+            """
+            SELECT u.email
+            FROM app_user u
+            WHERE u.id = ?
+            """.trimIndent(),
+            userId
+        )?.get("email", String::class.java)
+            ?.takeIf { it.isNotBlank() }
+            ?: throw UserNotFoundException(userId)
+
     private fun ensureUserExists(userId: Long) {
         val exists = dsl.fetchOne("SELECT 1 FROM app_user WHERE id = ?", userId) != null
         if (!exists) throw UserNotFoundException(userId)
@@ -95,6 +119,7 @@ class UserReadRepository(
             birthdate = record.get("birthdate", Date::class.java)!!.toLocalDate(),
             username = record.get("username", String::class.java)!!,
             pageDescription = record.get("page_description", String::class.java)!!,
+            path = record.get("path", String::class.java),
             followersCount = record.get("followers_count", Int::class.java) ?: 0,
             followingCount = record.get("following_count", Int::class.java) ?: 0,
         )

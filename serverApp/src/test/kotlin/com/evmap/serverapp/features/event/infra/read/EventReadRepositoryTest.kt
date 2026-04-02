@@ -36,6 +36,7 @@ class EventReadRepositoryTest {
 
         assertEquals(42L, view.id)
         assertEquals("Central Park", view.locationName)
+        assertEquals("/media/events/42/cover.jpg", view.imagePath)
         assertEquals(7L, view.userId)
         assertEquals(2, view.repostsCount)
         assertEquals(3, view.ratingsCount)
@@ -81,6 +82,7 @@ class EventReadRepositoryTest {
         assertEquals(1, page.content.size)
         val item = page.content.first()
         assertEquals("City Hall", item.locationName)
+        assertEquals("/media/events/1/cover.jpg", item.imagePath)
         assertEquals(5, item.repostsCount)
         assertEquals(6, item.ratingsCount)
         assertEquals(7, item.commentsCount)
@@ -153,6 +155,7 @@ class EventReadRepositoryTest {
             fields.endAt,
             fields.userId,
             fields.locationName,
+            fields.imagePath,
             fields.repostsCount,
             fields.ratingsCount,
             fields.commentsCount
@@ -165,6 +168,7 @@ class EventReadRepositoryTest {
             fields.endAt,
             fields.userId,
             fields.locationName,
+            fields.imagePath,
             fields.repostsCount,
             fields.ratingsCount,
             fields.commentsCount
@@ -177,6 +181,7 @@ class EventReadRepositoryTest {
         record.set(fields.endAt, Timestamp.from(Instant.parse("2026-03-22T12:00:00Z")))
         record.set(fields.userId, 7L)
         record.set(fields.locationName, locationName)
+        record.set(fields.imagePath, "/media/events/$id/cover.jpg")
         record.set(fields.repostsCount, 2L)
         record.set(fields.ratingsCount, 3L)
         record.set(fields.commentsCount, 4L)
@@ -196,6 +201,7 @@ class EventReadRepositoryTest {
             fields.endAt,
             fields.userId,
             fields.locationName,
+            fields.imagePath,
             fields.repostsCount,
             fields.ratingsCount,
             fields.commentsCount
@@ -214,6 +220,7 @@ class EventReadRepositoryTest {
             fields.endAt,
             fields.userId,
             fields.locationName,
+            fields.imagePath,
             fields.repostsCount,
             fields.ratingsCount,
             fields.commentsCount
@@ -226,6 +233,7 @@ class EventReadRepositoryTest {
             fields.endAt,
             fields.userId,
             fields.locationName,
+            fields.imagePath,
             fields.repostsCount,
             fields.ratingsCount,
             fields.commentsCount
@@ -238,6 +246,7 @@ class EventReadRepositoryTest {
         record.set(fields.endAt, null)
         record.set(fields.userId, 3L)
         record.set(fields.locationName, locationName)
+        record.set(fields.imagePath, "/media/events/1/cover.jpg")
         record.set(fields.repostsCount, 5L)
         record.set(fields.ratingsCount, 6L)
         record.set(fields.commentsCount, 7L)
@@ -333,6 +342,7 @@ class EventReadRepositoryTest {
         endAt = DSL.field("end_at", Timestamp::class.java),
         userId = DSL.field("user_id", Long::class.java),
         locationName = DSL.field("location_name", String::class.java),
+        imagePath = DSL.field("image_path", String::class.java),
         repostsCount = DSL.field("reposts_count", Long::class.java),
         ratingsCount = DSL.field("ratings_count", Long::class.java),
         commentsCount = DSL.field("comments_count", Long::class.java),
@@ -363,6 +373,7 @@ class EventReadRepositoryTest {
         val endAt: Field<Timestamp>,
         val userId: Field<Long>,
         val locationName: Field<String>,
+        val imagePath: Field<String>,
         val repostsCount: Field<Long>,
         val ratingsCount: Field<Long>,
         val commentsCount: Field<Long>,

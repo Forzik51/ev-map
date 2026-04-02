@@ -3,8 +3,8 @@ package com.evmap.serverapp.features.event.infra.write
 import com.evmap.serverapp.features.event.application.EventNotFoundException
 import com.evmap.serverapp.features.event.domain.Event
 import com.evmap.serverapp.features.event.domain.EventRepositoryPort
+import com.evmap.serverapp.shared.storage.FileStorageService
 import org.jooq.DSLContext
-import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
@@ -17,6 +17,7 @@ import java.time.ZoneOffset
 class EventRepositoryAdapter(
     private val jpa: SpringDataEventJpa,
     private val dsl: DSLContext,
+    private val fileStorageService: FileStorageService,
 ) : EventRepositoryPort {
     override fun save(event: Event): Long {
         val e = jpa.save(
@@ -59,6 +60,15 @@ class EventRepositoryAdapter(
     @Transactional
     override fun delete(eventId: Long) {
         ensureEventExists(eventId)
+        val photoPaths = dsl.fetch(
+            """
+            SELECT image_path
+            FROM photo
+            WHERE event_id = ?
+            """.trimIndent(),
+            eventId
+        ).mapNotNull { it.get("image_path", String::class.java) }
+
         dsl.execute("DELETE FROM decision WHERE report_id IN (SELECT id FROM report WHERE event_id = ?)", eventId)
         dsl.execute("DELETE FROM report WHERE event_id = ?", eventId)
         dsl.execute("DELETE FROM advertising WHERE event_id = ?", eventId)
@@ -69,6 +79,7 @@ class EventRepositoryAdapter(
         dsl.execute("DELETE FROM event_list WHERE event_id = ?", eventId)
         dsl.execute("DELETE FROM photo WHERE event_id = ?", eventId)
         dsl.execute("DELETE FROM event WHERE id = ?", eventId)
+        fileStorageService.deleteAllByStoredPath(photoPaths)
     }
 
     override fun addComment(eventId: Long, userId: Long, comment: String) {

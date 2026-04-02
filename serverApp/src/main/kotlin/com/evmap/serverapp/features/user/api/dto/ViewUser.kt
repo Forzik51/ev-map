@@ -11,6 +11,7 @@ data class ViewUser(
     val birthdate: LocalDate,
     val username: String,
     val pageDescription: String,
+    val path: String?,
     val followersCount: Int,
     val followingCount: Int,
 )
