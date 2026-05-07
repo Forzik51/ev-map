@@ -12,4 +12,5 @@ data class ViewEvent(
     val repostsCount: Int,
     val ratingsCount: Int,
     val commentsCount: Int,
+    val categories: List<ViewEventCategory> = emptyList(),
 )

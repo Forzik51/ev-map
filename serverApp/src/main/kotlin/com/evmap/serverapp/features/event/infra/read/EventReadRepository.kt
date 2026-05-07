@@ -76,6 +76,7 @@ class EventReadRepository(private val dsl: DSLContext) {
             val startAt = r.get("start_at", Timestamp::class.java)
                 ?: throw IllegalStateException("start_at is null for id=$id")
             val endAt = r.get("end_at", Timestamp::class.java)
+            val categoriesByEventId = findCategoriesByEventIds(listOf(id))
 
             ViewEvent(
                 id = requireNotNull(r.get("id", Long::class.java)) { "id is null for id=$id" },
@@ -89,6 +90,7 @@ class EventReadRepository(private val dsl: DSLContext) {
                 repostsCount = countValue(r, "reposts_count"),
                 ratingsCount = countValue(r, "ratings_count"),
                 commentsCount = countValue(r, "comments_count"),
+                categories = categoriesByEventId[id].orEmpty(),
             )
         } ?: throw EventNotFoundException(id)
 
@@ -135,9 +137,13 @@ class EventReadRepository(private val dsl: DSLContext) {
 
         val recs = dsl.resultQuery(sql, pageable.pageSize, pageable.offset).fetch()
 
+        val eventIds = recs.mapNotNull { it.get("id", Long::class.java) }
+        val categoriesByEventId = findCategoriesByEventIds(eventIds)
+
         val items = recs.map {
+            val eventId = requireNotNull(it.get("id", Long::class.java)) { "id is null for event row" }
             ViewEvent(
-                id = requireNotNull(it.get("id", Long::class.java)) { "id is null for event row" },
+                id = eventId,
                 name = requireNotNull(it.get("name", String::class.java)) { "name is null for event row" },
                 description = requireNotNull(it.get("description", String::class.java)) { "description is null for event row" },
                 startsAt = requireNotNull(it.get("start_at", Timestamp::class.java)) { "start_at is null for event row" }
@@ -149,6 +155,7 @@ class EventReadRepository(private val dsl: DSLContext) {
                 repostsCount = countValue(it, "reposts_count"),
                 ratingsCount = countValue(it, "ratings_count"),
                 commentsCount = countValue(it, "comments_count"),
+                categories = categoriesByEventId[eventId].orEmpty(),
             )
         }
 
@@ -248,6 +255,32 @@ class EventReadRepository(private val dsl: DSLContext) {
     private fun ensureEventExists(eventId: Long) {
         val exists = dsl.fetchOne("SELECT 1 FROM event WHERE id = ?", eventId) != null
         if (!exists) throw EventNotFoundException(eventId)
+    }
+
+    private fun findCategoriesByEventIds(eventIds: List<Long>): Map<Long, List<ViewEventCategory>> {
+        if (eventIds.isEmpty()) return emptyMap()
+
+        val placeholders = eventIds.joinToString(",") { "?" }
+        val sql = """
+            SELECT ce.event_id,
+                   c.id AS category_id,
+                   c.name AS category_name
+            FROM category_event ce
+            JOIN category c ON c.id = ce.category_id
+            WHERE ce.event_id IN ($placeholders)
+            ORDER BY ce.event_id, c.id
+        """.trimIndent()
+
+        return dsl.fetch(sql, *eventIds.toTypedArray())
+            .groupBy(
+                keySelector = { requireNotNull(it.get("event_id", Long::class.java)) { "event_id is null for category row" } },
+                valueTransform = {
+                    ViewEventCategory(
+                        id = requireNotNull(it.get("category_id", Long::class.java)) { "category_id is null for category row" },
+                        name = requireNotNull(it.get("category_name", String::class.java)) { "category_name is null for category row" },
+                    )
+                }
+            )
     }
 
     private fun countValue(record: Record, alias: String): Int =

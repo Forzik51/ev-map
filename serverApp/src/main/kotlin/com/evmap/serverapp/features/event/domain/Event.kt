@@ -8,5 +8,6 @@ data class Event(
     val endsAt: java.time.Instant? = null,
     val locationId: Long,
     val userId: Long,
+    val categoryIds: List<Long>,
     val createdAt: java.time.Instant = java.time.Instant.now(),
 )

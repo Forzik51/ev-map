@@ -1,6 +1,7 @@
 package com.evmap.serverapp.features.event.api.dto
 
 import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.NotEmpty
 import jakarta.validation.constraints.Positive
 import jakarta.validation.constraints.Size
 import java.time.Instant
@@ -23,4 +24,7 @@ data class CreateEvent(
 
     @field:Positive
     val userId: Long,
+
+    @field:NotEmpty
+    val categoryIds: List<@Positive Long>,
 )

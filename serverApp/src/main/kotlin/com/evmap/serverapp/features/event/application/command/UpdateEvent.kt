@@ -20,6 +20,7 @@ class UpdateEvent(
                 endsAt = dto.endsAt,
                 locationId = dto.locationId,
                 userId = dto.userId,
+                categoryIds = dto.categoryIds,
             )
         )
     }

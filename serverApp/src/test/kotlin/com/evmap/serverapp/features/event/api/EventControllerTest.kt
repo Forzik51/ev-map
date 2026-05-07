@@ -86,6 +86,7 @@ class EventControllerTest {
             startsAt = Instant.parse("2026-03-22T10:00:00Z"),
             locationId = 1L,
             userId = 1L,
+            categoryIds = listOf(1L),
         )
 
         Mockito.`when`(createEvent.handle(expected)).thenReturn(123L)
@@ -96,7 +97,8 @@ class EventControllerTest {
               "description": "Test description",
               "startsAt": "2026-03-22T10:00:00Z",
               "locationId": 1,
-              "userId": 1
+              "userId": 1,
+              "categoryIds": [1]
             }
         """.trimIndent()
 
@@ -118,7 +120,8 @@ class EventControllerTest {
               "description": "Test description",
               "startsAt": "2026-03-22T10:00:00Z",
               "locationId": 1,
-              "userId": 1
+              "userId": 1,
+              "categoryIds": [1]
             }
         """.trimIndent()
 
@@ -140,7 +143,8 @@ class EventControllerTest {
               "description": "Test description",
               "startsAt": "not-an-instant",
               "locationId": 1,
-              "userId": 1
+              "userId": 1,
+              "categoryIds": [1]
             }
         """.trimIndent()
 

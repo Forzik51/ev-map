@@ -23,10 +23,10 @@ class EventReadRepositoryTest {
     @Test
     fun `findViewById should use id placeholder and map response`() {
         val provider = CapturingProvider { ctx ->
-            if (ctx.sql().contains("FROM event", ignoreCase = true)) {
-                arrayOf(eventRowResult(id = 42L, locationName = "Central Park"))
-            } else {
-                error("Unexpected SQL: ${ctx.sql()}")
+            when {
+                ctx.sql().contains("FROM category_event", ignoreCase = true) -> arrayOf(emptyCategoryResult())
+                ctx.sql().contains("FROM event", ignoreCase = true) -> arrayOf(eventRowResult(id = 42L, locationName = "Central Park"))
+                else -> error("Unexpected SQL: ${ctx.sql()}")
             }
         }
 
@@ -42,7 +42,7 @@ class EventReadRepositoryTest {
         assertEquals(3, view.ratingsCount)
         assertEquals(4, view.commentsCount)
 
-        val executed = provider.executed.single()
+        val executed = provider.executed.first { it.sql().contains("WHERE e.id = ?") }
         assertEquals(42L, executed.bindings().first())
         assertTrue(executed.sql().contains("WHERE e.id = ?"))
     }
@@ -69,6 +69,7 @@ class EventReadRepositoryTest {
         val provider = CapturingProvider { ctx ->
             when {
                 ctx.sql().contains("SELECT COUNT(*)", ignoreCase = true) -> arrayOf(countResult(1L))
+                ctx.sql().contains("FROM category_event", ignoreCase = true) -> arrayOf(emptyCategoryResult())
                 ctx.sql().contains("FROM event", ignoreCase = true) ->
                     arrayOf(eventsListResult(locationName = "City Hall"))
                 else -> error("Unexpected SQL: ${ctx.sql()}")
@@ -322,6 +323,15 @@ class EventReadRepositoryTest {
         record.set(existsField, 1)
         result.add(record)
         return MockResult(1, result)
+    }
+
+    private fun emptyCategoryResult(): MockResult {
+        val dsl = DSL.using(SQLDialect.POSTGRES)
+        val eventIdField = DSL.field("event_id", Long::class.java)
+        val categoryIdField = DSL.field("category_id", Long::class.java)
+        val categoryNameField = DSL.field("category_name", String::class.java)
+        val result = dsl.newResult(eventIdField, categoryIdField, categoryNameField)
+        return MockResult(0, result)
     }
 
     private fun countResult(total: Long): MockResult {

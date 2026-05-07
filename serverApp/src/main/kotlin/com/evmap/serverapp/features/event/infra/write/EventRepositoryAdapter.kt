@@ -19,6 +19,7 @@ class EventRepositoryAdapter(
     private val dsl: DSLContext,
     private val fileStorageService: FileStorageService,
 ) : EventRepositoryPort {
+    @Transactional
     override fun save(event: Event): Long {
         val e = jpa.save(
             EventEntity(
@@ -31,9 +32,12 @@ class EventRepositoryAdapter(
                 createdAt = event.createdAt,
             )
         )
-        return e.id!!
+        val eventId = e.id!!
+        replaceEventCategories(eventId, event.categoryIds)
+        return eventId
     }
 
+    @Transactional
     override fun update(eventId: Long, event: Event) {
         val updated = dsl.execute(
             """
@@ -55,6 +59,7 @@ class EventRepositoryAdapter(
             eventId
         )
         if (updated == 0) throw EventNotFoundException(eventId)
+        replaceEventCategories(eventId, event.categoryIds)
     }
 
     @Transactional
@@ -155,6 +160,43 @@ class EventRepositoryAdapter(
             this > max -> max
             else -> this
         }
+
+    private fun replaceEventCategories(eventId: Long, rawCategoryIds: List<Long>) {
+        val categoryIds = rawCategoryIds.distinct()
+        if (categoryIds.isEmpty()) {
+            throw IllegalArgumentException("Event must contain at least one category")
+        }
+
+        ensureCategoriesExist(categoryIds)
+        dsl.execute("DELETE FROM category_event WHERE event_id = ?", eventId)
+        categoryIds.forEach { categoryId ->
+            dsl.execute(
+                """
+                INSERT INTO category_event(category_id, event_id)
+                VALUES (?, ?)
+                """.trimIndent(),
+                categoryId,
+                eventId
+            )
+        }
+    }
+
+    private fun ensureCategoriesExist(categoryIds: List<Long>) {
+        val placeholders = categoryIds.joinToString(",") { "?" }
+        val sql = """
+            SELECT id
+            FROM category
+            WHERE id IN ($placeholders)
+        """.trimIndent()
+        val found = dsl.fetch(sql, *categoryIds.toTypedArray())
+            .mapNotNull { it.get("id", Long::class.java) }
+            .toSet()
+
+        if (found.size != categoryIds.size) {
+            val missing = categoryIds.filterNot { it in found }
+            throw IllegalArgumentException("Unknown category ids: $missing")
+        }
+    }
 
     private fun Instant.toOffsetDateTimeUtc(): OffsetDateTime = atOffset(ZoneOffset.UTC)
 }
