@@ -6,5 +6,7 @@ interface ChatRepositoryPort {
     fun removeUser(chatId: Long, userId: Long)
     fun changeName(chatId: Long, name: String)
     fun delete(chatId: Long)
-    fun sendMessage(chatId: Long, userId: Long, message: String)
+    fun sendMessage(chatId: Long, userId: Long, message: String): ChatMessage
+    fun markRead(chatId: Long, userId: Long, lastReadMessageId: Long)
+    fun isOwner(chatId: Long, userId: Long): Boolean
 }

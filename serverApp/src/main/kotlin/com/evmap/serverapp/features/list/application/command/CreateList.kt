@@ -7,11 +7,11 @@ import org.springframework.stereotype.Service
 
 @Service
 class CreateList(private val repo: ListRepositoryPort) {
-    fun handle(dto: CreateListRequest): Long =
+    fun handle(dto: CreateListRequest, userId: Long): Long =
         repo.save(
             UserList(
                 name = dto.name,
-                userId = dto.userId,
+                userId = userId,
             )
         )
 }

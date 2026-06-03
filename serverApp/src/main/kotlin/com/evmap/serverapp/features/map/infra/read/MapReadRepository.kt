@@ -1,11 +1,16 @@
 package com.evmap.serverapp.features.map.infra.read
 
+import com.evmap.serverapp.features.event.application.EventNotFoundException
 import com.evmap.serverapp.features.map.api.dto.ViewMapCategory
+import com.evmap.serverapp.features.map.api.dto.ViewMapCluster
+import com.evmap.serverapp.features.map.api.dto.ViewMapEventDetails
 import com.evmap.serverapp.features.map.api.dto.ViewMapEventItem
 import com.evmap.serverapp.features.map.api.dto.ViewMapPoint
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
+import java.sql.Timestamp
+import java.time.OffsetDateTime
 
 @Repository
 class MapReadRepository(
@@ -16,10 +21,16 @@ class MapReadRepository(
         lng: Double,
         radiusMeters: Double,
         categoryIds: List<Long>,
+        locationCategoryIds: List<Long>,
+        startsFrom: OffsetDateTime?,
+        startsTo: OffsetDateTime?,
+        onlyActive: Boolean,
+        sort: String,
         limit: Int,
     ): List<ViewMapEventItem> {
-        val bindings = mutableListOf<Any>()
+        val selectBindings = mutableListOf<Any>(lng, lat)
         val conditions = mutableListOf<String>()
+        val conditionBindings = mutableListOf<Any>()
 
         conditions += """
             ST_DWithin(
@@ -28,55 +39,51 @@ class MapReadRepository(
                 ?
             )
         """.trimIndent()
-        bindings += lng
-        bindings += lat
-        bindings += radiusMeters
+        conditionBindings += lng
+        conditionBindings += lat
+        conditionBindings += radiusMeters
+        addCommonFilters(conditions, conditionBindings, categoryIds, locationCategoryIds, startsFrom, startsTo, onlyActive)
 
-        if (categoryIds.isNotEmpty()) {
-            val placeholders = categoryIds.joinToString(",") { "?" }
-            conditions += """
-                EXISTS (
-                    SELECT 1
-                    FROM category_event ce_filter
-                    WHERE ce_filter.event_id = e.id
-                      AND ce_filter.category_id IN ($placeholders)
+        val sql = eventItemSql(
+            distanceExpression = """
+                ST_Distance(
+                    COALESCE(l.point, ST_PointOnSurface(l.region))::geography,
+                    ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography
                 )
-            """.trimIndent()
-            bindings.addAll(categoryIds)
-        }
+            """.trimIndent(),
+            conditions = conditions,
+            having = emptyList(),
+            orderBy = orderBy(sort, includeDistance = true, includeRelevance = false),
+        )
 
-        val sql = """
-            SELECT e.id AS event_id,
-                   e.name AS event_name,
-                   l.name AS location_name,
-                   CASE
-                       WHEN l.region IS NOT NULL THEN 'REGION'
-                       WHEN l.name IS NOT NULL AND BTRIM(l.name) <> '' THEN 'NAMED_POINT'
-                       ELSE 'POINT'
-                   END AS geometry_type,
-                   ST_Y(COALESCE(l.point, ST_PointOnSurface(l.region))) AS lat,
-                   ST_X(COALESCE(l.point, ST_PointOnSurface(l.region))) AS lng,
-                   ST_AsGeoJSON(l.region) AS region_geojson,
-                   ST_Distance(
-                       COALESCE(l.point, ST_PointOnSurface(l.region))::geography,
-                       ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography
-                   ) AS distance_meters,
-                   COALESCE(AVG(r.rating), 0)::double precision AS rating_avg,
-                   COUNT(r.rating)::int AS ratings_count
-            FROM event e
-            JOIN rating r ON r.event_id = e.id
-            JOIN location l ON l.id = e.location_id
-            WHERE ${conditions.joinToString("\n  AND ")}
-            GROUP BY e.id, e.name, l.name, l.point, l.region
-            HAVING COUNT(r.rating) > 0
-            ORDER BY distance_meters ASC, rating_avg DESC, e.start_at DESC
-            LIMIT ?
-        """.trimIndent()
+        return toViewItems(dsl.fetch(sql, *(selectBindings + conditionBindings + limit).toTypedArray()))
+    }
 
-        bindings += lng
-        bindings += lat
-        bindings += limit
-        return toViewItems(dsl.fetch(sql, *bindings.toTypedArray()))
+    fun findBounds(
+        minLat: Double,
+        minLng: Double,
+        maxLat: Double,
+        maxLng: Double,
+        categoryIds: List<Long>,
+        locationCategoryIds: List<Long>,
+        startsFrom: OffsetDateTime?,
+        startsTo: OffsetDateTime?,
+        onlyActive: Boolean,
+        sort: String,
+        limit: Int,
+    ): List<ViewMapEventItem> {
+        val conditions = mutableListOf(boundsCondition())
+        val bindings = mutableListOf<Any>(minLng, minLat, maxLng, maxLat, minLng, minLat, maxLng, maxLat)
+        addCommonFilters(conditions, bindings, categoryIds, locationCategoryIds, startsFrom, startsTo, onlyActive)
+
+        val sql = eventItemSql(
+            distanceExpression = "NULL::double precision",
+            conditions = conditions,
+            having = emptyList(),
+            orderBy = orderBy(sort, includeDistance = false, includeRelevance = false),
+        )
+
+        return toViewItems(dsl.fetch(sql, *(bindings + limit).toTypedArray()))
     }
 
     fun search(
@@ -87,20 +94,261 @@ class MapReadRepository(
         ratingFrom: Double?,
         ratingTo: Double?,
         categoryIds: List<Long>,
+        locationCategoryIds: List<Long>,
+        startsFrom: OffsetDateTime?,
+        startsTo: OffsetDateTime?,
+        onlyActive: Boolean,
+        sort: String,
         limit: Int,
     ): List<ViewMapEventItem> {
-        val bindings = mutableListOf<Any>()
+        val selectBindings = mutableListOf<Any>()
         val conditions = mutableListOf<String>()
+        val conditionBindings = mutableListOf<Any>()
         val havings = mutableListOf<String>()
-        val distanceMeters = distanceKm?.times(1000.0)
+        val havingBindings = mutableListOf<Any>()
         val like = "%${query.trim()}%"
         val prefix = "${query.trim()}%"
 
-        conditions += "(e.name ILIKE ? OR e.description ILIKE ? OR l.name ILIKE ?)"
-        bindings += like
-        bindings += like
-        bindings += like
+        val distanceExpression = if (lat != null && lng != null) {
+            selectBindings += lng
+            selectBindings += lat
+            """
+            ST_Distance(
+                COALESCE(l.point, ST_PointOnSurface(l.region))::geography,
+                ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography
+            )
+            """.trimIndent()
+        } else {
+            "NULL::double precision"
+        }
 
+        conditions += "(e.name ILIKE ? OR e.description ILIKE ? OR l.name ILIKE ?)"
+        conditionBindings += like
+        conditionBindings += like
+        conditionBindings += like
+        addCommonFilters(conditions, conditionBindings, categoryIds, locationCategoryIds, startsFrom, startsTo, onlyActive)
+
+        if (lat != null && lng != null && distanceKm != null) {
+            conditions += """
+                ST_DWithin(
+                    COALESCE(l.point, ST_PointOnSurface(l.region))::geography,
+                    ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography,
+                    ?
+                )
+            """.trimIndent()
+            conditionBindings += lng
+            conditionBindings += lat
+            conditionBindings += distanceKm * 1000.0
+        }
+
+        if (ratingFrom != null) {
+            havings += "COALESCE(AVG(r.rating), 0) >= ?"
+            havingBindings += BigDecimal.valueOf(ratingFrom)
+        }
+        if (ratingTo != null) {
+            havings += "COALESCE(AVG(r.rating), 0) <= ?"
+            havingBindings += BigDecimal.valueOf(ratingTo)
+        }
+
+        val relevanceBindings = if (sort == "relevance") listOf(query.trim(), prefix, prefix) else emptyList()
+        val sql = eventItemSql(
+            distanceExpression = distanceExpression,
+            conditions = conditions,
+            having = havings,
+            orderBy = orderBy(sort, includeDistance = lat != null && lng != null, includeRelevance = true),
+        )
+
+        return toViewItems(
+            dsl.fetch(sql, *(selectBindings + conditionBindings + havingBindings + relevanceBindings + limit).toTypedArray()),
+        )
+    }
+
+    fun findClusters(
+        minLat: Double,
+        minLng: Double,
+        maxLat: Double,
+        maxLng: Double,
+        zoom: Int,
+        categoryIds: List<Long>,
+        locationCategoryIds: List<Long>,
+        startsFrom: OffsetDateTime?,
+        startsTo: OffsetDateTime?,
+        onlyActive: Boolean,
+    ): List<ViewMapCluster> {
+        val cellSize = when {
+            zoom <= 5 -> 2.0
+            zoom <= 8 -> 0.5
+            zoom <= 11 -> 0.1
+            zoom <= 14 -> 0.03
+            else -> 0.01
+        }
+        val conditions = mutableListOf(boundsCondition())
+        val bindings = mutableListOf<Any>(minLng, minLat, maxLng, maxLat, minLng, minLat, maxLng, maxLat)
+        addCommonFilters(conditions, bindings, categoryIds, locationCategoryIds, startsFrom, startsTo, onlyActive)
+
+        val sql = """
+            SELECT COUNT(*)::int AS count,
+                   AVG(ST_Y(COALESCE(l.point, ST_PointOnSurface(l.region)))) AS lat,
+                   AVG(ST_X(COALESCE(l.point, ST_PointOnSurface(l.region)))) AS lng
+            FROM event e
+            JOIN location l ON l.id = e.location_id
+            WHERE ${conditions.joinToString("\n  AND ")}
+            GROUP BY FLOOR(ST_X(COALESCE(l.point, ST_PointOnSurface(l.region))) / ?),
+                     FLOOR(ST_Y(COALESCE(l.point, ST_PointOnSurface(l.region))) / ?)
+            ORDER BY count DESC
+        """.trimIndent()
+
+        return dsl.fetch(sql, *(bindings + cellSize + cellSize).toTypedArray()).map {
+            ViewMapCluster(
+                count = (it.get("count") as? Number)?.toInt() ?: 0,
+                point = ViewMapPoint(
+                    lat = requireNotNull((it.get("lat") as? Number)?.toDouble()) { "lat is null for cluster row" },
+                    lng = requireNotNull((it.get("lng") as? Number)?.toDouble()) { "lng is null for cluster row" },
+                ),
+            )
+        }
+    }
+
+    fun findDetails(eventId: Long): ViewMapEventDetails {
+        val record = dsl.fetchOne(
+            """
+            SELECT e.id AS event_id,
+                   e.name AS event_name,
+                   e.description,
+                   e.start_at,
+                   e.end_at,
+                   l.name AS location_name,
+                   CASE
+                       WHEN l.region IS NOT NULL THEN 'REGION'
+                       WHEN l.name IS NOT NULL AND BTRIM(l.name) <> '' THEN 'NAMED_POINT'
+                       ELSE 'POINT'
+                   END AS geometry_type,
+                   ST_Y(COALESCE(l.point, ST_PointOnSurface(l.region))) AS lat,
+                   ST_X(COALESCE(l.point, ST_PointOnSurface(l.region))) AS lng,
+                   ST_AsGeoJSON(l.region) AS region_geojson,
+                   ph.image_path AS image_path,
+                   COALESCE(AVG(r.rating), 0)::double precision AS rating_avg,
+                   COUNT(r.rating)::int AS ratings_count,
+                   COALESCE(rp.reposts_count, 0)::int AS reposts_count,
+                   COALESCE(cm.comments_count, 0)::int AS comments_count
+            FROM event e
+            JOIN location l ON l.id = e.location_id
+            LEFT JOIN rating r ON r.event_id = e.id
+            LEFT JOIN LATERAL (
+                SELECT p.image_path
+                FROM photo p
+                WHERE p.event_id = e.id
+                ORDER BY p.id
+                LIMIT 1
+            ) ph ON TRUE
+            LEFT JOIN (
+                SELECT event_id, COUNT(*) AS reposts_count
+                FROM repost
+                GROUP BY event_id
+            ) rp ON rp.event_id = e.id
+            LEFT JOIN (
+                SELECT event_id, COUNT(*) AS comments_count
+                FROM comment
+                GROUP BY event_id
+            ) cm ON cm.event_id = e.id
+            WHERE e.id = ?
+            GROUP BY e.id, e.name, e.description, e.start_at, e.end_at, l.name, l.point, l.region,
+                     ph.image_path, rp.reposts_count, cm.comments_count
+            """.trimIndent(),
+            eventId,
+        ) ?: throw EventNotFoundException(eventId)
+
+        val categories = findCategoriesByEventIds(listOf(eventId))[eventId].orEmpty()
+        val startsAt = requireNotNull(record.get("start_at", Timestamp::class.java)) { "start_at is null for map details row" }
+        return ViewMapEventDetails(
+            eventId = eventId,
+            eventName = requireNotNull(record.get("event_name", String::class.java)) { "event_name is null for map details row" },
+            description = requireNotNull(record.get("description", String::class.java)) { "description is null for map details row" },
+            startsAt = startsAt.toInstant().toString(),
+            endsAt = record.get("end_at", Timestamp::class.java)?.toInstant()?.toString(),
+            locationName = record.get("location_name", String::class.java),
+            geometryType = requireNotNull(record.get("geometry_type", String::class.java)) { "geometry_type is null for map details row" },
+            point = ViewMapPoint(
+                lat = requireNotNull((record.get("lat") as? Number)?.toDouble()) { "lat is null for map details row" },
+                lng = requireNotNull((record.get("lng") as? Number)?.toDouble()) { "lng is null for map details row" },
+            ),
+            regionGeoJson = record.get("region_geojson", String::class.java),
+            imagePath = record.get("image_path", String::class.java),
+            ratingAvg = (record.get("rating_avg") as? Number)?.toDouble() ?: 0.0,
+            ratingsCount = (record.get("ratings_count") as? Number)?.toInt() ?: 0,
+            repostsCount = (record.get("reposts_count") as? Number)?.toInt() ?: 0,
+            commentsCount = (record.get("comments_count") as? Number)?.toInt() ?: 0,
+            categories = categories,
+        )
+    }
+
+    fun toGeoJson(items: List<ViewMapEventItem>): Map<String, Any> =
+        mapOf(
+            "type" to "FeatureCollection",
+            "features" to items.map { item ->
+                mapOf(
+                    "type" to "Feature",
+                    "geometry" to mapOf(
+                        "type" to "Point",
+                        "coordinates" to listOf(item.point.lng, item.point.lat),
+                    ),
+                    "properties" to mapOf(
+                        "eventId" to item.eventId,
+                        "eventName" to item.eventName,
+                        "locationName" to item.locationName,
+                        "geometryType" to item.geometryType,
+                        "regionGeoJson" to item.regionGeoJson,
+                        "distanceMeters" to item.distanceMeters,
+                        "ratingAvg" to item.ratingAvg,
+                        "ratingsCount" to item.ratingsCount,
+                        "categories" to item.categories,
+                    ),
+                )
+            },
+        )
+
+    private fun eventItemSql(
+        distanceExpression: String,
+        conditions: List<String>,
+        having: List<String>,
+        orderBy: String,
+    ): String {
+        val havingSql = if (having.isEmpty()) "" else "HAVING ${having.joinToString("\n   AND ")}"
+        return """
+            SELECT e.id AS event_id,
+                   e.name AS event_name,
+                   l.name AS location_name,
+                   CASE
+                       WHEN l.region IS NOT NULL THEN 'REGION'
+                       WHEN l.name IS NOT NULL AND BTRIM(l.name) <> '' THEN 'NAMED_POINT'
+                       ELSE 'POINT'
+                   END AS geometry_type,
+                   ST_Y(COALESCE(l.point, ST_PointOnSurface(l.region))) AS lat,
+                   ST_X(COALESCE(l.point, ST_PointOnSurface(l.region))) AS lng,
+                   ST_AsGeoJSON(l.region) AS region_geojson,
+                   $distanceExpression AS distance_meters,
+                   COALESCE(AVG(r.rating), 0)::double precision AS rating_avg,
+                   COUNT(r.rating)::int AS ratings_count
+            FROM event e
+            JOIN location l ON l.id = e.location_id
+            LEFT JOIN rating r ON r.event_id = e.id
+            WHERE ${conditions.joinToString("\n  AND ")}
+            GROUP BY e.id, e.name, e.start_at, l.name, l.point, l.region
+            $havingSql
+            ORDER BY $orderBy
+            LIMIT ?
+        """.trimIndent()
+    }
+
+    private fun addCommonFilters(
+        conditions: MutableList<String>,
+        bindings: MutableList<Any>,
+        categoryIds: List<Long>,
+        locationCategoryIds: List<Long>,
+        startsFrom: OffsetDateTime?,
+        startsTo: OffsetDateTime?,
+        onlyActive: Boolean,
+    ) {
         if (categoryIds.isNotEmpty()) {
             val placeholders = categoryIds.joinToString(",") { "?" }
             conditions += """
@@ -113,82 +361,49 @@ class MapReadRepository(
             """.trimIndent()
             bindings.addAll(categoryIds)
         }
-
-        if (lat != null && lng != null && distanceMeters != null) {
-            conditions += """
-                ST_DWithin(
-                    COALESCE(l.point, ST_PointOnSurface(l.region))::geography,
-                    ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography,
-                    ?
-                )
-            """.trimIndent()
-            bindings += lng
-            bindings += lat
-            bindings += distanceMeters
+        if (locationCategoryIds.isNotEmpty()) {
+            val placeholders = locationCategoryIds.joinToString(",") { "?" }
+            conditions += "l.category_id IN ($placeholders)"
+            bindings.addAll(locationCategoryIds)
         }
-
-        val distanceExpr = if (lat != null && lng != null) {
-            """
-            ST_Distance(
-                COALESCE(l.point, ST_PointOnSurface(l.region))::geography,
-                ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography
-            )
-            """.trimIndent().also {
-                bindings += lng
-                bindings += lat
-            }
-        } else {
-            "NULL::double precision"
+        if (startsFrom != null) {
+            conditions += "e.start_at >= CAST(? AS timestamptz)"
+            bindings += startsFrom
         }
-
-        havings += "COUNT(r.rating) > 0"
-        if (ratingFrom != null) {
-            havings += "AVG(r.rating) >= ?"
-            bindings += BigDecimal.valueOf(ratingFrom)
+        if (startsTo != null) {
+            conditions += "e.start_at <= CAST(? AS timestamptz)"
+            bindings += startsTo
         }
-        if (ratingTo != null) {
-            havings += "AVG(r.rating) <= ?"
-            bindings += BigDecimal.valueOf(ratingTo)
+        if (onlyActive) {
+            conditions += "e.start_at <= now() AND (e.end_at IS NULL OR e.end_at >= now())"
         }
+    }
 
-        val sql = """
-            SELECT e.id AS event_id,
-                   e.name AS event_name,
-                   l.name AS location_name,
-                   CASE
-                       WHEN l.region IS NOT NULL THEN 'REGION'
-                       WHEN l.name IS NOT NULL AND BTRIM(l.name) <> '' THEN 'NAMED_POINT'
-                       ELSE 'POINT'
-                   END AS geometry_type,
-                   ST_Y(COALESCE(l.point, ST_PointOnSurface(l.region))) AS lat,
-                   ST_X(COALESCE(l.point, ST_PointOnSurface(l.region))) AS lng,
-                   ST_AsGeoJSON(l.region) AS region_geojson,
-                   $distanceExpr AS distance_meters,
-                   COALESCE(AVG(r.rating), 0)::double precision AS rating_avg,
-                   COUNT(r.rating)::int AS ratings_count
-            FROM event e
-            JOIN rating r ON r.event_id = e.id
-            JOIN location l ON l.id = e.location_id
-            WHERE ${conditions.joinToString("\n  AND ")}
-            GROUP BY e.id, e.name, l.name, l.point, l.region
-            HAVING ${havings.joinToString("\n   AND ")}
-            ORDER BY
-                CASE
-                    WHEN LOWER(e.name) = LOWER(?) THEN 300
-                    WHEN LOWER(e.name) LIKE LOWER(?) THEN 200
-                    WHEN LOWER(l.name) LIKE LOWER(?) THEN 100
-                    ELSE 0
-                END DESC,
-                rating_avg DESC,
-                e.start_at DESC
-            LIMIT ?
+    private fun boundsCondition(): String =
+        """
+        (
+            (l.point IS NOT NULL AND ST_Intersects(l.point, ST_MakeEnvelope(?, ?, ?, ?, 4326)))
+            OR
+            (l.region IS NOT NULL AND ST_Intersects(l.region, ST_MakeEnvelope(?, ?, ?, ?, 4326)))
+        )
         """.trimIndent()
 
-        bindings += query.trim()
-        bindings += prefix
-        bindings += prefix
-        bindings += limit
-        return toViewItems(dsl.fetch(sql, *bindings.toTypedArray()))
+    private fun orderBy(sort: String, includeDistance: Boolean, includeRelevance: Boolean): String {
+        val relevance = """
+            CASE
+                WHEN LOWER(e.name) = LOWER(?) THEN 300
+                WHEN LOWER(e.name) LIKE LOWER(?) THEN 200
+                WHEN LOWER(l.name) LIKE LOWER(?) THEN 100
+                ELSE 0
+            END DESC
+        """.trimIndent()
+        return when (sort) {
+            "distance" -> if (includeDistance) "distance_meters ASC NULLS LAST, rating_avg DESC, e.start_at DESC" else "e.start_at DESC"
+            "rating" -> "rating_avg DESC, ratings_count DESC, e.start_at DESC"
+            "date" -> "e.start_at DESC, rating_avg DESC"
+            "relevance" -> if (includeRelevance) "$relevance, rating_avg DESC, e.start_at DESC" else "rating_avg DESC, e.start_at DESC"
+            else -> "e.start_at DESC"
+        }
     }
 
     private fun toViewItems(records: org.jooq.Result<org.jooq.Record>): List<ViewMapEventItem> {

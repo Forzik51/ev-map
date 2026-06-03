@@ -57,6 +57,13 @@ class ListRepositoryAdapter(
         dsl.execute("DELETE FROM user_list WHERE id = ?", listId)
     }
 
+    override fun isOwner(listId: Long, userId: Long): Boolean =
+        dsl.fetchOne(
+            "SELECT 1 FROM user_list WHERE id = ? AND user_id = ?",
+            listId,
+            userId,
+        ) != null
+
     private fun ensureListExists(listId: Long) {
         val exists = dsl.fetchOne("SELECT 1 FROM user_list WHERE id = ?", listId) != null
         if (!exists) throw ListNotFoundException(listId)

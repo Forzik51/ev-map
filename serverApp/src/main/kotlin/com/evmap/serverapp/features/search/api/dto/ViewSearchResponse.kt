@@ -5,4 +5,6 @@ data class ViewSearchResponse(
     val limit: Int,
     val events: List<ViewSearchEvent> = emptyList(),
     val users: List<ViewSearchUser> = emptyList(),
+    val locations: List<ViewSearchLocation> = emptyList(),
+    val categories: List<ViewSearchCategory> = emptyList(),
 )

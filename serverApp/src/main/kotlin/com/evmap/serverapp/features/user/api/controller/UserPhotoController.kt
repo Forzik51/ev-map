@@ -3,6 +3,7 @@ package com.evmap.serverapp.features.user.api.controller
 import com.evmap.serverapp.features.user.api.dto.ViewUserPhoto
 import com.evmap.serverapp.features.user.application.UserPhotoNotFoundException
 import com.evmap.serverapp.features.user.domian.UserRepositoryPort
+import com.evmap.serverapp.shared.security.CurrentUserProvider
 import com.evmap.serverapp.shared.storage.FileStorageService
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -22,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile
 class UserPhotoController(
     private val userRepository: UserRepositoryPort,
     private val fileStorageService: FileStorageService,
+    private val currentUserProvider: CurrentUserProvider,
 ) {
     @PostMapping(consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
     @ResponseStatus(HttpStatus.CREATED)
@@ -29,6 +31,7 @@ class UserPhotoController(
         @PathVariable userId: Long,
         @RequestPart("file") file: MultipartFile,
     ): ViewUserPhoto {
+        currentUserProvider.requireSelfOrAdmin(userId)
         val existing = userRepository.findPathByUserId(userId)
         if (!existing.isNullOrBlank()) {
             throw IllegalStateException("Photo for user $userId already exists. Use PUT to replace it.")
@@ -44,6 +47,7 @@ class UserPhotoController(
         @PathVariable userId: Long,
         @RequestPart("file") file: MultipartFile,
     ): ViewUserPhoto {
+        currentUserProvider.requireSelfOrAdmin(userId)
         val currentPath = userRepository.findPathByUserId(userId)
         val newPath = fileStorageService.saveUserProfilePhoto(userId, file)
 
@@ -67,6 +71,7 @@ class UserPhotoController(
     @DeleteMapping
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun delete(@PathVariable userId: Long) {
+        currentUserProvider.requireSelfOrAdmin(userId)
         val storedPath = userRepository.findPathByUserId(userId)
             ?: throw UserPhotoNotFoundException(userId)
         fileStorageService.deleteByStoredPath(storedPath)

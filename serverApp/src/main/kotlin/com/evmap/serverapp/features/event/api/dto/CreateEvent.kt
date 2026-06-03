@@ -22,8 +22,9 @@ data class CreateEvent(
     @field:Positive
     val locationId: Long,
 
+    @Deprecated("Ignored by the server. The authenticated user is used instead.")
     @field:Positive
-    val userId: Long,
+    val userId: Long? = null,
 
     @field:NotEmpty
     val categoryIds: List<@Positive Long>,

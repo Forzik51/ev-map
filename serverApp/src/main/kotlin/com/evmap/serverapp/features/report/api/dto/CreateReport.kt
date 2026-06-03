@@ -15,6 +15,7 @@ data class CreateReport(
     @field:Positive
     val categoryId: Long,
 
+    @Deprecated("Ignored by the server. The authenticated user is used instead.")
     @field:Positive
-    val userId: Long,
+    val userId: Long? = null,
 )

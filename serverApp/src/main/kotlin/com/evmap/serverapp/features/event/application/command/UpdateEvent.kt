@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service
 class UpdateEvent(
     private val repo: EventRepositoryPort,
 ) {
-    fun handle(eventId: Long, dto: CreateEvent) {
+    fun handle(eventId: Long, dto: CreateEvent, userId: Long) {
         repo.update(
             eventId,
             Event(
@@ -19,7 +19,7 @@ class UpdateEvent(
                 startsAt = dto.startsAt,
                 endsAt = dto.endsAt,
                 locationId = dto.locationId,
-                userId = dto.userId,
+                userId = userId,
                 categoryIds = dto.categoryIds,
             )
         )

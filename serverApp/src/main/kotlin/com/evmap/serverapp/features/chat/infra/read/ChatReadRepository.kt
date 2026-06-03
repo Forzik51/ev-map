@@ -1,6 +1,8 @@
 package com.evmap.serverapp.features.chat.infra.read
 
 import com.evmap.serverapp.features.chat.api.dto.ViewChat
+import com.evmap.serverapp.features.chat.api.dto.ViewMessage
+import com.evmap.serverapp.features.chat.application.ChatAccessDeniedException
 import com.evmap.serverapp.features.chat.application.ChatNotFoundException
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -62,17 +64,36 @@ class ChatReadRepository(
             chatId
         )?.let { toViewChat(it) } ?: throw ChatNotFoundException(chatId)
 
-    fun findMessages(chatId: Long): List<String> {
+    fun findMessages(chatId: Long, userId: Long, beforeId: Long?, limit: Int): List<ViewMessage> {
         ensureChatExists(chatId)
-        return dsl.fetch(
+        ensureMember(chatId, userId)
+
+        val conditions = mutableListOf("m.chat_id = ?")
+        val bindings = mutableListOf<Any>(chatId)
+        if (beforeId != null) {
+            conditions += "m.id < ?"
+            bindings += beforeId
+        }
+        bindings += limit
+
+        val rows = dsl.fetch(
             """
-            SELECT text
-            FROM message
-            WHERE chat_id = ?
-            ORDER BY sent_at ASC, id ASC
+            SELECT m.id,
+                   m.chat_id,
+                   m.user_id,
+                   u.username,
+                   m.text,
+                   m.sent_at
+            FROM message m
+            LEFT JOIN app_user u ON u.id = m.user_id
+            WHERE ${conditions.joinToString(" AND ")}
+            ORDER BY m.sent_at DESC, m.id DESC
+            LIMIT ?
             """.trimIndent(),
-            chatId
-        ).map { it.get("text", String::class.java) ?: "" }
+            *bindings.toTypedArray(),
+        )
+
+        return rows.reversed().map { toViewMessage(it) }
     }
 
     fun searchByAllChats(query: String): List<ViewChat> =
@@ -113,6 +134,15 @@ class ChatReadRepository(
         if (!exists) throw ChatNotFoundException(chatId)
     }
 
+    private fun ensureMember(chatId: Long, userId: Long) {
+        val exists = dsl.fetchOne(
+            "SELECT 1 FROM user_chat WHERE chat_id = ? AND user_id = ?",
+            chatId,
+            userId,
+        ) != null
+        if (!exists) throw ChatAccessDeniedException(chatId)
+    }
+
     private fun toViewChat(record: org.jooq.Record): ViewChat {
         val lastMessageTs = record.get("last_message_at", Timestamp::class.java)
         return ViewChat(
@@ -133,5 +163,19 @@ class ChatReadRepository(
             is Collection<*> -> raw.mapNotNull { (it as? Number)?.toLong() }
             else -> emptyList()
         }
+    }
+
+    private fun toViewMessage(record: org.jooq.Record): ViewMessage {
+        val sentAt = requireNotNull(record.get("sent_at", Timestamp::class.java)) {
+            "sent_at is null for message row"
+        }
+        return ViewMessage(
+            id = requireNotNull(record.get("id", Long::class.java)) { "id is null for message row" },
+            chatId = requireNotNull(record.get("chat_id", Long::class.java)) { "chat_id is null for message row" },
+            senderId = requireNotNull(record.get("user_id", Long::class.java)) { "user_id is null for message row" },
+            senderUsername = record.get("username", String::class.java),
+            text = requireNotNull(record.get("text", String::class.java)) { "text is null for message row" },
+            sentAt = sentAt.toInstant().toString(),
+        )
     }
 }

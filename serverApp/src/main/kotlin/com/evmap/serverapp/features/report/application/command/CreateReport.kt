@@ -7,13 +7,13 @@ import org.springframework.stereotype.Service
 
 @Service
 class CreateReport(private val repo: ReportRepositoryPort) {
-    fun handle(dto: CreateReportRequest): Long =
+    fun handle(dto: CreateReportRequest, userId: Long): Long =
         repo.save(
             Report(
                 description = dto.description,
                 eventId = dto.eventId,
                 categoryId = dto.categoryId,
-                userId = dto.userId,
+                userId = userId,
             )
         )
 }

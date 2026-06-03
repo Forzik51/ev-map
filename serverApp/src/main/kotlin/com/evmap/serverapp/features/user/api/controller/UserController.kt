@@ -12,6 +12,7 @@ import com.evmap.serverapp.features.user.application.query.GetAllUsers
 import com.evmap.serverapp.features.user.application.query.GetFollowedUserById
 import com.evmap.serverapp.features.user.application.query.GetFollowingUserById
 import com.evmap.serverapp.features.user.application.query.GetUserById
+import com.evmap.serverapp.shared.security.CurrentUserProvider
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -37,6 +38,7 @@ class UserController(
     private val getUserById: GetUserById,
     private val getFollowedUserById: GetFollowedUserById,
     private val getFollowingUserById: GetFollowingUserById,
+    private val currentUserProvider: CurrentUserProvider,
 ) {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -54,27 +56,34 @@ class UserController(
     @GetMapping("/{userId}/following")
     fun getFollowing(@PathVariable userId: Long): List<ViewUserShort> = getFollowingUserById.handle(userId)
 
+    @GetMapping("/me")
+    fun getMe(): ViewUser = getUserById.handle(currentUserProvider.get().id)
+
     @PatchMapping("/{userId}/description")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun updateDescription(@PathVariable userId: Long, @RequestParam description: String) {
+        currentUserProvider.requireSelfOrAdmin(userId)
         editUserInfo.handle(userId, description)
     }
 
     @PostMapping("/{userId}/follow/{targetUserId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun follow(@PathVariable userId: Long, @PathVariable targetUserId: Long) {
-        followUser.handle(userId, targetUserId)
+        currentUserProvider.requireSelfOrAdmin(userId)
+        followUser.handle(currentUserProvider.get().id, targetUserId)
     }
 
     @DeleteMapping("/{userId}/follow/{targetUserId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun unfollow(@PathVariable userId: Long, @PathVariable targetUserId: Long) {
-        unfollowUser.handle(userId, targetUserId)
+        currentUserProvider.requireSelfOrAdmin(userId)
+        unfollowUser.handle(currentUserProvider.get().id, targetUserId)
     }
 
     @DeleteMapping("/{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun delete(@PathVariable userId: Long) {
+        currentUserProvider.requireSelfOrAdmin(userId)
         deleteUser.handle(userId)
     }
 }

@@ -9,6 +9,7 @@ data class CreateList(
     @field:Size(max = 20)
     val name: String,
 
+    @Deprecated("Ignored by the server. The authenticated user is used instead.")
     @field:Positive
-    val userId: Long,
+    val userId: Long? = null,
 )

@@ -6,4 +6,5 @@ interface ListRepositoryPort {
     fun removeEvent(listId: Long, eventId: Long)
     fun changeName(listId: Long, name: String)
     fun delete(listId: Long)
+    fun isOwner(listId: Long, userId: Long): Boolean
 }

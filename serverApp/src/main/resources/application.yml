@@ -23,6 +23,12 @@ spring:
     schemas: evmap
 
 app:
+  security:
+    jwt:
+      issuer: ${APP_JWT_ISSUER:evmap}
+      secret: ${APP_JWT_SECRET:dev-only-secret-key-change-me-please-32}
+      access-token-minutes: ${APP_JWT_ACCESS_TOKEN_MINUTES:15}
+      refresh-token-days: ${APP_JWT_REFRESH_TOKEN_DAYS:30}
   media:
     root: ${APP_MEDIA_ROOT:./storage/media}
   mail:

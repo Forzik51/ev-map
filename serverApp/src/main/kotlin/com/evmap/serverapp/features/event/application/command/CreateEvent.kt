@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class CreateEvent(private val repo: EventRepositoryPort) {
-    fun handle(dto: CreateEventRequest): Long =
+    fun handle(dto: CreateEventRequest, userId: Long): Long =
         repo.save(
             Event(
                 name = dto.name,
@@ -15,7 +15,7 @@ class CreateEvent(private val repo: EventRepositoryPort) {
                 startsAt = dto.startsAt,
                 endsAt = dto.endsAt,
                 locationId = dto.locationId,
-                userId = dto.userId,
+                userId = userId,
                 categoryIds = dto.categoryIds,
             )
         )

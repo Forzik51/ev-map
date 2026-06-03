@@ -17,7 +17,9 @@ import com.evmap.serverapp.features.event.application.query.GetAllEventsByUser
 import com.evmap.serverapp.features.event.application.query.GetCommentsByEventId
 import com.evmap.serverapp.features.event.application.query.GetEventById
 import com.evmap.serverapp.features.event.application.query.GetEventsLine
+import com.evmap.serverapp.features.event.application.query.GetPersonalizedEvents
 import com.evmap.serverapp.features.event.application.query.GetReactionsByEventId
+import com.evmap.serverapp.shared.security.CurrentUserProvider
 import jakarta.validation.Valid
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -42,6 +44,7 @@ class EventController(
     private val getEventById: GetEventById,
     private val getAllEventsByUser: GetAllEventsByUser,
     private val getEventsLine: GetEventsLine,
+    private val getPersonalizedEvents: GetPersonalizedEvents,
     private val getCommentsByEventId: GetCommentsByEventId,
     private val getReactionsByEventId: GetReactionsByEventId,
     private val updateEvent: UpdateEvent,
@@ -50,10 +53,12 @@ class EventController(
     private val addReaction: AddReaction,
     private val addShare: AddShare,
     private val removeShare: RemoveShare,
+    private val currentUserProvider: CurrentUserProvider,
 ) {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    fun create(@Valid @RequestBody dto: CreateEvent): Long = createEvent.handle(dto)
+    fun create(@Valid @RequestBody dto: CreateEvent): Long =
+        createEvent.handle(dto, currentUserProvider.get().id)
 
     @GetMapping("/categories")
     fun getAllCategories(): List<ViewEventCategory> = getAllEventCategories.handle()
@@ -73,6 +78,15 @@ class EventController(
         pageable: Pageable
     ): Page<ViewEvent> = getEventsLine.handle(pageable)
 
+    @GetMapping("/feed")
+    fun getFeed(
+        @RequestParam(required = false) lat: Double?,
+        @RequestParam(required = false) lng: Double?,
+        @PageableDefault(size = 20)
+        pageable: Pageable
+    ): Page<ViewEvent> =
+        getPersonalizedEvents.handle(currentUserProvider.get().id, lat, lng, pageable)
+
     @GetMapping("/{id}/comments")
     fun getCommentsByEvent(
         @PathVariable id: Long,
@@ -90,12 +104,22 @@ class EventController(
     @PatchMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun update(@PathVariable id: Long, @Valid @RequestBody dto: CreateEvent) {
-        updateEvent.handle(id, dto)
+        val currentUser = currentUserProvider.get()
+        val existing = getEventById.handle(id)
+        if (existing.userId != currentUser.id && !currentUser.isAdmin) {
+            throw org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.FORBIDDEN, "Access denied")
+        }
+        updateEvent.handle(id, dto, existing.userId)
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun delete(@PathVariable id: Long) {
+        val currentUser = currentUserProvider.get()
+        val existing = getEventById.handle(id)
+        if (existing.userId != currentUser.id && !currentUser.isAdmin) {
+            throw org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.FORBIDDEN, "Access denied")
+        }
         deleteEvent.handle(id)
     }
 
@@ -103,31 +127,29 @@ class EventController(
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun comment(
         @PathVariable id: Long,
-        @RequestParam userId: Long,
         @RequestParam comment: String,
     ) {
-        addComment.handle(id, userId, comment)
+        addComment.handle(id, currentUserProvider.get().id, comment)
     }
 
     @PostMapping("/{id}/reactions")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun react(
         @PathVariable id: Long,
-        @RequestParam userId: Long,
         @RequestParam reaction: String,
     ) {
-        addReaction.handle(id, userId, reaction)
+        addReaction.handle(id, currentUserProvider.get().id, reaction)
     }
 
-    @PostMapping("/{id}/shares/{userId}")
+    @PostMapping("/{id}/shares")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun share(@PathVariable id: Long, @PathVariable userId: Long) {
-        addShare.handle(id, userId)
+    fun share(@PathVariable id: Long) {
+        addShare.handle(id, currentUserProvider.get().id)
     }
 
-    @DeleteMapping("/{id}/shares/{userId}")
+    @DeleteMapping("/{id}/shares")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun unshare(@PathVariable id: Long, @PathVariable userId: Long) {
-        removeShare.handle(id, userId)
+    fun unshare(@PathVariable id: Long) {
+        removeShare.handle(id, currentUserProvider.get().id)
     }
 }

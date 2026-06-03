@@ -169,6 +169,113 @@ class EventReadRepository(private val dsl: DSLContext) {
         return PageImpl(items, pageable, total)
     }
 
+    fun findPersonalizedViews(userId: Long, lat: Double?, lng: Double?, pageable: Pageable): Page<ViewEvent> {
+        val distanceSelect = if (lat != null && lng != null) {
+            """
+            ST_Distance(
+                COALESCE(l.point, ST_PointOnSurface(l.region))::geography,
+                ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography
+            )
+            """.trimIndent()
+        } else {
+            "NULL::double precision"
+        }
+        val selectBindings = if (lat != null && lng != null) listOf(lng, lat) else emptyList()
+        val sql = """
+            SELECT e.id,
+                   e.name,
+                   e.description,
+                   e.start_at,
+                   e.end_at,
+                   e.user_id,
+                   l.name AS location_name,
+                   ph.image_path AS image_path,
+                   COALESCE(rp.reposts_count, 0) AS reposts_count,
+                   COALESCE(rt.ratings_count, 0) AS ratings_count,
+                   COALESCE(cm.comments_count, 0) AS comments_count,
+                   $distanceSelect AS distance_meters,
+                   (
+                       CASE WHEN f.following_id IS NOT NULL THEN 80 ELSE 0 END
+                       + CASE WHEN e.start_at >= now() THEN 30 ELSE 0 END
+                       + CASE WHEN pref.event_id IS NOT NULL THEN 40 ELSE 0 END
+                       + LEAST(COALESCE(rt.ratings_count, 0), 20)
+                   ) AS personalization_score
+            FROM event e
+            LEFT JOIN location l ON l.id = e.location_id
+            LEFT JOIN follow f ON f.follower_id = ? AND f.following_id = e.user_id
+            LEFT JOIN LATERAL (
+                SELECT p.image_path
+                FROM photo p
+                WHERE p.event_id = e.id
+                ORDER BY p.id
+                LIMIT 1
+            ) ph ON TRUE
+            LEFT JOIN (
+                SELECT event_id, COUNT(*) AS reposts_count
+                FROM repost
+                GROUP BY event_id
+            ) rp ON rp.event_id = e.id
+            LEFT JOIN (
+                SELECT event_id, COUNT(*) AS ratings_count
+                FROM rating
+                GROUP BY event_id
+            ) rt ON rt.event_id = e.id
+            LEFT JOIN (
+                SELECT event_id, COUNT(*) AS comments_count
+                FROM comment
+                GROUP BY event_id
+            ) cm ON cm.event_id = e.id
+            LEFT JOIN (
+                SELECT DISTINCT ce.event_id
+                FROM category_event ce
+                WHERE ce.category_id IN (
+                    SELECT ce2.category_id
+                    FROM rating r2
+                    JOIN category_event ce2 ON ce2.event_id = r2.event_id
+                    WHERE r2.user_id = ?
+                    UNION
+                    SELECT ce3.category_id
+                    FROM comment c3
+                    JOIN category_event ce3 ON ce3.event_id = c3.event_id
+                    WHERE c3.user_id = ?
+                )
+            ) pref ON pref.event_id = e.id
+            ORDER BY personalization_score DESC,
+                     distance_meters ASC NULLS LAST,
+                     e.start_at DESC
+            LIMIT ? OFFSET ?
+        """.trimIndent()
+
+        val recs = dsl.resultQuery(
+            sql,
+            *(selectBindings + listOf(userId, userId, userId, pageable.pageSize, pageable.offset)).toTypedArray(),
+        ).fetch()
+
+        val eventIds = recs.mapNotNull { it.get("id", Long::class.java) }
+        val categoriesByEventId = findCategoriesByEventIds(eventIds)
+        val items = recs.map {
+            val eventId = requireNotNull(it.get("id", Long::class.java)) { "id is null for event row" }
+            ViewEvent(
+                id = eventId,
+                name = requireNotNull(it.get("name", String::class.java)) { "name is null for event row" },
+                description = requireNotNull(it.get("description", String::class.java)) { "description is null for event row" },
+                startsAt = requireNotNull(it.get("start_at", Timestamp::class.java)) { "start_at is null for event row" }
+                    .toInstant().toString(),
+                endsAt = it.get("end_at", Timestamp::class.java)?.toInstant()?.toString(),
+                locationName = it.get("location_name", String::class.java),
+                imagePath = it.get("image_path", String::class.java),
+                userId = requireNotNull(it.get("user_id", Long::class.java)) { "user_id is null for event row" },
+                repostsCount = countValue(it, "reposts_count"),
+                ratingsCount = countValue(it, "ratings_count"),
+                commentsCount = countValue(it, "comments_count"),
+                categories = categoriesByEventId[eventId].orEmpty(),
+            )
+        }
+
+        val total = dsl.fetchOne("SELECT COUNT(*) FROM event")?.get(0, Long::class.java) ?: 0L
+        return PageImpl(items, pageable, total)
+    }
+
     fun findCommentsByEventId(eventId: Long, pageable: Pageable): Page<ViewEventComment> {
         ensureEventExists(eventId)
 

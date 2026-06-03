@@ -9,8 +9,9 @@ data class CreateChat(
     @field:Size(max = 20)
     val name: String,
 
+    @Deprecated("Ignored by the server. The authenticated user is used instead.")
     @field:Positive
-    val creatorUserId: Long,
+    val creatorUserId: Long? = null,
 
     val participantUserIds: List<Long> = emptyList(),
 )

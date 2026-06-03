@@ -5,15 +5,15 @@ import com.evmap.serverapp.features.notification.application.command.SendWelcome
 import com.evmap.serverapp.features.user.domian.User
 import com.evmap.serverapp.features.user.domian.UserRepositoryPort
 import org.slf4j.LoggerFactory
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 
 @Service
 class CreateUser(
     private val repo: UserRepositoryPort,
     private val sendWelcomeEmail: SendWelcomeEmail,
+    private val passwordEncoder: PasswordEncoder,
 ) {
-    private val passwordEncoder = BCryptPasswordEncoder()
     private val log = LoggerFactory.getLogger(javaClass)
 
     fun handle(dto: CreateUserRequest): Long {

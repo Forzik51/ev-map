@@ -10,4 +10,5 @@ data class ViewSearchEvent(
     val ratingsCount: Int,
     val distanceMeters: Double?,
     val categories: List<ViewSearchCategory>,
+    val matchedFields: List<String> = emptyList(),
 )

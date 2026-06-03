@@ -15,7 +15,11 @@ import com.evmap.serverapp.features.event.application.query.GetAllEventsByUser
 import com.evmap.serverapp.features.event.application.query.GetCommentsByEventId
 import com.evmap.serverapp.features.event.application.query.GetEventById
 import com.evmap.serverapp.features.event.application.query.GetEventsLine
+import com.evmap.serverapp.features.event.application.query.GetPersonalizedEvents
 import com.evmap.serverapp.features.event.application.query.GetReactionsByEventId
+import com.evmap.serverapp.shared.security.CurrentUser
+import com.evmap.serverapp.shared.security.CurrentUserProvider
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
@@ -55,6 +59,9 @@ class EventControllerTest {
     lateinit var getEventsLine: GetEventsLine
 
     @MockitoBean
+    lateinit var getPersonalizedEvents: GetPersonalizedEvents
+
+    @MockitoBean
     lateinit var getCommentsByEventId: GetCommentsByEventId
 
     @MockitoBean
@@ -78,6 +85,14 @@ class EventControllerTest {
     @MockitoBean
     lateinit var removeShare: RemoveShare
 
+    @MockitoBean
+    lateinit var currentUserProvider: CurrentUserProvider
+
+    @BeforeEach
+    fun setUp() {
+        Mockito.`when`(currentUserProvider.get()).thenReturn(CurrentUser(id = 1L, username = "test-user"))
+    }
+
     @Test
     fun `create should return 201 for valid payload`() {
         val expected = CreateEventRequest(
@@ -89,7 +104,7 @@ class EventControllerTest {
             categoryIds = listOf(1L),
         )
 
-        Mockito.`when`(createEvent.handle(expected)).thenReturn(123L)
+        Mockito.`when`(createEvent.handle(expected, 1L)).thenReturn(123L)
 
         val body = """
             {

@@ -7,10 +7,10 @@ import org.springframework.stereotype.Service
 
 @Service
 class CreateChat(private val repo: ChatRepositoryPort) {
-    fun handle(dto: CreateChatRequest): Long =
+    fun handle(dto: CreateChatRequest, creatorUserId: Long): Long =
         repo.save(
             chat = Chat(name = dto.name),
-            creatorUserId = dto.creatorUserId,
+            creatorUserId = creatorUserId,
             participantUserIds = dto.participantUserIds
         )
 }

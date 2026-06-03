@@ -3,6 +3,7 @@ package com.evmap.serverapp.features.notification.api.controller
 import com.evmap.serverapp.features.notification.api.dto.SendEmailRequest
 import com.evmap.serverapp.features.notification.application.command.SendEmailToAllUsers
 import com.evmap.serverapp.features.notification.application.command.SendEmailToUserById
+import com.evmap.serverapp.shared.security.CurrentUserProvider
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Positive
 import org.springframework.http.HttpStatus
@@ -20,16 +21,19 @@ import org.springframework.web.bind.annotation.RestController
 class NotificationController(
     private val sendEmailToAllUsers: SendEmailToAllUsers,
     private val sendEmailToUserById: SendEmailToUserById,
+    private val currentUserProvider: CurrentUserProvider,
 ) {
     @PostMapping("/all")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun sendToAll(@Valid @RequestBody dto: SendEmailRequest) {
+        currentUserProvider.requireAdmin()
         sendEmailToAllUsers.handle(dto)
     }
 
     @PostMapping("/user/{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun sendToUserById(@PathVariable @Positive userId: Long, @Valid @RequestBody dto: SendEmailRequest) {
+        currentUserProvider.requireAdmin()
         sendEmailToUserById.handle(userId, dto)
     }
 }

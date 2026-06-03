@@ -1,6 +1,7 @@
 package com.evmap.serverapp.features.chat.api
 
 import com.evmap.serverapp.features.chat.api.controller.ChatController
+import com.evmap.serverapp.features.chat.application.ChatAccessDeniedException
 import com.evmap.serverapp.features.chat.application.ChatNotFoundException
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
@@ -14,6 +15,11 @@ class ChatApiExceptionHandler {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     fun handleNotFound(ex: ChatNotFoundException): Map<String, String> =
         mapOf("message" to (ex.message ?: "Chat not found"))
+
+    @ExceptionHandler(ChatAccessDeniedException::class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    fun handleAccessDenied(ex: ChatAccessDeniedException): Map<String, String> =
+        mapOf("message" to (ex.message ?: "Chat access denied"))
 
     @ExceptionHandler(DataIntegrityViolationException::class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
