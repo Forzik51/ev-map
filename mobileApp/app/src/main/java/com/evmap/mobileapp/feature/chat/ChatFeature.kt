@@ -1,18 +1,15 @@
 package feature.chat
 
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
-import core.navigation.FeatureEntry
-import core.ui.model.ChatUi
-import core.ui.model.MessageUi
-import feature.chat.ui.ChatsScreen
-import com.evmap.mobileapp.core.ui.model.ChatsUiState
+import com.evmap.mobileapp.feature.chat.ui.ChatViewModel
 import com.evmap.mobileapp.feature.chat.ui.ConversationScreen
-import com.evmap.mobileapp.core.ui.model.ConversationUi
+import core.navigation.FeatureEntry
+import feature.chat.ui.ChatsScreen
 
 object ChatFeature : FeatureEntry {
     override val route = "chats"
@@ -22,180 +19,52 @@ object ChatFeature : FeatureEntry {
         onNavigateToRoute: (String) -> Unit,
         onNavigateUp: () -> Unit
     ) {
-        // Chats list screen
         navGraphBuilder.composable(route = route) {
-            var uiState by remember {
-                mutableStateOf(
-                    ChatsUiState(
-                        items = getMockChats(),
-                        isSelecting = false,
-                        selection = emptySet()
-                    )
-                )
+            val viewModel: ChatViewModel = hiltViewModel()
+            val state by viewModel.state.collectAsState()
+
+            LaunchedEffect(Unit) {
+                viewModel.loadChats()
             }
 
             ChatsScreen(
-                ui = uiState,
+                ui = state.chats,
                 onOpenChat = { chatId ->
                     onNavigateToRoute("chats/$chatId")
                 },
-                onEnterSelectMode = {
-                    uiState = uiState.copy(isSelecting = true)
-                },
-                onToggleSelect = { chatId ->
-                    val newSelection = if (uiState.selection.contains(chatId)) {
-                        uiState.selection - chatId
-                    } else {
-                        uiState.selection + chatId
-                    }
-                    uiState = uiState.copy(selection = newSelection)
-                },
-                onDeleteSelected = {
-                    val remainingItems = uiState.items.filterNot { chat ->
-                        uiState.selection.contains(chat.id)
-                    }
-                    uiState = ChatsUiState(
-                        items = remainingItems,
-                        isSelecting = false,
-                        selection = emptySet()
-                    )
-                },
-                onExitSelectMode = {
-                    uiState = uiState.copy(
-                        isSelecting = false,
-                        selection = emptySet()
-                    )
-                },
+                onEnterSelectMode = viewModel::enterSelectMode,
+                onToggleSelect = viewModel::toggleSelect,
+                onDeleteSelected = viewModel::deleteSelected,
+                onExitSelectMode = viewModel::exitSelectMode,
                 currentRoute = route,
                 onNavigate = onNavigateToRoute
             )
         }
 
-        // Individual conversation screen
         navGraphBuilder.composable(route = "chats/{chatId}") { backStackEntry ->
             val chatId = backStackEntry.arguments?.getString("chatId") ?: return@composable
+            val viewModel: ChatViewModel = hiltViewModel()
+            val state by viewModel.state.collectAsState()
 
-            var conversationUi by remember {
-                mutableStateOf(
-                    ConversationUi(
-                        messages = getMockMessages(),
-                        input = "",
-                        isRecording = false,
-                        recordSeconds = 0
-                    )
-                )
+            LaunchedEffect(chatId) {
+                viewModel.loadConversation(chatId)
             }
 
-            // Get peer name from chat ID (in real app, fetch from repository)
-            val peerName = getMockChats().find { it.id == chatId }?.name ?: "Unknown"
-
             ConversationScreen(
-                ui = conversationUi,
-                peerName = peerName,
+                ui = state.conversation,
+                peerName = state.peerName,
                 onBack = onNavigateUp,
-                onInputChange = { newInput ->
-                    conversationUi = conversationUi.copy(input = newInput)
-                },
-                onSend = {
-                    if (conversationUi.input.isNotBlank()) {
-                        // TODO: Implement send message logic
-                        conversationUi = conversationUi.copy(input = "")
-                    }
-                },
+                onInputChange = viewModel::updateInput,
+                onSend = { viewModel.send(chatId) },
                 onAttach = {
-                    // TODO: Implement attach media logic
+                    // Media attachments are pending backend contract/UI picker work.
                 },
                 onStartRecord = {
-                    conversationUi = conversationUi.copy(isRecording = true, recordSeconds = 0)
+                    // Voice recording remains UI-only until backend media messages exist.
                 },
-                onStopRecord = {
-                    // TODO: Implement stop recording logic
-                    conversationUi = conversationUi.copy(isRecording = false, recordSeconds = 0)
-                },
-                onCancelRecord = {
-                    conversationUi = conversationUi.copy(isRecording = false, recordSeconds = 0)
-                }
+                onStopRecord = {},
+                onCancelRecord = {}
             )
         }
     }
-
-    private fun getMockChats(): List<ChatUi> = listOf(
-        ChatUi(
-            id = "1",
-            name = "Alice Johnson",
-            lastMessage = "Hey, how are you doing?",
-            lastMessageTime = "2:30 PM",
-            unreadCount = 2
-        ),
-        ChatUi(
-            id = "2",
-            name = "Bob Smith",
-            lastMessage = "Let's meet tomorrow",
-            lastMessageTime = "1:15 PM",
-            unreadCount = 0
-        ),
-        ChatUi(
-            id = "3",
-            name = "Carol Williams",
-            lastMessage = "Thanks for your help!",
-            lastMessageTime = "Yesterday",
-            unreadCount = 1
-        ),
-        ChatUi(
-            id = "4",
-            name = "David Brown",
-            lastMessage = "See you soon",
-            lastMessageTime = "Yesterday",
-            unreadCount = 0
-        ),
-        ChatUi(
-            id = "5",
-            name = "Emma Davis",
-            lastMessage = "Great job on the project",
-            lastMessageTime = "Monday",
-            unreadCount = 5
-        )
-    )
-
-    private fun getMockMessages(): List<MessageUi> = listOf(
-        MessageUi(
-            id = "1",
-            text = "So excited!",
-            timestamp = System.currentTimeMillis() - 86400000, // Yesterday
-            isMine = false,
-            senderName = "Alice",
-            senderAvatarUrl = null
-        ),
-        MessageUi(
-            id = "2",
-            text = "What should we make?",
-            timestamp = System.currentTimeMillis() - 86000000,
-            isMine = false,
-            senderName = "Alice",
-            senderAvatarUrl = null
-        ),
-        MessageUi(
-            id = "3",
-            text = "Pasta?",
-            timestamp = System.currentTimeMillis() - 85800000,
-            isMine = false,
-            senderName = "Alice",
-            senderAvatarUrl = null
-        ),
-        MessageUi(
-            id = "4",
-            text = "or we could make this?",
-            timestamp = System.currentTimeMillis() - 3600000,
-            isMine = true,
-            mediaUrl = "https://example.com/dumplings.jpg"
-        ),
-        MessageUi(
-            id = "5",
-            text = "Sounds good!",
-            timestamp = System.currentTimeMillis() - 1800000,
-            isMine = false,
-            senderName = "Alice",
-            senderAvatarUrl = null
-        )
-    )
 }

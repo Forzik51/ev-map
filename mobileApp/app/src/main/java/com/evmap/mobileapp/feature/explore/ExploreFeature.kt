@@ -1,11 +1,11 @@
 package feature.explore
 
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import com.evmap.mobileapp.feature.explore.ui.ExploreViewModel
 import core.navigation.FeatureEntry
 import core.ui.model.EventUi
 import core.ui.model.ProfileUserUi
@@ -13,102 +13,35 @@ import feature.explore.ui.ExploreScreen
 
 object ExploreFeature : FeatureEntry {
     override val route = "explore"
-    
+
     override fun registerGraph(
         navGraphBuilder: NavGraphBuilder,
         onNavigateToRoute: (String) -> Unit,
         onNavigateUp: () -> Unit
     ) {
         navGraphBuilder.composable(route) {
-            // TODO: Implement with ViewModel
-            // val viewModel: ExploreViewModel = hiltViewModel()
-            // val state by viewModel.state.collectAsState()
-            
-            // Mock data for demonstration
-            var uiState by remember {
-                mutableStateOf(
-                    ExploreUiState(
-                        query = "",
-                        selectedTab = ExploreTab.USERS, // Default to USERS as requested
-                        events = listOf(
-                            EventUi(
-                                id = "1",
-                                title = "List item",
-                                location = "loc • ",
-                                startsAt = "startat",
-                                description = "Supporting line text lorem ipsum dolor sit amet, consectetur.",
-                                rating = 5.0f,
-                                imageUrl = "https://picsum.photos/200/300"
-                            ),
-                            EventUi(
-                                id = "2", 
-                                title = "List item",
-                                location = "loc • ",
-                                startsAt = "startat",
-                                description = "Supporting line text lorem ipsum dolor sit amet, consectetur.",
-                                rating = 5.0f,
-                                imageUrl = "https://picsum.photos/200/300"
-                            ),
-                            EventUi(
-                                id = "3",
-                                title = "List item",
-                                location = "loc • ",
-                                startsAt = "startat",
-                                description = "Supporting line text lorem ipsum dolor sit amet, consectetur.",
-                                rating = 5.0f,
-                                imageUrl = "https://picsum.photos/200/300"
-                            )
-                        ),
-                        isFilterOpen = false,
-                        sortBy = "Name",
-                        selectedType = "All"
-                    )
-                )
-            }
-            
+            val viewModel: ExploreViewModel = hiltViewModel()
+            val uiState by viewModel.state.collectAsState()
+
             ExploreScreen(
                 uiState = uiState,
-                onQueryChange = { query ->
-                    uiState = uiState.copy(query = query)
-                    // TODO: viewModel::updateQuery
-                },
-                onSelectTab = { tab ->
-                    uiState = uiState.copy(selectedTab = tab)
-                    // TODO: viewModel::selectTab
-                },
+                onQueryChange = viewModel::updateQuery,
+                onSelectTab = viewModel::selectTab,
                 onUserClick = { userId ->
                     onNavigateToRoute("profile/$userId")
-                    // TODO: viewModel::onUserClick
                 },
                 onEventClick = { eventId ->
                     onNavigateToRoute("events/$eventId")
-                    // TODO: viewModel::onEventClick
                 },
-                onOpenFilters = {
-                    uiState = uiState.copy(isFilterOpen = true)
-                    // TODO: viewModel::openFilters
-                },
-                onCloseFilters = {
-                    uiState = uiState.copy(isFilterOpen = false)
-                    // TODO: viewModel::closeFilters
-                },
-                onApplyFilters = {
-                    uiState = uiState.copy(isFilterOpen = false)
-                    // TODO: viewModel::applyFilters
-                },
+                onOpenFilters = viewModel::openFilters,
+                onCloseFilters = viewModel::closeFilters,
+                onApplyFilters = viewModel::applyFilters,
                 onBack = onNavigateUp,
-                onSave = { eventId ->
-                    // TODO: Handle save/bookmark event
-                    // viewModel::saveEvent(eventId)
+                onSave = {
+                    // Saved-list picker is pending.
                 },
-                onSortChange = { sortBy ->
-                    uiState = uiState.copy(sortBy = sortBy)
-                    // TODO: viewModel::updateSortBy(sortBy)
-                },
-                onTypeChange = { type ->
-                    uiState = uiState.copy(selectedType = type)
-                    // TODO: viewModel::updateSelectedType(type)
-                }
+                onSortChange = viewModel::updateSortBy,
+                onTypeChange = viewModel::updateSelectedType
             )
         }
     }

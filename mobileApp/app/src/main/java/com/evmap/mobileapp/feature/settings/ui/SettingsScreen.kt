@@ -19,6 +19,8 @@ private fun SettingsScreenPreview() {
         SettingsScreen(
             onOpenProfileEdit = {},
             onOpenSaved = {},
+            onOpenAdmin = {},
+            showAdmin = true,
             onOpenOthers = {},
             onLogOut = {},
             onBack = {}
@@ -31,6 +33,8 @@ private fun SettingsScreenPreview() {
 fun SettingsScreen(
     onOpenProfileEdit: () -> Unit,
     onOpenSaved: () -> Unit,
+    onOpenAdmin: () -> Unit,
+    showAdmin: Boolean,
     onOpenOthers: () -> Unit,
     onLogOut: () -> Unit,
     onBack: () -> Unit,
@@ -95,6 +99,13 @@ fun SettingsScreen(
                 label = "Saved events",
                 onClick = onOpenSaved
             )
+
+            if (showAdmin) {
+                SettingsRow(
+                    label = "Admin moderation",
+                    onClick = onOpenAdmin
+                )
+            }
             
             SettingsRow(
                 label = "Others",

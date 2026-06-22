@@ -1,20 +1,23 @@
 package feature.events
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.setValue
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import core.navigation.FeatureEntry
-import core.ui.model.EventDraftUi
+import com.evmap.mobileapp.feature.events.ui.EventCreateViewModel
 import feature.events.ui.EventCreateScreen
 import feature.events.ui.EventDetailsScreen
-import java.text.SimpleDateFormat
-import java.util.*
+import java.time.Instant
+import java.time.ZoneId
 
 object EventsFeature : FeatureEntry {
     override val route = "events"
@@ -76,6 +79,7 @@ object EventsFeature : FeatureEntry {
                     currentRoute = EventsFeature.route,
                     onBack = onNavigateUp,
                     onShare = {},
+                    onReport = { onNavigateToRoute("reports/create/$eventId") },
                     onOpenMap = {},
                     onOpenOrganizer = {},
                     onOpenCategory = {},
@@ -84,99 +88,57 @@ object EventsFeature : FeatureEntry {
             }
             
             composable(Create) {
-                // TODO: Implement with ViewModel
-                // val viewModel: EventCreateViewModel = hiltViewModel()
-                // val state by viewModel.state.collectAsState()
-                
-                // Local state for demonstration - this would be in ViewModel
-                var currentDraft by remember {
-                    mutableStateOf(
-                        EventDraftUi(
-                            title = "",
-                            subtitle = "",
-                            description = "",
-                            date = "08/17/2025",
-                            location = "Warsaw",
-                            categories = emptySet(),
-                            availableCategories = listOf(
-                                "Music", "Art", "Food", "Technology", "Sports", 
-                                "Business", "Health", "Education", "Travel", "Gaming",
-                                "Conference", "Workshop", "Networking", "Entertainment",
-                                "Festival", "Competition", "Exhibition", "Social"
-                            ),
-                            media = listOf(
-                                "https://example.com/image1.jpg",
-                                "https://example.com/image2.jpg"
-                            ),
-                            categoriesQuery = ""
-                        )
-                    )
-                }
-                
+                val viewModel: EventCreateViewModel = hiltViewModel()
+                val state by viewModel.state.collectAsState()
                 var showDatePicker by remember { mutableStateOf(false) }
 
+                LaunchedEffect(state.createdEventId) {
+                    state.createdEventId?.let { eventId ->
+                        viewModel.consumeCreatedEvent()
+                        onNavigateToRoute("events/$eventId")
+                    }
+                }
+
                 EventCreateScreen(
-                    draft = currentDraft,
+                    draft = state.draft,
                     showDatePicker = showDatePicker,
-                    onTitleChange = { title ->
-                        currentDraft = currentDraft.copy(title = title)
-                        // TODO: viewModel::updateTitle
-                    },
-                    onSubtitleChange = { subtitle ->
-                        currentDraft = currentDraft.copy(subtitle = subtitle)
-                        // TODO: viewModel::updateSubtitle
-                    },
-                    onDescriptionChange = { description ->
-                        currentDraft = currentDraft.copy(description = description)
-                        // TODO: viewModel::updateDescription
-                    },
+                    showLocationPicker = state.isLocationPickerOpen,
+                    locationQuery = state.locationQuery,
+                    locationResults = state.locationResults,
+                    isSubmitting = state.loading,
+                    errorMessage = state.error,
+                    onTitleChange = viewModel::updateTitle,
+                    onSubtitleChange = viewModel::updateSubtitle,
+                    onDescriptionChange = viewModel::updateDescription,
                     onPickDate = {
                         showDatePicker = true
-                        // TODO: viewModel::showDatePicker
                     },
                     onDateSelected = { dateMillis ->
                         dateMillis?.let { millis ->
-                            val formatter = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
-                            val formattedDate = formatter.format(Date(millis))
-                            currentDraft = currentDraft.copy(date = formattedDate)
-                            // TODO: viewModel::updateDate(formattedDate)
+                            val date = Instant.ofEpochMilli(millis)
+                                .atZone(ZoneId.systemDefault())
+                                .toLocalDate()
+                                .toString()
+                            viewModel.updateDate(date)
                         }
                     },
                     onDatePickerDismiss = {
                         showDatePicker = false
-                        // TODO: viewModel::hideDatePicker
                     },
                     onPickLocation = {
-                        // TODO: Show location picker
+                        viewModel.openLocationPicker()
                     },
-                    onCategoriesQueryChange = { query ->
-                        currentDraft = currentDraft.copy(categoriesQuery = query)
-                        // TODO: viewModel::updateCategoriesQuery(query)
-                    },
-                    onToggleCategory = { category ->
-                        val updatedCategories = if (category in currentDraft.categories) {
-                            currentDraft.categories - category
-                        } else {
-                            currentDraft.categories + category
-                        }
-                        currentDraft = currentDraft.copy(categories = updatedCategories)
-                        // TODO: viewModel::toggleCategory(category)
-                    },
+                    onLocationQueryChange = viewModel::updateLocationQuery,
+                    onSelectLocation = viewModel::selectLocation,
+                    onLocationPickerDismiss = viewModel::closeLocationPicker,
+                    onCategoriesQueryChange = viewModel::updateCategoriesQuery,
+                    onToggleCategory = viewModel::toggleCategory,
                     onAddPhoto = {
                         // TODO: Show photo picker
                     },
-                    onRemovePhoto = { index ->
-                        val updatedMedia = currentDraft.media.toMutableList().apply {
-                            if (index < size) removeAt(index)
-                        }
-                        currentDraft = currentDraft.copy(media = updatedMedia)
-                        // TODO: viewModel::removePhoto(index)
-                    },
+                    onRemovePhoto = viewModel::removePhoto,
                     onSubmit = {
-                        // TODO: viewModel.createEvent { eventId ->
-                        //     onNavigateToRoute("events/$eventId")
-                        // }
-                        onNavigateUp()
+                        viewModel.createEvent()
                     },
                     onBack = onNavigateUp
                 )

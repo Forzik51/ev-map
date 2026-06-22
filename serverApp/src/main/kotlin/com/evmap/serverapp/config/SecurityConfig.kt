@@ -32,6 +32,7 @@ class SecurityConfig(
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests {
                 it
+                    .requestMatchers("/error").permitAll()
                     .requestMatchers("/api/auth/**").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
                     .requestMatchers("/ws/**").permitAll()

@@ -1,11 +1,13 @@
 package feature.settings
 
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import com.evmap.mobileapp.feature.settings.ui.ProfileEditViewModel
+import com.evmap.mobileapp.feature.settings.ui.SettingsViewModel
 import core.navigation.FeatureEntry
 import feature.settings.ui.ProfileEditScreen
 import feature.settings.ui.SettingsScreen
@@ -19,6 +21,15 @@ object SettingsFeature : FeatureEntry {
         onNavigateUp: () -> Unit
     ) {
         navGraphBuilder.composable(route = route) {
+            val viewModel: SettingsViewModel = hiltViewModel()
+            val state by viewModel.state.collectAsState()
+
+            LaunchedEffect(state.loggedOut) {
+                if (state.loggedOut) {
+                    onNavigateToRoute("auth/login")
+                }
+            }
+
             SettingsScreen(
                 onOpenProfileEdit = {
                     onNavigateToRoute("profile/edit")
@@ -26,12 +37,16 @@ object SettingsFeature : FeatureEntry {
                 onOpenSaved = {
                     onNavigateToRoute("saved")
                 },
+                onOpenAdmin = {
+                    onNavigateToRoute("admin/moderation")
+                },
+                showAdmin = state.isAdmin,
                 onOpenOthers = {
                     // TODO: Navigate to others screen
                     // onNavigateToRoute("others")
                 },
                 onLogOut = {
-                    onNavigateToRoute("auth/login")
+                    viewModel.logout()
                 },
                 onBack = onNavigateUp
             )
@@ -39,24 +54,26 @@ object SettingsFeature : FeatureEntry {
 
         // Profile Edit Screen
         navGraphBuilder.composable(route = "profile/edit") {
-            var username by remember { mutableStateOf("") }
-            var phone by remember { mutableStateOf("") }
-            var title by remember { mutableStateOf("") }
-            var bio by remember { mutableStateOf("") }
+            val viewModel: ProfileEditViewModel = hiltViewModel()
+            val state by viewModel.state.collectAsState()
+
+            LaunchedEffect(state.saved) {
+                if (state.saved) {
+                    viewModel.consumeSaved()
+                    onNavigateUp()
+                }
+            }
 
             ProfileEditScreen(
-                username = username,
-                phone = phone,
-                title = title,
-                bio = bio,
-                onUsernameChange = { username = it },
-                onPhoneChange = { phone = it },
-                onTitleChange = { title = it },
-                onBioChange = { bio = it },
-                onApply = {
-                    // TODO: Implement profile save logic
-                    onNavigateUp()
-                },
+                username = state.username,
+                phone = state.phone,
+                title = state.title,
+                bio = state.bio,
+                onUsernameChange = { },
+                onPhoneChange = { },
+                onTitleChange = viewModel::updateTitle,
+                onBioChange = viewModel::updateBio,
+                onApply = viewModel::save,
                 onBack = onNavigateUp
             )
         }

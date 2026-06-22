@@ -6,6 +6,7 @@ data class EventDraftUi(
     val description: String = "bbb",
     val date: String = "bbb",
     val location: String = "bbb",
+    val locationId: Long? = null,
     val categories: Set<String> = emptySet(),
     val availableCategories: List<String> = emptyList(),
     val media: List<String> = emptyList(),

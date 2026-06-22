@@ -1,16 +1,14 @@
 package feature.saved
 
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import com.evmap.mobileapp.feature.saved.ui.SavedViewModel
 import core.navigation.FeatureEntry
-import core.ui.model.EventUi
 import core.ui.model.GroupItemsUi
-import core.ui.model.SavedGroupUi
-import core.ui.model.ViewMode
 import feature.saved.ui.GroupItemsScreen
 import feature.saved.ui.SavedScreen
 
@@ -23,96 +21,40 @@ object SavedFeature : FeatureEntry {
         onNavigateUp: () -> Unit
     ) {
         navGraphBuilder.composable(route = route) {
-            val savedGroups = remember {
-                listOf(
-                    SavedGroupUi(
-                        id = "group1",
-                        name = "Name",
-                        count = 5,
-                        imageUrl = null
-                    ),
-                    SavedGroupUi(
-                        id = "group2", 
-                        name = "Name",
-                        count = 3,
-                        imageUrl = null
-                    ),
-                    SavedGroupUi(
-                        id = "group3",
-                        name = "Name",
-                        count = 8,
-                        imageUrl = null
-                    ),
-                    SavedGroupUi(
-                        id = "group4",
-                        name = "Name", 
-                        count = 2,
-                        imageUrl = null
-                    )
-                )
+            val viewModel: SavedViewModel = hiltViewModel()
+            val state by viewModel.state.collectAsState()
+
+            LaunchedEffect(Unit) {
+                viewModel.loadGroups()
             }
 
             SavedScreen(
-                groups = savedGroups,
+                groups = state.groups,
                 onOpenGroup = { groupId ->
                     onNavigateToRoute("saved/$groupId")
                 },
                 onAddGroup = {
-                    // TODO: Navigate to add/create saved group screen
-                    // onNavigateToRoute("saved/create")
+                    // Create-list UI is still pending.
                 },
                 onBack = onNavigateUp
             )
         }
 
-        // Group Items Screen
         navGraphBuilder.composable(route = "saved/{groupId}") { backStackEntry ->
             val groupId = backStackEntry.arguments?.getString("groupId") ?: return@composable
+            val viewModel: SavedViewModel = hiltViewModel()
+            val state by viewModel.state.collectAsState()
 
-            // TODO: Replace with actual ViewModel when available
-            var groupItemsState by remember {
-                mutableStateOf(
-                    GroupItemsUi(
-                        groupId = groupId,
-                        title = "Name", // TODO: Get actual group name
-                        items = listOf(
-                            EventUi(
-                                id = "event1",
-                                title = "Title",
-                                location = "Subtitle",
-                                startsAt = "stAt",
-                                description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor",
-                                imageUrl = null,
-                                rating = 5.0f,
-                                reviewCount = 50
-                            ),
-                            EventUi(
-                                id = "event2",
-                                title = "Title",
-                                location = "Subtitle",
-                                startsAt = "stAt",
-                                description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor",
-                                imageUrl = null,
-                                rating = 4.5f,
-                                reviewCount = 30
-                            )
-                        ),
-                        viewMode = ViewMode.LIST
-                    )
-                )
+            LaunchedEffect(groupId) {
+                viewModel.loadGroup(groupId)
             }
 
             GroupItemsScreen(
-                ui = groupItemsState,
+                ui = state.groupItems ?: GroupItemsUi(groupId = groupId, title = "Saved", items = emptyList()),
                 onBack = onNavigateUp,
-                onToggleView = {
-                    groupItemsState = groupItemsState.copy(
-                        viewMode = if (groupItemsState.viewMode == ViewMode.LIST) ViewMode.GRID else ViewMode.LIST
-                    )
-                },
+                onToggleView = viewModel::toggleView,
                 onOpenItem = { eventId ->
-                    // TODO: Navigate to event details
-                    // onNavigateToRoute("events/$eventId")
+                    onNavigateToRoute("events/$eventId")
                 }
             )
         }

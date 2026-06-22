@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Report
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Add
@@ -20,8 +21,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.evmap.mobileapp.feature.events.ui.EventViewModel
+import com.evmap.mobileapp.feature.feed.data.toAbsoluteMediaUrl
 import core.designsystem.Spacing
 import core.ui.components.AppBottomBar
+import core.ui.components.CategoryChip
+import core.ui.components.ChipsFlowRow
 import feature.events.ui.components.MediaHeader
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -32,6 +36,7 @@ fun EventDetailsScreen(
     currentRoute: String?,
     onBack: () -> Unit,
     onShare: () -> Unit,
+    onReport: () -> Unit,
     onOpenMap: () -> Unit,
     onOpenOrganizer: () -> Unit,
     onOpenCategory: (String) -> Unit,
@@ -40,15 +45,13 @@ fun EventDetailsScreen(
     vm: EventViewModel = hiltViewModel()
 ) {
     val state by vm.state.collectAsState()
+    val event = state.event
+    val media = state.photos
+        .mapNotNull { it.imagePath.toAbsoluteMediaUrl() }
+        .ifEmpty { listOfNotNull(event?.imagePath.toAbsoluteMediaUrl()) }
 
     LaunchedEffect(eventId) {
         vm.load(eventId)
-    }
-
-    when {
-        state.loading -> Text("Loading...")
-        state.error != null -> Text("Error: ${state.error}")
-        state.event != null -> Text("Title: ${state.event!!.description}")
     }
 
     Scaffold(
@@ -66,7 +69,17 @@ fun EventDetailsScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = onShare) {
+                    IconButton(onClick = onReport) {
+                        Icon(
+                            imageVector = Icons.Default.Report,
+                            contentDescription = "Report",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    IconButton(onClick = {
+                        vm.share(eventId)
+                        onShare()
+                    }) {
                         Icon(
                             imageVector = Icons.Default.Share,
                             contentDescription = "Share",
@@ -97,11 +110,33 @@ fun EventDetailsScreen(
             // Media Header (read-only gallery)
             item {
                 MediaHeader(
-                    media = emptyList(),
+                    media = media,
                     onAddClick = null, // Read-only, no add functionality
                     onRemoveAt = null, // Read-only, no remove functionality
                     modifier = Modifier.padding(horizontal = Spacing.s)
                 )
+            }
+
+            if (state.loading) {
+                item {
+                    Text(
+                        text = "Loading...",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = Spacing.m)
+                    )
+                }
+            }
+
+            if (state.error != null && event == null) {
+                item {
+                    Text(
+                        text = "Error: ${state.error}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(horizontal = Spacing.m)
+                    )
+                }
             }
             
             // Title and Subtitle
@@ -112,17 +147,17 @@ fun EventDetailsScreen(
                         .padding(horizontal = Spacing.m)
                 ) {
                     Text(
-                        text = "Error: ${state.error}",
+                        text = event?.name ?: "Event",
                         style = MaterialTheme.typography.headlineSmall,
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
 
-                    state.event?.locationName.let { subtitle ->
+                    event?.locationName.let { subtitle ->
                         Spacer(modifier = Modifier.height(Spacing.xs))
                         Text(
-                            text = subtitle ?: "none subtitle",
+                            text = subtitle ?: "Location not specified",
                             style = MaterialTheme.typography.titleSmall,
                             color = MaterialTheme.colorScheme.onSurface,
                             maxLines = 1,
@@ -151,7 +186,7 @@ fun EventDetailsScreen(
                     Spacer(modifier = Modifier.width(Spacing.s))
                     
                     Text(
-                        text = /*state.event.rating?.toString() ?:*/ "5.0",
+                        text = event?.ratingsCount?.toString() ?: "0",
                         style = MaterialTheme.typography.labelLarge,
                         color = Color.Black
                     )
@@ -179,26 +214,16 @@ fun EventDetailsScreen(
                     Spacer(modifier = Modifier.width(Spacing.s))
                     
                     Text(
-                        text = /*state.event.reviewCount?.toString() ?:*/ "50",
+                        text = event?.commentsCount?.toString() ?: "0",
                         style = MaterialTheme.typography.labelLarge,
                         color = Color.Black
                     )
                     
                     Spacer(modifier = Modifier.width(Spacing.m))
                     
-                    // Views/Likes if present
-                    state.event?.id.let { views ->
+                    event?.repostsCount.let { shares ->
                         Text(
-                            text = "$views views",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.width(Spacing.s))
-                    }
-
-                    state.event?.id.let { likes ->
-                        Text(
-                            text = "$likes likes",
+                            text = "${shares ?: 0} shares",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -213,7 +238,7 @@ fun EventDetailsScreen(
                         .fillMaxWidth()
                         .padding(horizontal = Spacing.m)
                 ) {
-                    state.event?.locationName.let { location ->
+                    event?.locationName.let { location ->
                         Row(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -225,17 +250,17 @@ fun EventDetailsScreen(
                             )
                             Spacer(modifier = Modifier.width(Spacing.xs))
                             Text(
-                                text = location.toString(),
+                                text = location ?: "Location not specified",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
                     
-                    state.event?.startsAt.let { date ->
+                    event?.startsAt.let { date ->
                         Spacer(modifier = Modifier.height(Spacing.xs))
                         Text(
-                            text = "Date $date",
+                            text = "Date ${date ?: "not specified"}",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -244,7 +269,7 @@ fun EventDetailsScreen(
             }
             
             // Categories
-            /*if (state.event.categories.isNotEmpty()) {
+            if (!event?.categories.isNullOrEmpty()) {
                 item {
                     Column(
                         modifier = Modifier
@@ -260,17 +285,17 @@ fun EventDetailsScreen(
                         Spacer(modifier = Modifier.height(Spacing.s))
                         
                         ChipsFlowRow {
-                            ui.categories.forEach { category ->
+                            event?.categories.orEmpty().forEach { category ->
                                 CategoryChip(
-                                    text = category,
+                                    text = category.name,
                                     selected = false,
-                                    onToggle = { onOpenCategory(category) }
+                                    onToggle = { onOpenCategory(category.name) }
                                 )
                             }
                         }
                     }
                 }
-            }*/
+            }
             
             // Long Description
             item {
@@ -279,7 +304,7 @@ fun EventDetailsScreen(
                         .fillMaxWidth()
                         .padding(horizontal = Spacing.m)
                 ) {
-                    val description = state.event?.description ?: "ui.event.description"
+                    val description = event?.description ?: state.error ?: "No description"
                     description.let {
                         Text(
                             text = "Description",

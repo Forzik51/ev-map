@@ -1,7 +1,11 @@
 package feature.map
 
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import com.evmap.mobileapp.feature.map.ui.MapViewModel
 import core.navigation.FeatureEntry
 import feature.map.ui.SearchMapScreen
 
@@ -14,23 +18,24 @@ object MapFeature : FeatureEntry {
         onNavigateUp: () -> Unit
     ) {
         navGraphBuilder.composable(route = route) {
-            // TODO: Replace with actual state management/ViewModel
+            val viewModel: MapViewModel = hiltViewModel()
+            val state by viewModel.state.collectAsState()
+
             SearchMapScreen(
-                query = "",
-                pins = emptyList(),
-                camera = core.ui.model.MapCameraUi(lat = 37.7749, lng = -122.4194, zoom = 10f),
-                selected = null,
-                onQueryChange = { /* TODO: Handle query change */ },
-                onPinClick = { /* TODO: Handle pin click */ },
-                onRecenter = { /* TODO: Handle recenter */ },
-                onZoomIn = { /* TODO: Handle zoom in */ },
-                onZoomOut = { /* TODO: Handle zoom out */ },
-                onMyLocation = { /* TODO: Handle my location */ },
+                query = state.query,
+                pins = state.pins,
+                camera = state.camera,
+                selected = state.selected,
+                onQueryChange = viewModel::updateQuery,
+                onPinClick = viewModel::selectPin,
+                onRecenter = viewModel::loadNearby,
+                onZoomIn = viewModel::zoomIn,
+                onZoomOut = viewModel::zoomOut,
+                onMyLocation = viewModel::loadNearby,
                 onOpenEvent = { eventId ->
-                    // TODO: Navigate to event details
-                    onNavigateToRoute("event/$eventId")
+                    onNavigateToRoute("events/$eventId")
                 },
-                onDismissPreview = { /* TODO: Handle dismiss preview */ },
+                onDismissPreview = viewModel::dismissPreview,
                 currentRoute = route,
                 onNavigate = onNavigateToRoute
             )

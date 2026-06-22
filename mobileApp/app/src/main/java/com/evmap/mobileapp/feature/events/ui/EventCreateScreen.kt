@@ -1,6 +1,8 @@
 package feature.events.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -10,6 +12,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.evmap.mobileapp.core.data.dto.SearchLocationDto
 import core.designsystem.AppTheme
 import core.designsystem.Spacing
 import core.ui.components.*
@@ -85,6 +89,11 @@ private fun EventCreateScreenPreview() {
 fun EventCreateScreen(
     draft: EventDraftUi,
     showDatePicker: Boolean = false,
+    showLocationPicker: Boolean = false,
+    locationQuery: String = "",
+    locationResults: List<SearchLocationDto> = emptyList(),
+    isSubmitting: Boolean = false,
+    errorMessage: String? = null,
     onTitleChange: (String) -> Unit,
     onSubtitleChange: (String) -> Unit,
     onDescriptionChange: (String) -> Unit,
@@ -92,6 +101,9 @@ fun EventCreateScreen(
     onDateSelected: (Long?) -> Unit = {},
     onDatePickerDismiss: () -> Unit = {},
     onPickLocation: () -> Unit,
+    onLocationQueryChange: (String) -> Unit = {},
+    onSelectLocation: (SearchLocationDto) -> Unit = {},
+    onLocationPickerDismiss: () -> Unit = {},
     onCategoriesQueryChange: (String) -> Unit,
     onToggleCategory: (String) -> Unit,
     onAddPhoto: () -> Unit,
@@ -132,10 +144,10 @@ fun EventCreateScreen(
         },
         bottomBar = {
             PrimaryButton(
-                text = "Add",
+                text = if (isSubmitting) "Adding..." else "Add",
                 onClick = onSubmit,
                 modifier = Modifier.padding(Spacing.m),
-                enabled = draft.title.isNotBlank()
+                enabled = !isSubmitting && draft.title.isNotBlank()
             )
         },
         containerColor = MaterialTheme.colorScheme.surface
@@ -255,7 +267,7 @@ fun EventCreateScreen(
 
                 // Location Field
                 LocationField(
-                    value = draft.location.ifEmpty { "Warsaw" },
+                    value = draft.location,
                     onClick = onPickLocation,
                     label = "Location",
                     placeholder = "Select location"
@@ -310,6 +322,15 @@ fun EventCreateScreen(
                 }
             }
 
+            if (!errorMessage.isNullOrBlank()) {
+                Text(
+                    text = errorMessage,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(horizontal = Spacing.m)
+                )
+            }
+
             // Bottom spacing to ensure content doesn't get hidden behind bottom bar
             Spacer(modifier = Modifier.height(Spacing.xxl))
         }
@@ -356,5 +377,53 @@ fun EventCreateScreen(
                 }
             )
         }
+    }
+
+    if (showLocationPicker) {
+        AlertDialog(
+            onDismissRequest = onLocationPickerDismiss,
+            title = { Text("Select location") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
+                    SearchField(
+                        value = locationQuery,
+                        onValueChange = onLocationQueryChange,
+                        placeholder = "Search locations"
+                    )
+                    if (locationResults.isEmpty()) {
+                        Text(
+                            text = "Type at least 2 characters",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.heightIn(max = 320.dp),
+                            verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+                        ) {
+                            items(locationResults, key = { it.id }) { location ->
+                                ListItem(
+                                    headlineContent = { Text(location.name) },
+                                    supportingContent = { Text(location.categoryName ?: "Location") },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = ListItemDefaults.colors(
+                                        containerColor = MaterialTheme.colorScheme.surface
+                                    )
+                                )
+                                TextButton(onClick = { onSelectLocation(location) }) {
+                                    Text("Choose")
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = onLocationPickerDismiss) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }

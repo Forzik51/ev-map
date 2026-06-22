@@ -37,6 +37,8 @@ fun SignupScreen(
     username: String = "",
     password: String = "",
     showPassword: Boolean = false,
+    isLoading: Boolean = false,
+    errorMessage: String? = null,
     onNameChange: (String) -> Unit = {},
     onSurnameChange: (String) -> Unit = {},
     onEmailChange: (String) -> Unit = {},
@@ -170,11 +172,29 @@ fun SignupScreen(
         )
         
         Spacer(modifier = Modifier.height(Spacing.l))
+
+        if (!errorMessage.isNullOrBlank()) {
+            Text(
+                text = errorMessage,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.error,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(Spacing.s))
+        }
         
         // Sign up button
         PrimaryButton(
-            text = "Sign up",
-            onClick = onSignup
+            text = if (isLoading) "Creating account..." else "Sign up",
+            onClick = onSignup,
+            enabled = !isLoading &&
+                name.isNotBlank() &&
+                email.isNotBlank() &&
+                birthDate.isNotBlank() &&
+                phone.isNotBlank() &&
+                username.isNotBlank() &&
+                password.isNotBlank()
         )
         
         Spacer(modifier = Modifier.height(Spacing.m))

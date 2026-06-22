@@ -10,6 +10,7 @@ import feature.feed.FeedFeature
 import feature.follow.FollowFeature
 import feature.map.MapFeature
 import feature.profile.ProfileFeature
+import feature.reports.ReportsFeature
 import feature.saved.SavedFeature
 import feature.settings.SettingsFeature
 
@@ -103,6 +104,16 @@ fun NavGraph(
         )
 
         ChatFeature.registerGraph(
+            navGraphBuilder = this,
+            onNavigateToRoute = { route ->
+                navController.navigate(route)
+            },
+            onNavigateUp = {
+                navController.navigateUp()
+            }
+        )
+
+        ReportsFeature.registerGraph(
             navGraphBuilder = this,
             onNavigateToRoute = { route ->
                 navController.navigate(route)

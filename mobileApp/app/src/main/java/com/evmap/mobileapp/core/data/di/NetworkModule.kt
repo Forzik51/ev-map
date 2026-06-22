@@ -1,5 +1,9 @@
 package com.evmap.mobileapp.core.data.di
 
+import com.evmap.mobileapp.BuildConfig
+import com.evmap.mobileapp.core.data.remote.AuthApi
+import com.evmap.mobileapp.core.data.remote.AuthHeaderInterceptor
+import com.evmap.mobileapp.core.data.remote.TokenRefreshAuthenticator
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
@@ -18,12 +22,27 @@ import javax.inject.Singleton
 object NetworkModule {
 
     @Provides @Singleton
-    fun okHttp(): OkHttpClient = OkHttpClient.Builder()
+    @Named("noAuthOkHttp")
+    fun noAuthOkHttp(): OkHttpClient = OkHttpClient.Builder()
         .apply {
             val logger = HttpLoggingInterceptor().apply {
-                level = HttpLoggingInterceptor.Level.BODY
+                level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BASIC else HttpLoggingInterceptor.Level.NONE
             }
             addInterceptor(logger)
+        }.build()
+
+    @Provides @Singleton
+    fun okHttp(
+        authHeaderInterceptor: AuthHeaderInterceptor,
+        tokenRefreshAuthenticator: TokenRefreshAuthenticator,
+    ): OkHttpClient = OkHttpClient.Builder()
+        .apply {
+            val logger = HttpLoggingInterceptor().apply {
+                level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BASIC else HttpLoggingInterceptor.Level.NONE
+            }
+            addInterceptor(authHeaderInterceptor)
+            addInterceptor(logger)
+            authenticator(tokenRefreshAuthenticator)
         }.build()
 
     @Provides @Singleton
@@ -41,4 +60,22 @@ object NetworkModule {
         .addConverterFactory(MoshiConverterFactory.create(moshi))
         .client(ok)
         .build()
+
+    @Provides @Singleton
+    @Named("refreshRetrofit")
+    fun refreshRetrofit(
+        moshi: Moshi,
+        @Named("baseUrl") baseUrl: String,
+        @Named("noAuthOkHttp") ok: OkHttpClient
+    ): Retrofit = Retrofit.Builder()
+        .baseUrl(baseUrl)
+        .addConverterFactory(MoshiConverterFactory.create(moshi))
+        .client(ok)
+        .build()
+
+    @Provides @Singleton
+    @Named("refreshAuthApi")
+    fun refreshAuthApi(
+        @Named("refreshRetrofit") retrofit: Retrofit
+    ): AuthApi = retrofit.create(AuthApi::class.java)
 }

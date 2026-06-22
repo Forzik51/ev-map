@@ -34,6 +34,8 @@ fun LoginScreen(
     emailOrUsername: String = "",
     password: String = "",
     showPassword: Boolean = false,
+    isLoading: Boolean = false,
+    errorMessage: String? = null,
     onEmailChange: (String) -> Unit = {},
     onPasswordChange: (String) -> Unit = {},
     onTogglePassword: () -> Unit = {},
@@ -110,12 +112,23 @@ fun LoginScreen(
         }
 
         Spacer(modifier = Modifier.height(Spacing.m))
+
+        if (!errorMessage.isNullOrBlank()) {
+            Text(
+                text = errorMessage,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.error,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(Spacing.s))
+        }
         
         // Login button
         PrimaryButton(
-            text = "Log in",
+            text = if (isLoading) "Logging in..." else "Log in",
             onClick = onLogin,
-            enabled = emailOrUsername.isNotBlank() && password.isNotBlank()
+            enabled = !isLoading && emailOrUsername.isNotBlank() && password.isNotBlank()
         )
         Spacer(modifier = Modifier.height(Spacing.s))
 

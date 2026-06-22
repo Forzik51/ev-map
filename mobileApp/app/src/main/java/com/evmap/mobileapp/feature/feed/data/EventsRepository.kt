@@ -12,7 +12,7 @@ class EventsPagingSource(
 ) : PagingSource<Int, EventDto>() {
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, EventDto> = try {
         val page = params.key ?: 0
-        val res = api.getEvents(page = page, size = params.loadSize)
+        val res = api.getFeed(page = page, size = params.loadSize)
         LoadResult.Page(res.content, if (page==0) null else page-1, if (res.last) null else page+1)
     } catch (t: Throwable) { LoadResult.Error(t) }
 
