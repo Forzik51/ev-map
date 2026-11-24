@@ -22,6 +22,7 @@ fun UserShortDto.toUserFollowUi(isFollowing: Boolean): UserFollowUi =
         user = ProfileUserUi(
             id = id.toString(),
             username = username,
+            avatarUrl = path.toAbsoluteMediaUrl(),
             bio = pageDescription,
         ),
         isFollowing = isFollowing,

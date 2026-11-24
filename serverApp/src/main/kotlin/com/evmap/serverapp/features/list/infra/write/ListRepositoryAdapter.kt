@@ -23,8 +23,9 @@ class ListRepositoryAdapter(
             list.userId
         )?.get("id", Long::class.java) ?: error("Failed to create user list")
 
+    @Transactional
     override fun addEvent(listId: Long, eventId: Long) {
-        ensureListExists(listId)
+        lockList(listId, exclusive = false)
         dsl.execute(
             """
             INSERT INTO event_list(favourite_list_id, event_id)
@@ -36,8 +37,9 @@ class ListRepositoryAdapter(
         )
     }
 
+    @Transactional
     override fun removeEvent(listId: Long, eventId: Long) {
-        ensureListExists(listId)
+        lockList(listId, exclusive = false)
         dsl.execute(
             "DELETE FROM event_list WHERE favourite_list_id = ? AND event_id = ?",
             listId,
@@ -52,7 +54,7 @@ class ListRepositoryAdapter(
 
     @Transactional
     override fun delete(listId: Long) {
-        ensureListExists(listId)
+        lockList(listId, exclusive = true)
         dsl.execute("DELETE FROM event_list WHERE favourite_list_id = ?", listId)
         dsl.execute("DELETE FROM user_list WHERE id = ?", listId)
     }
@@ -64,8 +66,9 @@ class ListRepositoryAdapter(
             userId,
         ) != null
 
-    private fun ensureListExists(listId: Long) {
-        val exists = dsl.fetchOne("SELECT 1 FROM user_list WHERE id = ?", listId) != null
+    private fun lockList(listId: Long, exclusive: Boolean) {
+        val lock = if (exclusive) "FOR UPDATE" else "FOR KEY SHARE"
+        val exists = dsl.fetchOne("SELECT id FROM user_list WHERE id = ? $lock", listId) != null
         if (!exists) throw ListNotFoundException(listId)
     }
 }

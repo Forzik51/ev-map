@@ -29,6 +29,7 @@ class JwtTokenService(
             .claim("userId", user.id)
             .claim("username", user.username)
             .claim("role", user.role)
+            .claim("authVersion", user.authVersion)
             .build()
         val headers = JwsHeader.with(MacAlgorithm.HS256).build()
 

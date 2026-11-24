@@ -13,4 +13,7 @@ data class ViewEvent(
     val ratingsCount: Int,
     val commentsCount: Int,
     val categories: List<ViewEventCategory> = emptyList(),
+    val locationId: Long,
+    val ratingAvg: Double?,
+    val myRating: Double? = null,
 )

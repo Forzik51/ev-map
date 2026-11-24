@@ -1,146 +1,75 @@
 package feature.events
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.setValue
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.runtime.getValue
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
-import core.navigation.FeatureEntry
-import com.evmap.mobileapp.feature.events.ui.EventCreateViewModel
-import feature.events.ui.EventCreateScreen
-import feature.events.ui.EventDetailsScreen
-import java.time.Instant
-import java.time.ZoneId
+import com.evmap.mobileapp.feature.events.ui.EventDetailsScreen
+import com.evmap.mobileapp.feature.events.ui.EventFormScreen
+import com.evmap.mobileapp.feature.events.ui.EventListScreen
+import feature.saved.SavedFeature
 
-object EventsFeature : FeatureEntry {
-    override val route = "events"
-    
+object EventsFeature {
+    private const val Route = "events"
     const val List = "events/list"
-    const val Details = "events/{eventId}"
+    private const val Details = "events/{eventId}"
     const val Create = "events/create"
-    
-    override fun registerGraph(
-        navGraphBuilder: NavGraphBuilder,
-        onNavigateToRoute: (String) -> Unit,
-        onNavigateUp: () -> Unit
-    ) {
-        navGraphBuilder.navigation(
-            startDestination = List,
-            route = route
-        ) {
+    private const val Edit = "events/{eventId}/edit"
+    private const val RefreshDetails = "refresh_event_details"
+
+    fun registerGraph(navGraphBuilder: NavGraphBuilder, navController: NavHostController) {
+        val eventIdArgument = listOf(navArgument("eventId") { type = NavType.LongType })
+        navGraphBuilder.navigation(startDestination = List, route = Route) {
             composable(List) {
-                // TODO: Implement EventsListScreen
-                // EventsListScreen(
-                //     onNavigateToDetails = { eventId ->
-                //         onNavigateToRoute("events/$eventId")
-                //     },
-                //     onNavigateToCreate = {
-                //         onNavigateToRoute(createEventRoute)
-                //     }
-                // )
-            }
-
-            composable(
-                route = Details,
-                arguments = listOf(navArgument("eventId") { type = NavType.LongType })
-            ) { backStackEntry ->
-                val eventId = checkNotNull(backStackEntry.arguments?.getLong("eventId"))
-
-                EventDetailsScreen(
-                    eventId = eventId,
-                    /*ui = EventDetailsUi(
-                        event = EventUi(
-                            id = eventId,
-                            title = "Event $eventId",
-                            location = "—",
-                            startsAt = "—",
-                            description = "—",
-                            imageUrl = null,
-                            rating = 5.0f,
-                            reviewCount = 0
-                        ),
-                        gallery = emptyList(),
-                        fullDescription = null,
-                        location = null,
-                        date = null,
-                        categories = emptyList(),
-                        viewCount = null,
-                        likeCount = null,
-                        organizerName = null,
-                        organizerId = null
-                    ),*/
-                    currentRoute = EventsFeature.route,
-                    onBack = onNavigateUp,
-                    onShare = {},
-                    onReport = { onNavigateToRoute("reports/create/$eventId") },
-                    onOpenMap = {},
-                    onOpenOrganizer = {},
-                    onOpenCategory = {},
-                    onNavigate = onNavigateToRoute
+                EventListScreen(
+                    onBack = { navController.navigateUp() },
+                    onCreate = { navController.navigate(Create) },
+                    onOpen = { navController.navigate("events/$it") },
+                    onSave = { navController.navigate(SavedFeature.pickerRoute(it)) },
                 )
             }
-            
+            composable(Details, arguments = eventIdArgument) { entry ->
+                val id = checkNotNull(entry.arguments?.getLong("eventId"))
+                val refresh by entry.savedStateHandle.getStateFlow(RefreshDetails, false).collectAsState()
+                EventDetailsScreen(
+                    onBack = { navController.navigateUp() },
+                    onEdit = { navController.navigate("events/$id/edit") },
+                    onDeleted = { navController.popBackStack() },
+                    onReport = { navController.navigate("reports/create/$id") },
+                    onSave = { navController.navigate(SavedFeature.pickerRoute(id.toString())) },
+                    onNavigate = { navController.navigate(it) },
+                    refreshAfterEdit = refresh,
+                    onRefreshConsumed = { entry.savedStateHandle[RefreshDetails] = false },
+                )
+            }
             composable(Create) {
-                val viewModel: EventCreateViewModel = hiltViewModel()
-                val state by viewModel.state.collectAsState()
-                var showDatePicker by remember { mutableStateOf(false) }
-
-                LaunchedEffect(state.createdEventId) {
-                    state.createdEventId?.let { eventId ->
-                        viewModel.consumeCreatedEvent()
-                        onNavigateToRoute("events/$eventId")
-                    }
-                }
-
-                EventCreateScreen(
-                    draft = state.draft,
-                    showDatePicker = showDatePicker,
-                    showLocationPicker = state.isLocationPickerOpen,
-                    locationQuery = state.locationQuery,
-                    locationResults = state.locationResults,
-                    isSubmitting = state.loading,
-                    errorMessage = state.error,
-                    onTitleChange = viewModel::updateTitle,
-                    onSubtitleChange = viewModel::updateSubtitle,
-                    onDescriptionChange = viewModel::updateDescription,
-                    onPickDate = {
-                        showDatePicker = true
-                    },
-                    onDateSelected = { dateMillis ->
-                        dateMillis?.let { millis ->
-                            val date = Instant.ofEpochMilli(millis)
-                                .atZone(ZoneId.systemDefault())
-                                .toLocalDate()
-                                .toString()
-                            viewModel.updateDate(date)
+                EventFormScreen(
+                    onBack = { navController.navigateUp() },
+                    onSaved = { id ->
+                        navController.navigate("events/$id") {
+                            popUpTo(Create) { inclusive = true }
                         }
                     },
-                    onDatePickerDismiss = {
-                        showDatePicker = false
+                    onOpenCatalog = {
+                        navController.navigate(List) {
+                            popUpTo(Create) { inclusive = true }
+                            launchSingleTop = true
+                        }
                     },
-                    onPickLocation = {
-                        viewModel.openLocationPicker()
+                )
+            }
+            composable(Edit, arguments = eventIdArgument) {
+                EventFormScreen(
+                    onBack = { navController.navigateUp() },
+                    onSaved = {
+                        navController.previousBackStackEntry?.savedStateHandle?.set(RefreshDetails, true)
+                        navController.popBackStack()
                     },
-                    onLocationQueryChange = viewModel::updateLocationQuery,
-                    onSelectLocation = viewModel::selectLocation,
-                    onLocationPickerDismiss = viewModel::closeLocationPicker,
-                    onCategoriesQueryChange = viewModel::updateCategoriesQuery,
-                    onToggleCategory = viewModel::toggleCategory,
-                    onAddPhoto = {
-                        // TODO: Show photo picker
-                    },
-                    onRemovePhoto = viewModel::removePhoto,
-                    onSubmit = {
-                        viewModel.createEvent()
-                    },
-                    onBack = onNavigateUp
+                    onOpenCatalog = { navController.navigate(List) },
                 )
             }
         }

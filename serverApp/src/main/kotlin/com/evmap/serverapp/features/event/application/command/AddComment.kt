@@ -8,6 +8,9 @@ class AddComment(
     private val repo: EventRepositoryPort,
 ) {
     fun handle(eventId: Long, userId: Long, comment: String) {
-        repo.addComment(eventId, userId, comment)
+        val text = comment.trim()
+        require(text.isNotEmpty()) { "Comment must not be empty" }
+        require(text.codePointCount(0, text.length) <= 100) { "Comment must be at most 100 characters" }
+        repo.addComment(eventId, userId, text)
     }
 }

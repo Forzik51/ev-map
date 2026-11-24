@@ -1,62 +1,73 @@
 package feature.saved
 
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavType
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.dialog
+import androidx.navigation.navArgument
 import com.evmap.mobileapp.feature.saved.ui.SavedViewModel
 import core.navigation.FeatureEntry
-import core.ui.model.GroupItemsUi
 import feature.saved.ui.GroupItemsScreen
+import feature.saved.ui.SavedListDialogs
+import feature.saved.ui.SavedListPicker
 import feature.saved.ui.SavedScreen
 
 object SavedFeature : FeatureEntry {
     override val route = "saved"
 
+    fun pickerRoute(eventId: String) = "$route/pick/$eventId"
+
     override fun registerGraph(
         navGraphBuilder: NavGraphBuilder,
         onNavigateToRoute: (String) -> Unit,
-        onNavigateUp: () -> Unit
+        onNavigateUp: () -> Unit,
     ) {
-        navGraphBuilder.composable(route = route) {
+        navGraphBuilder.composable(route) {
             val viewModel: SavedViewModel = hiltViewModel()
-            val state by viewModel.state.collectAsState()
-
-            LaunchedEffect(Unit) {
-                viewModel.loadGroups()
-            }
+            val state by viewModel.state.collectAsStateWithLifecycle()
+            LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.load() }
 
             SavedScreen(
-                groups = state.groups,
-                onOpenGroup = { groupId ->
-                    onNavigateToRoute("saved/$groupId")
-                },
-                onAddGroup = {
-                    // Create-list UI is still pending.
-                },
-                onBack = onNavigateUp
+                state = state,
+                onOpenGroup = { onNavigateToRoute("$route/$it") },
+                onAddGroup = viewModel::openNameDialog,
+                onRetry = viewModel::load,
+                onBack = onNavigateUp,
             )
+            SavedListDialogs(state, viewModel)
         }
 
-        navGraphBuilder.composable(route = "saved/{groupId}") { backStackEntry ->
-            val groupId = backStackEntry.arguments?.getString("groupId") ?: return@composable
+        navGraphBuilder.composable("$route/{groupId}", arguments = listOf(navArgument("groupId") { type = NavType.LongType })) {
             val viewModel: SavedViewModel = hiltViewModel()
-            val state by viewModel.state.collectAsState()
-
-            LaunchedEffect(groupId) {
-                viewModel.loadGroup(groupId)
-            }
+            val state by viewModel.state.collectAsStateWithLifecycle()
+            LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.load() }
+            LaunchedEffect(state.deleted) { if (state.deleted) onNavigateUp() }
 
             GroupItemsScreen(
-                ui = state.groupItems ?: GroupItemsUi(groupId = groupId, title = "Saved", items = emptyList()),
+                state = state,
                 onBack = onNavigateUp,
+                onRetry = viewModel::load,
                 onToggleView = viewModel::toggleView,
-                onOpenItem = { eventId ->
-                    onNavigateToRoute("events/$eventId")
-                }
+                onRename = viewModel::openNameDialog,
+                onDelete = viewModel::confirmDelete,
+                onRemoveEvent = viewModel::removeEvent,
+                onOpenItem = { onNavigateToRoute("events/$it") },
+                onSaveItem = { onNavigateToRoute(pickerRoute(it)) },
             )
+            SavedListDialogs(state, viewModel)
+        }
+
+        navGraphBuilder.dialog("$route/pick/{eventId}", arguments = listOf(navArgument("eventId") { type = NavType.LongType })) {
+            val viewModel: SavedViewModel = hiltViewModel()
+            val state by viewModel.state.collectAsStateWithLifecycle()
+            LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.load() }
+            SavedListPicker(state, viewModel, onClose = onNavigateUp)
         }
     }
 }

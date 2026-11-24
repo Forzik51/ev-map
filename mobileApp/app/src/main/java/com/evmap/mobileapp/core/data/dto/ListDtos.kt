@@ -10,3 +10,5 @@ data class ListDto(
     val userId: Long,
     val eventsCount: Int,
 )
+
+data class SavedListDetailsDto(val list: ListDto, val events: List<EventDto>)

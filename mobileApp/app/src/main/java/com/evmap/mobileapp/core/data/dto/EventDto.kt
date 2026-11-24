@@ -13,6 +13,9 @@ data class EventDto(
     val ratingsCount: Int = 0,
     val commentsCount: Int = 0,
     val categories: List<EventCategoryDto> = emptyList(),
+    val locationId: Long? = null,
+    val ratingAvg: Double? = null,
+    val myRating: Double? = null,
 )
 
 data class CreateEventRequest(

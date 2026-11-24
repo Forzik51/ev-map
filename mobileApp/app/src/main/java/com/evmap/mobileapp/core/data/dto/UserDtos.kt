@@ -18,6 +18,15 @@ data class UserShortDto(
     val id: Long,
     val username: String,
     val pageDescription: String,
+    val path: String? = null,
+)
+
+data class UpdateProfileRequest(
+    val name: String = "",
+    val surname: String? = null,
+    val username: String = "",
+    val phone: String = "",
+    val pageDescription: String = "",
 )
 
 data class UserPhotoDto(

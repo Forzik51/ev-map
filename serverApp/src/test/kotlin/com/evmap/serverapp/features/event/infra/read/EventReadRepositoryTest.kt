@@ -33,6 +33,8 @@ class EventReadRepositoryTest {
         val repository = EventReadRepository(mockDsl(provider))
 
         val view = repository.findViewById(42L)
+        assertEquals(11L, view.locationId)
+        assertEquals(4.5, view.ratingAvg)
 
         assertEquals(42L, view.id)
         assertEquals("Central Park", view.locationName)
@@ -155,6 +157,8 @@ class EventReadRepositoryTest {
             fields.startAt,
             fields.endAt,
             fields.userId,
+            fields.locationId,
+            fields.ratingAvg,
             fields.locationName,
             fields.imagePath,
             fields.repostsCount,
@@ -168,6 +172,8 @@ class EventReadRepositoryTest {
             fields.startAt,
             fields.endAt,
             fields.userId,
+            fields.locationId,
+            fields.ratingAvg,
             fields.locationName,
             fields.imagePath,
             fields.repostsCount,
@@ -181,6 +187,8 @@ class EventReadRepositoryTest {
         record.set(fields.startAt, Timestamp.from(Instant.parse("2026-03-22T10:00:00Z")))
         record.set(fields.endAt, Timestamp.from(Instant.parse("2026-03-22T12:00:00Z")))
         record.set(fields.userId, 7L)
+        record.set(fields.locationId, 11L)
+        record.set(fields.ratingAvg, BigDecimal("4.5"))
         record.set(fields.locationName, locationName)
         record.set(fields.imagePath, "/media/events/$id/cover.jpg")
         record.set(fields.repostsCount, 2L)
@@ -201,6 +209,8 @@ class EventReadRepositoryTest {
             fields.startAt,
             fields.endAt,
             fields.userId,
+            fields.locationId,
+            fields.ratingAvg,
             fields.locationName,
             fields.imagePath,
             fields.repostsCount,
@@ -220,6 +230,8 @@ class EventReadRepositoryTest {
             fields.startAt,
             fields.endAt,
             fields.userId,
+            fields.locationId,
+            fields.ratingAvg,
             fields.locationName,
             fields.imagePath,
             fields.repostsCount,
@@ -233,6 +245,8 @@ class EventReadRepositoryTest {
             fields.startAt,
             fields.endAt,
             fields.userId,
+            fields.locationId,
+            fields.ratingAvg,
             fields.locationName,
             fields.imagePath,
             fields.repostsCount,
@@ -246,6 +260,8 @@ class EventReadRepositoryTest {
         record.set(fields.startAt, Timestamp.from(Instant.parse("2026-03-22T10:00:00Z")))
         record.set(fields.endAt, null)
         record.set(fields.userId, 3L)
+        record.set(fields.locationId, 11L)
+        record.set(fields.ratingAvg, BigDecimal("4.0"))
         record.set(fields.locationName, locationName)
         record.set(fields.imagePath, "/media/events/1/cover.jpg")
         record.set(fields.repostsCount, 5L)
@@ -351,6 +367,8 @@ class EventReadRepositoryTest {
         startAt = DSL.field("start_at", Timestamp::class.java),
         endAt = DSL.field("end_at", Timestamp::class.java),
         userId = DSL.field("user_id", Long::class.java),
+        locationId = DSL.field("location_id", Long::class.java),
+        ratingAvg = DSL.field("rating_avg", BigDecimal::class.java),
         locationName = DSL.field("location_name", String::class.java),
         imagePath = DSL.field("image_path", String::class.java),
         repostsCount = DSL.field("reposts_count", Long::class.java),
@@ -382,6 +400,8 @@ class EventReadRepositoryTest {
         val startAt: Field<Timestamp>,
         val endAt: Field<Timestamp>,
         val userId: Field<Long>,
+        val locationId: Field<Long>,
+        val ratingAvg: Field<BigDecimal>,
         val locationName: Field<String>,
         val imagePath: Field<String>,
         val repostsCount: Field<Long>,

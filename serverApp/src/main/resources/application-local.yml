@@ -1,0 +1,18 @@
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/evmap}
+    username: ${SPRING_DATASOURCE_USERNAME:evmap}
+    password: ${SPRING_DATASOURCE_PASSWORD:evmap}
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    properties:
+      mail.smtp.auth: ${MAIL_SMTP_AUTH:false}
+      mail.smtp.starttls.enable: ${MAIL_SMTP_STARTTLS:false}
+
+app:
+  security:
+    jwt:
+      secret: ${APP_JWT_SECRET:dev-only-secret-key-change-me-please-32}
+  mail:
+    from: ${APP_MAIL_FROM:no-reply@evmap.local}

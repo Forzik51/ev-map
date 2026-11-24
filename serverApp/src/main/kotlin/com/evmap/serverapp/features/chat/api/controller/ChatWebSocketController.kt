@@ -3,7 +3,6 @@ package com.evmap.serverapp.features.chat.api.controller
 import com.evmap.serverapp.features.chat.api.dto.MarkChatReadRequest
 import com.evmap.serverapp.features.chat.api.dto.SendMessageRequest
 import com.evmap.serverapp.features.chat.api.dto.TypingEventRequest
-import com.evmap.serverapp.features.chat.api.dto.ViewReadEvent
 import com.evmap.serverapp.features.chat.api.dto.ViewTypingEvent
 import com.evmap.serverapp.features.chat.application.command.MarkChatRead
 import com.evmap.serverapp.features.chat.application.command.SendMessage
@@ -30,8 +29,7 @@ class ChatWebSocketController(
         authentication: Authentication,
     ) {
         val currentUser = currentUserProvider.fromAuthentication(authentication)
-        val message = sendMessage.handle(chatId, currentUser.id, request.text)
-        messagingTemplate.convertAndSend("/topic/chats/$chatId/messages", message)
+        sendMessage.handle(chatId, currentUser.id, request.text, request.clientMessageId)
     }
 
     @MessageMapping("/chats/{chatId}/typing")
@@ -60,13 +58,5 @@ class ChatWebSocketController(
     ) {
         val currentUser = currentUserProvider.fromAuthentication(authentication)
         markChatRead.handle(chatId, currentUser.id, request.lastReadMessageId)
-        messagingTemplate.convertAndSend(
-            "/topic/chats/$chatId/read",
-            ViewReadEvent(
-                chatId = chatId,
-                userId = currentUser.id,
-                lastReadMessageId = request.lastReadMessageId,
-            ),
-        )
     }
 }

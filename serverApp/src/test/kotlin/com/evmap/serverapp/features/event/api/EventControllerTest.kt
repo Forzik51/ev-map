@@ -177,7 +177,7 @@ class EventControllerTest {
     fun `get should return 404 when event does not exist`() {
         Mockito.doThrow(EventNotFoundException(99L))
             .`when`(getEventById)
-            .handle(99L)
+            .handleForViewer(99L, 1L)
 
         mockMvc.perform(get("/api/events/99").with(user("test-user")))
             .andExpect(status().isNotFound)

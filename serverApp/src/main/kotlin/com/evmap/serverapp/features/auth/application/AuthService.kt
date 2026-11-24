@@ -37,8 +37,9 @@ class AuthService(
 
     @Transactional
     fun login(request: LoginRequest): AuthResponse {
-        val user = authRepository.findUserByUsernameOrEmail(request.usernameOrEmail)
+        val candidate = authRepository.findUserByUsernameOrEmail(request.usernameOrEmail)
             ?: throw InvalidCredentialsException()
+        val user = authRepository.findUserByIdForUpdate(candidate.id) ?: throw InvalidCredentialsException()
 
         if (!passwordEncoder.matches(request.password, user.passwordHash)) {
             log.warn("Failed login for usernameOrEmail={}", request.usernameOrEmail)
@@ -51,14 +52,15 @@ class AuthService(
 
     @Transactional
     fun refresh(request: RefreshTokenRequest): AuthResponse {
-        val stored = authRepository.findRefreshToken(request.refreshToken)
+        val candidate = authRepository.findRefreshToken(request.refreshToken)
             ?: throw InvalidRefreshTokenException()
+        val user = authRepository.findUserByIdForUpdate(candidate.userId) ?: throw InvalidRefreshTokenException()
+        val stored = authRepository.findRefreshToken(request.refreshToken) ?: throw InvalidRefreshTokenException()
         if (stored.revokedAt != null || stored.expiresAt.isBefore(OffsetDateTime.now(ZoneOffset.UTC))) {
             throw InvalidRefreshTokenException()
         }
 
         authRepository.revokeRefreshToken(request.refreshToken)
-        val user = authRepository.findUserById(stored.userId) ?: throw InvalidRefreshTokenException()
         log.info("Refreshed token for userId={}", user.id)
         return issueTokens(user)
     }

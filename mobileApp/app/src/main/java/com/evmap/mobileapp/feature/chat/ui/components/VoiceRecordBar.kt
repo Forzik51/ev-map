@@ -62,6 +62,7 @@ fun VoiceRecordBar(
                     modifier = Modifier.size(24.dp)
                 )
             }
+            TextButton(onClick = onCancel) { Text("Cancel recording") }
         }
     }
 }

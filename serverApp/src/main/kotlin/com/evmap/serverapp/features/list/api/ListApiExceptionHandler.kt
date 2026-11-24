@@ -18,4 +18,9 @@ class ListApiExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException::class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     fun handleDataIntegrity(): Map<String, String> = mapOf("message" to "Invalid list payload")
+
+    @ExceptionHandler(IllegalArgumentException::class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    fun handleInvalidName(ex: IllegalArgumentException): Map<String, String> =
+        mapOf("message" to (ex.message ?: "Invalid list name"))
 }

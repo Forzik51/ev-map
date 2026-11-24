@@ -64,7 +64,8 @@ class EventController(
     fun getAllCategories(): List<ViewEventCategory> = getAllEventCategories.handle()
 
     @GetMapping("/{id}")
-    fun getById(@PathVariable id: Long): ViewEvent = getEventById.handle(id)
+    fun getById(@PathVariable id: Long): ViewEvent =
+        getEventById.handleForViewer(id, currentUserProvider.get().id)
 
     @GetMapping
     fun getAll(

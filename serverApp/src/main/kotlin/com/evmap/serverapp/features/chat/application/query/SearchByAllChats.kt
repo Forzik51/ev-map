@@ -8,5 +8,5 @@ import org.springframework.stereotype.Service
 class SearchByAllChats(
     private val readRepo: ChatReadRepository,
 ) {
-    fun handle(query: String): List<ViewChat> = readRepo.searchByAllChats(query)
+    fun handle(query: String, userId: Long): List<ViewChat> = readRepo.searchByAllChats(query, userId)
 }

@@ -2,9 +2,13 @@ package com.evmap.mobileapp.core.data.session
 
 import android.content.Context
 import android.util.Base64
+import android.util.Log
 import com.evmap.mobileapp.core.data.dto.AuthResponse
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import org.json.JSONObject
+import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -15,6 +19,7 @@ data class AuthSession(
     val expiresAtMillis: Long,
     val userId: Long,
     val username: String,
+    internal val loginId: UUID = UUID.randomUUID(),
 ) {
     val isAdmin: Boolean
         get() = role == "ADMIN"
@@ -28,8 +33,33 @@ class TokenStore @Inject constructor(
     @ApplicationContext context: Context,
 ) {
     private val prefs = context.getSharedPreferences("evmap_auth", Context.MODE_PRIVATE)
+    private val storage = SessionStorage(context)
+    private val current = MutableStateFlow(restore())
+    val sessions = current.asStateFlow()
 
-    fun session(): AuthSession? {
+    private fun restore(): AuthSession? {
+        val restored = try {
+            storage.read()?.let(::JSONObject)?.toSession()
+        } catch (_: Exception) {
+            runCatching(storage::clear)
+            null
+        }
+        if (restored != null) {
+            if (prefs.contains(KEY_ACCESS_TOKEN)) prefs.edit().clear().commit()
+            return restored
+        }
+        val legacy = legacySession() ?: return null
+        return try {
+            storage.write(legacy.toJson())
+            prefs.edit().clear().commit()
+            legacy
+        } catch (_: Exception) {
+            prefs.edit().clear().commit()
+            null
+        }
+    }
+
+    private fun legacySession(): AuthSession? {
         val accessToken = prefs.getString(KEY_ACCESS_TOKEN, null) ?: return null
         val refreshToken = prefs.getString(KEY_REFRESH_TOKEN, null) ?: return null
         return AuthSession(
@@ -42,6 +72,7 @@ class TokenStore @Inject constructor(
         )
     }
 
+    fun session(): AuthSession? = current.value
     fun accessToken(): String? = session()?.accessToken
 
     fun refreshToken(): String? = session()?.refreshToken
@@ -50,20 +81,49 @@ class TokenStore @Inject constructor(
 
     fun isAdmin(): Boolean = session()?.isAdmin == true
 
+    @Synchronized
     fun save(response: AuthResponse) {
-        val expiresAtMillis = System.currentTimeMillis() + response.expiresInSeconds * 1000
-        prefs.edit()
-            .putString(KEY_ACCESS_TOKEN, response.accessToken)
-            .putString(KEY_REFRESH_TOKEN, response.refreshToken)
-            .putString(KEY_TOKEN_TYPE, response.tokenType)
-            .putLong(KEY_EXPIRES_AT, expiresAtMillis)
-            .putLong(KEY_USER_ID, response.userId)
-            .putString(KEY_USERNAME, response.username)
-            .apply()
+        save(response.toSession())
     }
 
-    fun clear() {
-        prefs.edit().clear().apply()
+    @Synchronized
+    internal fun replaceIfCurrent(expected: AuthSession, response: AuthResponse): Boolean {
+        val active = current.value ?: return false
+        if (active.loginId != expected.loginId || active.refreshToken != expected.refreshToken ||
+            active.userId != response.userId) return false
+        save(response.toSession().copy(loginId = active.loginId,
+            username = if (active.username == expected.username) response.username else active.username))
+        return true
+    }
+
+    @Synchronized
+    fun updateUsername(userId: Long, username: String) {
+        val active = session() ?: return
+        if (active.userId == userId && active.username != username) {
+            save(active.copy(username = username))
+        }
+    }
+
+    fun clear() { takeAndClear() }
+
+    @Synchronized
+    internal fun takeAndClear(): AuthSession? {
+        val active = current.value
+        current.value = null
+        runCatching(storage::clear).onFailure { Log.w("TokenStore", "Could not clear session storage") }
+        if (prefs.contains(KEY_ACCESS_TOKEN)) prefs.edit().clear().commit()
+        return active
+    }
+
+    @Synchronized
+    internal fun clearIfCurrent(expected: AuthSession) {
+        val active = current.value ?: return
+        if (active.loginId == expected.loginId && active.refreshToken == expected.refreshToken) clear()
+    }
+
+    private fun save(session: AuthSession) {
+        storage.write(session.toJson())
+        current.value = session
     }
 
     private companion object {
@@ -74,6 +134,25 @@ class TokenStore @Inject constructor(
         const val KEY_USER_ID = "user_id"
         const val KEY_USERNAME = "username"
     }
+
+    private fun AuthSession.toJson(): String = JSONObject()
+        .put(KEY_ACCESS_TOKEN, accessToken)
+        .put(KEY_REFRESH_TOKEN, refreshToken)
+        .put(KEY_TOKEN_TYPE, tokenType)
+        .put(KEY_EXPIRES_AT, expiresAtMillis)
+        .put(KEY_USER_ID, userId)
+        .put(KEY_USERNAME, username)
+        .toString()
+
+    private fun JSONObject.toSession() = AuthSession(
+        getString(KEY_ACCESS_TOKEN), getString(KEY_REFRESH_TOKEN), getString(KEY_TOKEN_TYPE),
+        getLong(KEY_EXPIRES_AT), getLong(KEY_USER_ID), getString(KEY_USERNAME),
+    )
+
+    private fun AuthResponse.toSession() = AuthSession(
+        accessToken, refreshToken, tokenType, System.currentTimeMillis() + expiresInSeconds * 1000,
+        userId, username,
+    )
 }
 
 private fun String.roleClaim(): String? =

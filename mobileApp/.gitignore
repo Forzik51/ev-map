@@ -5,4 +5,3 @@
 /.idea/*
 /build
 local.properties
-gradle/wrapper

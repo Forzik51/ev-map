@@ -1,16 +1,22 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/evmap
-    username: evmap
-    password: evmap
+    hikari:
+      connection-init-sql: SET search_path TO evmap, public
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
   mail:
-    host: ${MAIL_HOST:localhost}
-    port: ${MAIL_PORT:1025}
+    host: ${MAIL_HOST:}
+    port: ${MAIL_PORT:587}
     username: ${MAIL_USERNAME:}
     password: ${MAIL_PASSWORD:}
     properties:
-      mail.smtp.auth: ${MAIL_SMTP_AUTH:false}
-      mail.smtp.starttls.enable: ${MAIL_SMTP_STARTTLS:false}
+      mail.smtp.auth: ${MAIL_SMTP_AUTH:true}
+      mail.smtp.starttls.enable: ${MAIL_SMTP_STARTTLS:true}
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 5000
+      mail.smtp.writetimeout: 5000
   jpa:
     hibernate:
       ddl-auto: validate
@@ -18,18 +24,27 @@ spring:
       hibernate.default_schema: evmap
   flyway:
     enabled: true
-    baseline-on-migrate: true
-    baseline-version: 1
+    baseline-on-migrate: false
     schemas: evmap
+    locations: classpath:db/migration,classpath:db/baseline
 
 app:
   security:
     jwt:
       issuer: ${APP_JWT_ISSUER:evmap}
-      secret: ${APP_JWT_SECRET:dev-only-secret-key-change-me-please-32}
+      secret: ${APP_JWT_SECRET:}
       access-token-minutes: ${APP_JWT_ACCESS_TOKEN_MINUTES:15}
       refresh-token-days: ${APP_JWT_REFRESH_TOKEN_DAYS:30}
+    password-reset:
+      secret: ${APP_PASSWORD_RESET_SECRET:}
+      code-ttl: 10m
+      reset-token-ttl: 5m
+      resend-cooldown: 60s
+      max-attempts: 5
+      requests-per-email-per-hour: 5
+      requests-per-ip-per-hour: 20
+      mail-max-attempts: 3
   media:
     root: ${APP_MEDIA_ROOT:./storage/media}
   mail:
-    from: ${APP_MAIL_FROM:no-reply@evmap.local}
+    from: ${APP_MAIL_FROM:}

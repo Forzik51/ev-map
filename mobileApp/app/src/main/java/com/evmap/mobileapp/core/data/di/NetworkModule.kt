@@ -11,6 +11,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
@@ -44,6 +45,37 @@ object NetworkModule {
             addInterceptor(logger)
             authenticator(tokenRefreshAuthenticator)
         }.build()
+
+    @Provides @Singleton
+    @Named("mediaOkHttp")
+    fun mediaOkHttp(
+        @Named("noAuthOkHttp") client: OkHttpClient,
+        @Named("baseUrl") baseUrl: String,
+        authHeader: AuthHeaderInterceptor,
+        refresh: TokenRefreshAuthenticator,
+    ): OkHttpClient {
+        val backend = baseUrl.toHttpUrl()
+        val chatAttachmentPath = Regex("^/api/chats/[0-9]+/attachments/[0-9]+$")
+        fun isBackendMedia(url: okhttp3.HttpUrl): Boolean =
+            url.scheme == backend.scheme && url.host == backend.host && url.port == backend.port &&
+                (url.encodedPath.startsWith("/media/") || chatAttachmentPath.matches(url.encodedPath))
+
+        return client.newBuilder()
+            .addInterceptor { chain ->
+                if (isBackendMedia(chain.request().url)) authHeader.intercept(chain)
+                else chain.proceed(chain.request())
+            }
+            .addNetworkInterceptor { chain ->
+                val request = chain.request()
+                val safeRequest = if (isBackendMedia(request.url)) request
+                else request.newBuilder().removeHeader("Authorization").build()
+                chain.proceed(safeRequest)
+            }
+            .authenticator { route, response ->
+                if (isBackendMedia(response.request.url)) refresh.authenticate(route, response) else null
+            }
+            .build()
+    }
 
     @Provides @Singleton
     fun moshi(): Moshi = Moshi.Builder()

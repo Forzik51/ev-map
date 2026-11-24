@@ -15,4 +15,5 @@ data class ViewReadEvent(
     val chatId: Long,
     val userId: Long,
     val lastReadMessageId: Long,
+    val lastReadSentAt: String,
 )

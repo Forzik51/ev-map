@@ -2,6 +2,7 @@ package com.evmap.mobileapp.core.data.remote
 
 import com.evmap.mobileapp.core.data.dto.CreateListRequest
 import com.evmap.mobileapp.core.data.dto.ListDto
+import com.evmap.mobileapp.core.data.dto.SavedListDetailsDto
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -17,6 +18,9 @@ interface ListsApi {
 
     @GET("api/lists/me")
     suspend fun mine(): List<ListDto>
+
+    @GET("api/lists/{listId}")
+    suspend fun details(@Path("listId") listId: Long): SavedListDetailsDto
 
     @GET("api/lists/{listId}/events")
     suspend fun eventIds(@Path("listId") listId: Long): List<Long>

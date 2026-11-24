@@ -4,17 +4,23 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.paging.LoadState
+import androidx.paging.PagingData
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
+import com.evmap.mobileapp.core.data.remote.toUserMessage
 import core.designsystem.AppTheme
 import core.designsystem.Spacing
 import core.ui.components.AppBottomBar
@@ -26,6 +32,7 @@ import feature.events.ui.components.EventCard
 import feature.events.ui.components.EventGridCard
 import feature.profile.ui.components.ProfileHeader
 import feature.profile.ui.components.ProfileViewToggle
+import kotlinx.coroutines.flow.flowOf
 
 @Preview(showBackground = true, widthDp = 412, heightDp = 892)
 @Composable
@@ -37,7 +44,7 @@ private fun ProfileScreenPreview() {
             startsAt = "stAt",
             description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor",
             imageUrl = null,
-            rating = 5.0f,
+            rating = 5.0,
             reviewCount = 50
         )
     val e2 = EventUi(
@@ -47,7 +54,7 @@ private fun ProfileScreenPreview() {
             startsAt = "stAt",
             description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor",
             imageUrl = null,
-            rating = 4.5f,
+            rating = 4.5,
             reviewCount = 32
         )
     val e3 = EventUi(
@@ -57,14 +64,14 @@ private fun ProfileScreenPreview() {
             startsAt = "stAt",
             description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor",
             imageUrl = null,
-            rating = 4.8f,
+            rating = 4.8,
             reviewCount = 18
         )
 
     val sampleItems = listOf(
         FeedItemUi(id = "1", event = e1, timestamp = System.currentTimeMillis(), isPromoted = true),
         FeedItemUi(id = "2", event = e2),
-        FeedItemUi(id = "2", event = e3)
+        FeedItemUi(id = "3", event = e3)
     )
     
     val sampleUser = ProfileUserUi(
@@ -79,7 +86,6 @@ private fun ProfileScreenPreview() {
     
     val sampleState = ProfileUiState(
         user = sampleUser,
-        list = sampleItems,
         isMe = true,
         isFollowing = true,
         selectedViewIsGrid = true // Preview grid mode
@@ -88,6 +94,7 @@ private fun ProfileScreenPreview() {
     AppTheme {
         ProfileScreen(
             ui = sampleState,
+            events = remember { flowOf(PagingData.from(sampleItems)) }.collectAsLazyPagingItems(),
             onFollowToggle = {},
             onMessage = {},
             onOpenItem = {},
@@ -103,6 +110,7 @@ private fun ProfileScreenPreview() {
 @Composable
 fun ProfileScreen(
     ui: ProfileUiState,
+    events: LazyPagingItems<FeedItemUi>,
     onFollowToggle: () -> Unit,
     onMessage: () -> Unit,
     onOpenItem: (String) -> Unit,
@@ -112,7 +120,8 @@ fun ProfileScreen(
     onNavigateUp: () -> Unit,
     currentRoute: String? = "profile",
     onNavigate: (String) -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onSaveItem: ((String) -> Unit)? = null,
 ) {
     Scaffold(
         modifier = modifier.fillMaxSize().statusBarsPadding(),
@@ -181,6 +190,9 @@ fun ProfileScreen(
                     bio = ui.user.bio,
                     isMe = ui.isMe,
                     isFollowing = ui.isFollowing,
+                    followEnabled = ui.followStatusAvailable && !ui.isLoading && !ui.isChangingFollow,
+                    messageEnabled = !ui.isLoading && !ui.openingChat,
+                    openingChat = ui.openingChat,
                     onFollowToggle = onFollowToggle,
                     onMessage = onMessage,
                     onOpenFollowers = onOpenFollowers,
@@ -188,6 +200,9 @@ fun ProfileScreen(
                     avatarUrl = ui.user.avatarUrl,
                     modifier = Modifier.fillMaxWidth()
                 )
+                ui.error?.let { message ->
+                    Text(message, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(Spacing.m))
+                }
                 
                 // View Toggle - uses ui.selectedViewIsGrid directly
                 ProfileViewToggle(
@@ -206,15 +221,12 @@ fun ProfileScreen(
                         horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
                         verticalArrangement = Arrangement.spacedBy(Spacing.xs)
                     ) {
-                        items(
-                            items = ui.list,
-                            key = { it.id }
-                        ) { feedItem ->
-                            EventGridCard(
-                                event = feedItem.event,
-                                onClick = { onOpenItem(feedItem.event.id) }
-                            )
+                        items(count = events.itemCount, key = events.itemKey { it.id }) { index ->
+                            events[index]?.let { feedItem ->
+                                EventGridCard(event = feedItem.event, onClick = { onOpenItem(feedItem.event.id) })
+                            }
                         }
+                        item(span = { GridItemSpan(maxLineSpan) }) { ProfileEventStatus(events) }
                     }
                 } else {
                     // List mode - LazyColumn with EventCard
@@ -223,15 +235,16 @@ fun ProfileScreen(
                         contentPadding = PaddingValues(horizontal = Spacing.s),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        items(
-                            items = ui.list,
-                            key = { it.id }
-                        ) { feedItem ->
-                            EventCard(
-                                event = feedItem.event,
-                                onClick = { onOpenItem(feedItem.event.id) }
-                            )
+                        items(count = events.itemCount, key = events.itemKey { it.id }) { index ->
+                            events[index]?.let { feedItem ->
+                                EventCard(
+                                    event = feedItem.event,
+                                    onClick = { onOpenItem(feedItem.event.id) },
+                                    onSave = onSaveItem,
+                                )
+                            }
                         }
+                        item { ProfileEventStatus(events) }
                     }
                 }
             }
@@ -271,6 +284,21 @@ fun ProfileScreen(
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ProfileEventStatus(events: LazyPagingItems<FeedItemUi>) {
+    val refresh = events.loadState.refresh
+    when (val load = if (refresh is LoadState.NotLoading) events.loadState.append else refresh) {
+        LoadState.Loading -> LinearProgressIndicator(Modifier.fillMaxWidth())
+        is LoadState.Error -> Column(Modifier.padding(Spacing.m)) {
+            Text(load.error.toUserMessage(), color = MaterialTheme.colorScheme.error)
+            TextButton(onClick = events::retry) { Text("Retry events") }
+        }
+        is LoadState.NotLoading -> if (events.itemCount == 0 && load.endOfPaginationReached) {
+            Text("No events yet", Modifier.padding(Spacing.m))
         }
     }
 }

@@ -16,10 +16,9 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.evmap.mobileapp.core.data.dto.CreateUserRequest
 import com.evmap.mobileapp.feature.auth.ui.AuthViewModel
+import com.evmap.mobileapp.feature.auth.ui.PasswordResetRoute
 import core.navigation.FeatureEntry
-import feature.auth.ui.ForgotPasswordScreen
 import feature.auth.ui.LoginScreen
-import feature.auth.ui.NewPasswordScreen
 import feature.auth.ui.SignupScreen
 import java.time.Instant
 import java.time.ZoneId
@@ -71,15 +70,7 @@ object AuthFeature : FeatureEntry {
 
         // Forgot Password Screen
         navGraphBuilder.composable(route = "auth/forgot") {
-            var email by remember { mutableStateOf("") }
-
-            ForgotPasswordScreen(
-                email = email,
-                onEmailChange = { email = it },
-                onContinue = {
-                    onNavigateToRoute("auth/new_password")
-                }
-            )
+            PasswordResetRoute(onBack = onNavigateUp, onLogin = { onNavigateToRoute(route) })
         }
 
         // Signup Screen
@@ -173,26 +164,5 @@ object AuthFeature : FeatureEntry {
             }
         }
 
-        // New Password Screen
-        navGraphBuilder.composable(route = "auth/new_password") {
-            var newPass by remember { mutableStateOf("") }
-            var confirmPass by remember { mutableStateOf("") }
-            var showNew by remember { mutableStateOf(false) }
-            var showConfirm by remember { mutableStateOf(false) }
-
-            NewPasswordScreen(
-                newPass = newPass,
-                confirmPass = confirmPass,
-                showNew = showNew,
-                showConfirm = showConfirm,
-                onNewChange = { newPass = it },
-                onConfirmChange = { confirmPass = it },
-                onToggleShowNew = { showNew = !showNew },
-                onToggleShowConfirm = { showConfirm = !showConfirm },
-                onCreate = {
-                    onNavigateToRoute(route)
-                }
-            )
-        }
     }
 }

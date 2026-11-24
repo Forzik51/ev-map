@@ -76,6 +76,7 @@ class AuthViewModel @Inject constructor(
             dateOfBirth.isBlank() -> "Pick date of birth"
             username.isBlank() -> "Enter username"
             password.length < 6 -> "Password must be at least 6 characters"
+            password.toByteArray(Charsets.UTF_8).size > 72 -> "Password must be at most 72 UTF-8 bytes"
             else -> null
         }
 

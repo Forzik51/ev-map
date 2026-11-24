@@ -26,6 +26,13 @@ interface EventsApi {
         @Query("size") size: Int = 20,
     ): PageResponse<EventDto>
 
+    @GET("api/users/{userId}/events")
+    suspend fun getUserEvents(
+        @Path("userId") userId: Long,
+        @Query("page") page: Int,
+        @Query("size") size: Int,
+    ): PageResponse<EventDto>
+
     @GET("api/events/feed")
     suspend fun getFeed(
         @Query("lat") lat: Double? = null,
@@ -103,6 +110,13 @@ interface EventsApi {
     @POST("api/events/{eventId}/photos")
     suspend fun uploadPhoto(
         @Path("eventId") eventId: Long,
+        @Query("uploadId") uploadId: String,
         @Part file: MultipartBody.Part,
     ): EventPhotoDto
+
+    @DELETE("api/events/{eventId}/photos/{photoId}")
+    suspend fun deletePhoto(
+        @Path("eventId") eventId: Long,
+        @Path("photoId") photoId: Long,
+    ): Response<Unit>
 }

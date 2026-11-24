@@ -1,6 +1,7 @@
 package com.evmap.serverapp.config
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret
+import com.evmap.serverapp.shared.security.AuthVersionValidator
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -17,6 +18,8 @@ import org.springframework.security.oauth2.jwt.JwtEncoder
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder
 import org.springframework.security.oauth2.jwt.Jwt
+import org.springframework.security.oauth2.jwt.JwtValidators
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter
 import org.springframework.security.web.SecurityFilterChain
@@ -25,6 +28,8 @@ import javax.crypto.spec.SecretKeySpec
 @Configuration
 class SecurityConfig(
     @Value("\${app.security.jwt.secret}") private val jwtSecret: String,
+    @Value("\${app.security.jwt.issuer:evmap}") private val issuer: String,
+    private val authVersionValidator: AuthVersionValidator,
 ) {
     @Bean
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
@@ -60,6 +65,7 @@ class SecurityConfig(
         return NimbusJwtDecoder.withSecretKey(key)
             .macAlgorithm(MacAlgorithm.HS256)
             .build()
+            .also { it.setJwtValidator(DelegatingOAuth2TokenValidator(JwtValidators.createDefaultWithIssuer(issuer), authVersionValidator)) }
     }
 
     private fun jwtAuthenticationConverter(): Converter<Jwt, out AbstractAuthenticationToken> {

@@ -67,19 +67,6 @@ private fun ChatsScreenPreview() {
     }
 }
 
-@Composable
-fun ChatItemUi(
-    id: String,
-    avatarUrl: Nothing?,
-    name: String,
-    lastMessage: String,
-    lastMessageTime: String,
-    unreadCount: Int
-) {
-    TODO("Not yet implemented")
-}
-
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatsScreen(
@@ -91,7 +78,10 @@ fun ChatsScreen(
     onExitSelectMode: () -> Unit,
     currentRoute: String?,
     onNavigate: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    loading: Boolean = false,
+    error: String? = null,
+    onRetry: () -> Unit = {},
 ) {
     Scaffold(
         modifier = modifier
@@ -180,7 +170,16 @@ fun ChatsScreen(
                 }
             }
 
-            // Chat list
+            if (loading) LinearProgressIndicator(Modifier.fillMaxWidth())
+            if (error != null) {
+                Row(Modifier.fillMaxWidth().padding(horizontal = Spacing.m), verticalAlignment = Alignment.CenterVertically) {
+                    Text(error, Modifier.weight(1f), color = MaterialTheme.colorScheme.error)
+                    TextButton(onClick = onRetry) { Text("Retry") }
+                }
+            } else if (!loading && ui.items.isEmpty()) {
+                Text("No chats yet", Modifier.padding(Spacing.m))
+            }
+
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(Spacing.m),

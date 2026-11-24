@@ -34,7 +34,10 @@ fun ProfileHeader(
     onOpenFollowers: () -> Unit,
     onOpenFollowing: () -> Unit,
     modifier: Modifier = Modifier,
-    avatarUrl: String? = null
+    avatarUrl: String? = null,
+    followEnabled: Boolean = true,
+    messageEnabled: Boolean = true,
+    openingChat: Boolean = false,
 ) {
     Column(
         modifier = modifier
@@ -171,60 +174,25 @@ fun ProfileHeader(
             }
         }
 
-        // Action buttons for other users
         if (!isMe) {
             Spacer(modifier = Modifier.height(Spacing.m))
 
-            if (isFollowing) {
-                // When following, show "Following" (outlined) + "Message" (filled) buttons
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.s)
-                ) {
-                    OutlinedButton(
-                        onClick = onFollowToggle,
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            containerColor = Color.Transparent,
-                            contentColor = MaterialTheme.colorScheme.primary
-                        ),
-                        shape = MaterialTheme.shapes.large
-                    ) {
-                        Text(
-                            text = "Following",
-                            style = MaterialTheme.typography.labelLarge
-                        )
-                    }
-
-                    Button(
-                        onClick = onMessage,
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
-                        ),
-                        shape = MaterialTheme.shapes.large
-                    ) {
-                        Text(
-                            text = "Message",
-                            style = MaterialTheme.typography.labelLarge
-                        )
-                    }
-                }
-            } else {
-                // When not following, show single primary "Follow" button
-                Button(
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
+                OutlinedButton(
                     onClick = onFollowToggle,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    ),
-                    shape = MaterialTheme.shapes.large
+                    enabled = followEnabled,
+                    modifier = Modifier.weight(1f),
+                    shape = MaterialTheme.shapes.large,
                 ) {
-                    Text(
-                        text = "Follow",
-                        style = MaterialTheme.typography.labelLarge
-                    )
+                    Text(if (isFollowing) "Following" else "Follow")
+                }
+                Button(
+                    onClick = onMessage,
+                    enabled = messageEnabled,
+                    modifier = Modifier.weight(1f),
+                    shape = MaterialTheme.shapes.large,
+                ) {
+                    Text(if (openingChat) "Opening…" else "Message")
                 }
             }
         }

@@ -8,11 +8,12 @@ import org.springframework.stereotype.Service
 class GetMessagesByChatId(
     private val readRepo: ChatReadRepository,
 ) {
-    fun handle(chatId: Long, userId: Long, beforeId: Long?, limit: Int?): List<ViewMessage> =
+    fun handle(chatId: Long, userId: Long, beforeId: Long?, afterId: Long?, limit: Int?): List<ViewMessage> =
         readRepo.findMessages(
             chatId = chatId,
             userId = userId,
             beforeId = beforeId,
+            afterId = afterId,
             limit = (limit ?: 50).coerceIn(1, 100),
         )
 }

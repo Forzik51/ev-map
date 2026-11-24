@@ -5,6 +5,13 @@ import com.evmap.serverapp.features.auth.api.dto.LoginRequest
 import com.evmap.serverapp.features.auth.api.dto.RefreshTokenRequest
 import com.evmap.serverapp.features.auth.api.dto.RegisterRequest
 import com.evmap.serverapp.features.auth.application.AuthService
+import com.evmap.serverapp.features.auth.application.PasswordResetService
+import com.evmap.serverapp.features.auth.api.dto.ForgotPasswordRequest
+import com.evmap.serverapp.features.auth.api.dto.ForgotPasswordResponse
+import com.evmap.serverapp.features.auth.api.dto.VerifyPasswordCodeRequest
+import com.evmap.serverapp.features.auth.api.dto.VerifyPasswordCodeResponse
+import com.evmap.serverapp.features.auth.api.dto.ResetPasswordRequest
+import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.PostMapping
@@ -17,7 +24,20 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/auth")
 class AuthController(
     private val authService: AuthService,
+    private val passwordReset: PasswordResetService,
 ) {
+    @PostMapping("/password/forgot")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    fun forgot(@Valid @RequestBody request: ForgotPasswordRequest, servletRequest: HttpServletRequest): ForgotPasswordResponse =
+        passwordReset.forgot(request, servletRequest.remoteAddr)
+
+    @PostMapping("/password/verify")
+    fun verify(@Valid @RequestBody request: VerifyPasswordCodeRequest): VerifyPasswordCodeResponse = passwordReset.verify(request)
+
+    @PostMapping("/password/reset")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun reset(@Valid @RequestBody request: ResetPasswordRequest) = passwordReset.reset(request)
+
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     fun register(@Valid @RequestBody request: RegisterRequest): AuthResponse = authService.register(request)

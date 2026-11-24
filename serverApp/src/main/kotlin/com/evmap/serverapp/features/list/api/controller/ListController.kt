@@ -2,6 +2,7 @@ package com.evmap.serverapp.features.list.api.controller
 
 import com.evmap.serverapp.features.list.api.dto.CreateList
 import com.evmap.serverapp.features.list.api.dto.ViewList
+import com.evmap.serverapp.features.list.api.dto.ViewSavedList
 import com.evmap.serverapp.features.list.application.command.AddEventToList
 import com.evmap.serverapp.features.list.application.command.ChangeListName
 import com.evmap.serverapp.features.list.application.command.CreateList as CreateListCommand
@@ -10,6 +11,7 @@ import com.evmap.serverapp.features.list.application.command.RemoveEventFromList
 import com.evmap.serverapp.features.list.application.query.GetAllLists
 import com.evmap.serverapp.features.list.application.query.GetAllListsByUser
 import com.evmap.serverapp.features.list.application.query.GetEventsFromList
+import com.evmap.serverapp.features.list.application.query.GetSavedList
 import com.evmap.serverapp.features.list.domian.ListRepositoryPort
 import com.evmap.serverapp.shared.security.CurrentUserProvider
 import jakarta.validation.Valid
@@ -36,6 +38,7 @@ class ListController(
     private val deleteList: DeleteList,
     private val removeEventFromList: RemoveEventFromList,
     private val getEventsFromList: GetEventsFromList,
+    private val getSavedList: GetSavedList,
     private val listRepository: ListRepositoryPort,
     private val currentUserProvider: CurrentUserProvider,
 ) {
@@ -55,6 +58,9 @@ class ListController(
 
     @GetMapping("/me")
     fun getMine(): List<ViewList> = getAllListsByUser.handle(currentUserProvider.get().id)
+
+    @GetMapping("/{listId}")
+    fun getDetails(@PathVariable listId: Long): ViewSavedList = getSavedList.handle(listId)
 
     @GetMapping("/{listId}/events")
     fun getEvents(@PathVariable listId: Long): List<Long> {

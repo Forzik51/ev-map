@@ -13,6 +13,7 @@ data class AuthUser(
     val email: String,
     val passwordHash: String,
     val role: String,
+    val authVersion: Long = 0,
 )
 
 data class StoredRefreshToken(
@@ -29,7 +30,7 @@ class AuthRepository(
     fun findUserByUsernameOrEmail(usernameOrEmail: String): AuthUser? =
         dsl.fetchOne(
             """
-            SELECT id, username, email, password_hash, COALESCE(role, 'USER') AS role
+            SELECT id, username, email, password_hash, COALESCE(role, 'USER') AS role, auth_version
             FROM app_user
             WHERE LOWER(username) = LOWER(?)
                OR LOWER(email) = LOWER(?)
@@ -43,6 +44,7 @@ class AuthRepository(
                 email = it.get("email", String::class.java)!!,
                 passwordHash = it.get("password_hash", String::class.java)!!,
                 role = it.get("role", String::class.java)!!,
+                authVersion = it.get("auth_version", Long::class.java)!!,
             )
         }
 
@@ -94,7 +96,7 @@ class AuthRepository(
     fun findUserById(userId: Long): AuthUser? =
         dsl.fetchOne(
             """
-            SELECT id, username, email, password_hash, COALESCE(role, 'USER') AS role
+            SELECT id, username, email, password_hash, COALESCE(role, 'USER') AS role, auth_version
             FROM app_user
             WHERE id = ?
             """.trimIndent(),
@@ -106,8 +108,30 @@ class AuthRepository(
                 email = it.get("email", String::class.java)!!,
                 passwordHash = it.get("password_hash", String::class.java)!!,
                 role = it.get("role", String::class.java)!!,
+                authVersion = it.get("auth_version", Long::class.java)!!,
             )
         }
+
+    fun findUserByIdForUpdate(userId: Long): AuthUser? =
+        dsl.fetchOne("SELECT * FROM app_user WHERE id = ? FOR UPDATE", userId)?.let(::toAuthUser)
+
+    fun findUserByEmailForUpdate(email: String): AuthUser? =
+        dsl.fetchOne("SELECT * FROM app_user WHERE LOWER(email) = ? FOR UPDATE", email)?.let(::toAuthUser)
+
+    fun currentAuthVersion(userId: Long): Long? =
+        dsl.fetchOne("SELECT auth_version FROM app_user WHERE id = ?", userId)?.get("auth_version", Long::class.java)
+
+    fun isChatMember(chatId: Long, userId: Long): Boolean =
+        dsl.fetchOne("SELECT 1 FROM user_chat WHERE chat_id = ? AND user_id = ?", chatId, userId) != null
+
+    private fun toAuthUser(row: org.jooq.Record) = AuthUser(
+        id = row.get("id", Long::class.java)!!,
+        username = row.get("username", String::class.java)!!,
+        email = row.get("email", String::class.java)!!,
+        passwordHash = row.get("password_hash", String::class.java)!!,
+        role = row.get("role", String::class.java) ?: "USER",
+        authVersion = row.get("auth_version", Long::class.java)!!,
+    )
 
     private fun hashToken(token: String): String {
         val digest = MessageDigest.getInstance("SHA-256").digest(token.toByteArray(Charsets.UTF_8))

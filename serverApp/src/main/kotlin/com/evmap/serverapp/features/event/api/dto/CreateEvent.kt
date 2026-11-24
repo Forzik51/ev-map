@@ -1,6 +1,7 @@
 package com.evmap.serverapp.features.event.api.dto
 
 import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.AssertTrue
 import jakarta.validation.constraints.NotEmpty
 import jakarta.validation.constraints.Positive
 import jakarta.validation.constraints.Size
@@ -28,4 +29,8 @@ data class CreateEvent(
 
     @field:NotEmpty
     val categoryIds: List<@Positive Long>,
-)
+) {
+    @get:AssertTrue(message = "End time must not be before the start time")
+    val isTimeRangeValid: Boolean
+        get() = endsAt == null || !endsAt.isBefore(startsAt)
+}

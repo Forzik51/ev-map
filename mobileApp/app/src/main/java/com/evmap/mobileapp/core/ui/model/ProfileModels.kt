@@ -2,12 +2,15 @@ package core.ui.model
 
 data class ProfileUiState(
     val user: ProfileUserUi? = null,
-    val list: List<FeedItemUi> = emptyList(),
     val isMe: Boolean = false,
     val isFollowing: Boolean = false,
     val selectedViewIsGrid: Boolean = false,
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val isChangingFollow: Boolean = false,
+    val followStatusAvailable: Boolean = true,
+    val openingChat: Boolean = false,
+    val openedChatId: Long? = null,
 )
 
 data class ProfileUserUi(

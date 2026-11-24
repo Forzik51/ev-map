@@ -13,7 +13,7 @@ fun SearchEventDto.toEventUi(): EventUi =
         startsAt = startsAt,
         description = description,
         imageUrl = null,
-        rating = ratingAvg.toFloat(),
+        rating = ratingAvg,
         reviewCount = ratingsCount,
     )
 

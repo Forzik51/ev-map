@@ -7,7 +7,7 @@ data class EventUi(
     val location: String,
     val startsAt: String,
     val imageUrl: String? = null,
-    val rating: Float? = null,
+    val rating: Double? = null,
     val reviewCount: Int? = null,
     val description: String
 )

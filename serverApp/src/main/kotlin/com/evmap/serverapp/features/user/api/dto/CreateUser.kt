@@ -1,5 +1,7 @@
 package com.evmap.serverapp.features.user.api.dto
 
+import com.evmap.serverapp.shared.security.ValidPassword
+
 import jakarta.validation.constraints.Email
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Pattern
@@ -18,7 +20,7 @@ data class CreateUser(
     @field:Size(max = 254)
     val email: String,
 
-    @field:Pattern(regexp = "^[+0-9 ()-]{7,15}$")
+    @field:Pattern(regexp = PROFILE_PHONE_PATTERN)
     val phone: String,
 
     val dateOfBirth: LocalDate,
@@ -31,7 +33,6 @@ data class CreateUser(
     @field:Size(max = 150)
     val pageDescription: String,
 
-    @field:NotBlank
-    @field:Size(min = 6, max = 255)
+    @field:ValidPassword
     val password: String,
 )

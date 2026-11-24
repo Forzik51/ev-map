@@ -34,11 +34,15 @@ fun NewPasswordScreen(
     onConfirmChange: (String) -> Unit = {},
     onToggleShowNew: () -> Unit = {},
     onToggleShowConfirm: () -> Unit = {},
-    onCreate: () -> Unit = {}
+    onCreate: () -> Unit = {},
+    isLoading: Boolean = false,
+    errorMessage: String? = null,
+    onBack: () -> Unit = {},
 ) {
     val focusManager = LocalFocusManager.current
 
     FormScaffold {
+        androidx.compose.material3.TextButton(onClick = onBack) { Text("Start again") }
         Spacer(modifier = Modifier.height(Spacing.xxl))
         
         // Title
@@ -106,10 +110,11 @@ fun NewPasswordScreen(
 
         Spacer(modifier = Modifier.height(Spacing.m))
         
-        // Create button
+        errorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         PrimaryButton(
-            text = "Create",
-            onClick = onCreate
+            text = if (isLoading) "Please wait…" else "Change password",
+            onClick = onCreate,
+            enabled = !isLoading && newPass.isNotBlank() && confirmPass.isNotBlank()
         )
         
         Spacer(modifier = Modifier.height(Spacing.s))

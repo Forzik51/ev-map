@@ -21,7 +21,7 @@ private fun SettingsScreenPreview() {
             onOpenSaved = {},
             onOpenAdmin = {},
             showAdmin = true,
-            onOpenOthers = {},
+            onNavigate = {},
             onLogOut = {},
             onBack = {}
         )
@@ -35,7 +35,7 @@ fun SettingsScreen(
     onOpenSaved: () -> Unit,
     onOpenAdmin: () -> Unit,
     showAdmin: Boolean,
-    onOpenOthers: () -> Unit,
+    onNavigate: (String) -> Unit,
     onLogOut: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier
@@ -45,7 +45,7 @@ fun SettingsScreen(
         bottomBar = {
             AppBottomBar(
                 currentRoute = "profile",
-                onNavigate = { /* TODO: Implement navigation */ }
+                onNavigate = onNavigate
             )
         },
         topBar = {
@@ -107,10 +107,6 @@ fun SettingsScreen(
                 )
             }
             
-            SettingsRow(
-                label = "Others",
-                onClick = onOpenOthers
-            )
             SettingsRow(
                 label = "Log out",
                 onClick = onLogOut

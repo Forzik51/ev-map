@@ -7,6 +7,8 @@ import okhttp3.Authenticator
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.Route
+import retrofit2.HttpException
+import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Named
 
@@ -16,27 +18,26 @@ class TokenRefreshAuthenticator @Inject constructor(
 ) : Authenticator {
     override fun authenticate(route: Route?, response: Response): Request? {
         if (responseCount(response) >= MAX_AUTH_ATTEMPTS) return null
-        val refreshToken = tokenStore.refreshToken() ?: return null
-        val requestToken = response.request.header("Authorization")
-            ?.removePrefix("Bearer ")
-            ?.trim()
+        val requestLogin = response.request.tag(UUID::class.java) ?: return null
+        val requestBearer = response.request.header("Authorization") ?: return null
 
         synchronized(this) {
-            val latestToken = tokenStore.accessToken()
-            if (!latestToken.isNullOrBlank() && latestToken != requestToken) {
-                return response.request.withBearer(latestToken)
+            val active = tokenStore.session()?.takeIf { it.loginId == requestLogin } ?: return null
+            if (requestBearer != "Bearer ${active.accessToken}") {
+                return response.request.withBearer(active.accessToken)
             }
 
-            val refreshed = runBlocking {
-                runCatching {
-                    authApi.refresh(RefreshTokenRequest(refreshToken))
-                }.getOrNull()
-            } ?: run {
-                tokenStore.clear()
+            val refreshed = try {
+                runBlocking { authApi.refresh(RefreshTokenRequest(active.refreshToken)) }
+            } catch (error: Exception) {
+                if (error is HttpException && error.code() == 401) tokenStore.clearIfCurrent(active)
                 return null
             }
-
-            tokenStore.save(refreshed)
+            if (!runCatching { tokenStore.replaceIfCurrent(active, refreshed) }.getOrDefault(false)) {
+                // The server may have rotated the token after logout began.
+                runCatching { runBlocking { authApi.logout(RefreshTokenRequest(refreshed.refreshToken)) } }
+                return null
+            }
             return response.request.withBearer(refreshed.accessToken)
         }
     }

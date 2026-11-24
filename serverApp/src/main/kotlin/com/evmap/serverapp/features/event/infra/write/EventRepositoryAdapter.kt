@@ -64,7 +64,9 @@ class EventRepositoryAdapter(
 
     @Transactional
     override fun delete(eventId: Long) {
-        ensureEventExists(eventId)
+        if (dsl.fetchOne("SELECT id FROM event WHERE id = ? FOR UPDATE", eventId) == null) {
+            throw EventNotFoundException(eventId)
+        }
         val photoPaths = dsl.fetch(
             """
             SELECT image_path
@@ -74,17 +76,25 @@ class EventRepositoryAdapter(
             eventId
         ).mapNotNull { it.get("image_path", String::class.java) }
 
-        dsl.execute("DELETE FROM decision WHERE report_id IN (SELECT id FROM report WHERE event_id = ?)", eventId)
         dsl.execute("DELETE FROM report WHERE event_id = ?", eventId)
         dsl.execute("DELETE FROM advertising WHERE event_id = ?", eventId)
         dsl.execute("DELETE FROM repost WHERE event_id = ?", eventId)
         dsl.execute("DELETE FROM rating WHERE event_id = ?", eventId)
+        // Imported comments can refer to a parent on a different event.
+        dsl.execute(
+            """
+            UPDATE comment SET parent_comment_id = NULL
+            WHERE event_id <> ?
+              AND parent_comment_id IN (SELECT id FROM comment WHERE event_id = ?)
+            """.trimIndent(),
+            eventId, eventId,
+        )
         dsl.execute("DELETE FROM comment WHERE event_id = ?", eventId)
         dsl.execute("DELETE FROM category_event WHERE event_id = ?", eventId)
         dsl.execute("DELETE FROM event_list WHERE event_id = ?", eventId)
         dsl.execute("DELETE FROM photo WHERE event_id = ?", eventId)
         dsl.execute("DELETE FROM event WHERE id = ?", eventId)
-        fileStorageService.deleteAllByStoredPath(photoPaths)
+        fileStorageService.deleteAfterCommit(photoPaths)
     }
 
     override fun addComment(eventId: Long, userId: Long, comment: String) {
@@ -148,18 +158,12 @@ class EventRepositoryAdapter(
                 "like", "love", "heart", "upvote" -> BigDecimal("5.0")
                 "dislike", "downvote" -> BigDecimal("1.0")
                 "neutral" -> BigDecimal("3.0")
-                else -> BigDecimal("3.0")
+                else -> throw IllegalArgumentException("Rating must be a number from 0 to 5")
             }
 
-        return score.coerceIn(BigDecimal.ZERO, BigDecimal("5.0")).setScale(1, RoundingMode.HALF_UP)
+        require(score >= BigDecimal.ZERO && score <= BigDecimal("5.0")) { "Rating must be from 0 to 5" }
+        return score.setScale(1, RoundingMode.HALF_UP)
     }
-
-    private fun BigDecimal.coerceIn(min: BigDecimal, max: BigDecimal): BigDecimal =
-        when {
-            this < min -> min
-            this > max -> max
-            else -> this
-        }
 
     private fun replaceEventCategories(eventId: Long, rawCategoryIds: List<Long>) {
         val categoryIds = rawCategoryIds.distinct()

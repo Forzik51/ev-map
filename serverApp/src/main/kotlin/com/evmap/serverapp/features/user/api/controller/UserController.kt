@@ -1,6 +1,9 @@
 package com.evmap.serverapp.features.user.api.controller
 
+import com.evmap.serverapp.features.event.api.dto.ViewEvent
+import com.evmap.serverapp.features.event.application.query.GetAllEventsByUser
 import com.evmap.serverapp.features.user.api.dto.CreateUser
+import com.evmap.serverapp.features.user.api.dto.UpdateProfile
 import com.evmap.serverapp.features.user.api.dto.ViewUser
 import com.evmap.serverapp.features.user.api.dto.ViewUserShort
 import com.evmap.serverapp.features.user.application.command.CreateUser as CreateUserCommand
@@ -14,6 +17,9 @@ import com.evmap.serverapp.features.user.application.query.GetFollowingUserById
 import com.evmap.serverapp.features.user.application.query.GetUserById
 import com.evmap.serverapp.shared.security.CurrentUserProvider
 import jakarta.validation.Valid
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
+import org.springframework.data.web.PageableDefault
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -39,6 +45,7 @@ class UserController(
     private val getFollowedUserById: GetFollowedUserById,
     private val getFollowingUserById: GetFollowingUserById,
     private val currentUserProvider: CurrentUserProvider,
+    private val getEvents: GetAllEventsByUser,
 ) {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -50,6 +57,12 @@ class UserController(
     @GetMapping("/{userId}")
     fun getById(@PathVariable userId: Long): ViewUser = getUserById.handle(userId)
 
+    @GetMapping("/{userId}/events")
+    fun events(@PathVariable userId: Long, @PageableDefault(size = 20) pageable: Pageable): Page<ViewEvent> {
+        getUserById.handle(userId)
+        return getEvents.handle(pageable, userId)
+    }
+
     @GetMapping("/{userId}/followers")
     fun getFollowers(@PathVariable userId: Long): List<ViewUserShort> = getFollowedUserById.handle(userId)
 
@@ -58,6 +71,10 @@ class UserController(
 
     @GetMapping("/me")
     fun getMe(): ViewUser = getUserById.handle(currentUserProvider.get().id)
+
+    @PatchMapping("/me")
+    fun updateMe(@Valid @RequestBody profile: UpdateProfile): ViewUser =
+        editUserInfo.handle(currentUserProvider.get().id, profile)
 
     @PatchMapping("/{userId}/description")
     @ResponseStatus(HttpStatus.NO_CONTENT)

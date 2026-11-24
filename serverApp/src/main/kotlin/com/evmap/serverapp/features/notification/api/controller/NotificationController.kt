@@ -1,6 +1,7 @@
 package com.evmap.serverapp.features.notification.api.controller
 
 import com.evmap.serverapp.features.notification.api.dto.SendEmailRequest
+import com.evmap.serverapp.features.notification.api.dto.EmailDeliverySummary
 import com.evmap.serverapp.features.notification.application.command.SendEmailToAllUsers
 import com.evmap.serverapp.features.notification.application.command.SendEmailToUserById
 import com.evmap.serverapp.shared.security.CurrentUserProvider
@@ -24,10 +25,9 @@ class NotificationController(
     private val currentUserProvider: CurrentUserProvider,
 ) {
     @PostMapping("/all")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun sendToAll(@Valid @RequestBody dto: SendEmailRequest) {
+    fun sendToAll(@Valid @RequestBody dto: SendEmailRequest): EmailDeliverySummary {
         currentUserProvider.requireAdmin()
-        sendEmailToAllUsers.handle(dto)
+        return sendEmailToAllUsers.handle(dto)
     }
 
     @PostMapping("/user/{userId}")

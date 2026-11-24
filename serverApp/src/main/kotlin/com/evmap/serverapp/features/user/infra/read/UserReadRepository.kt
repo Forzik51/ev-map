@@ -56,7 +56,8 @@ class UserReadRepository(
             """
             SELECT u.id,
                    u.username,
-                   u.page_description
+                   u.page_description,
+                   u.path
             FROM follow f0
             JOIN app_user u ON u.id = f0.follower_id
             WHERE f0.following_id = ?
@@ -72,7 +73,8 @@ class UserReadRepository(
             """
             SELECT u.id,
                    u.username,
-                   u.page_description
+                   u.page_description,
+                   u.path
             FROM follow f0
             JOIN app_user u ON u.id = f0.following_id
             WHERE f0.follower_id = ?
@@ -129,5 +131,6 @@ class UserReadRepository(
             id = record.get("id", Long::class.java)!!,
             username = record.get("username", String::class.java)!!,
             pageDescription = record.get("page_description", String::class.java)!!,
+            path = record.get("path", String::class.java),
         )
 }

@@ -1,138 +1,93 @@
 package feature.saved.ui
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.*
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import core.designsystem.AppTheme
+import com.evmap.mobileapp.feature.saved.ui.SavedDialog
+import com.evmap.mobileapp.feature.saved.ui.SavedUiState
 import core.designsystem.Spacing
-import core.ui.model.SavedGroupUi
 import feature.saved.ui.components.SavedGroupCard
-
-@Preview(showBackground = true, widthDp = 412, heightDp = 892)
-@Composable
-private fun SavedScreenPreview() {
-    val sampleGroups = listOf(
-        SavedGroupUi(
-            id = "1",
-            name = "Name",
-            count = 5,
-            imageUrl = null
-        ),
-        SavedGroupUi(
-            id = "2", 
-            name = "Name",
-            count = 3,
-            imageUrl = null
-        ),
-        SavedGroupUi(
-            id = "3",
-            name = "Name",
-            count = 8,
-            imageUrl = null
-        ),
-        SavedGroupUi(
-            id = "4",
-            name = "Name", 
-            count = 2,
-            imageUrl = null
-        )
-    )
-
-    AppTheme {
-        SavedScreen(
-            groups = sampleGroups,
-            onOpenGroup = {},
-            onAddGroup = {},
-            onBack = {}
-        )
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SavedScreen(
-    groups: List<SavedGroupUi>,
+    state: SavedUiState,
     onOpenGroup: (String) -> Unit,
     onAddGroup: () -> Unit,
+    onRetry: () -> Unit,
     onBack: () -> Unit,
-    modifier: Modifier = Modifier
 ) {
     Scaffold(
-        modifier = modifier.fillMaxSize(),
-        topBar = {
-            TopAppBar(
-                title = {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "Back",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "Saved events",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back",
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            )
-        },
+        topBar = { TopAppBar(title = { Text("Saved events") }, navigationIcon = { SavedBackButton(onBack) }) },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = onAddGroup,
-                containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = MaterialTheme.colorScheme.onSurface
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Add Group"
-                )
+            if (!state.busy) {
+                FloatingActionButton(onClick = onAddGroup) {
+                    Icon(Icons.Default.Add, contentDescription = "Create list")
+                }
             }
         },
-        containerColor = MaterialTheme.colorScheme.surface
-    ) { paddingValues ->
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
-            contentPadding = PaddingValues(horizontal = Spacing.s),
-            horizontalArrangement = Arrangement.spacedBy(Spacing.s),
-            verticalArrangement = Arrangement.spacedBy(Spacing.s)
-        ) {
-            items(
-                items = groups,
-                key = { it.id }
-            ) { group ->
-                SavedGroupCard(
-                    group = group,
-                    onClick = onOpenGroup
-                )
+    ) { padding ->
+        Column(Modifier.fillMaxSize().padding(padding)) {
+            SavedListStatus(state, if (state.groups.isEmpty()) "No saved lists yet" else null, onRetry)
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(Spacing.m),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+                verticalArrangement = Arrangement.spacedBy(Spacing.s),
+            ) {
+                items(state.groups, key = { it.id }) { list -> SavedGroupCard(list, onOpenGroup) }
             }
         }
     }
 }
+
+@Composable
+internal fun SavedBackButton(onBack: () -> Unit) {
+    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back") }
+}
+
+@Composable
+internal fun SavedListStatus(state: SavedUiState, emptyMessage: String?, onRetry: () -> Unit) {
+    val loadError = state.loadError
+    val writeError = state.writeError.takeIf { state.dialog == null }
+    if (!state.loading && loadError == null && writeError == null && emptyMessage == null) return
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(Spacing.m),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        when {
+            state.loading -> CircularProgressIndicator()
+            loadError != null -> {
+                Text(loadError, color = MaterialTheme.colorScheme.error)
+                TextButton(onClick = onRetry) { Text("Retry") }
+            }
+            writeError != null -> Text(writeError, color = MaterialTheme.colorScheme.error)
+            emptyMessage != null -> Text(emptyMessage)
+        }
+    }
+}
+
+internal fun eventCountLabel(count: Int) = if (count == 1) "1 event" else "$count events"

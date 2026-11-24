@@ -25,13 +25,18 @@ import core.ui.components.PrimaryButton
 fun ForgotPasswordScreen(
     email: String = "",
     onEmailChange: (String) -> Unit = {},
-    onContinue: () -> Unit = {}
+    onContinue: () -> Unit = {},
+    isLoading: Boolean = false,
+    errorMessage: String? = null,
+    resendSeconds: Long = 0,
+    onBack: () -> Unit = {},
 ) {
     val focusManager = LocalFocusManager.current
 
     FormScaffold(
 
     ) {
+        androidx.compose.material3.TextButton(onClick = onBack) { Text("Back") }
         Spacer(modifier = Modifier.height(Spacing.s))
         
         // Title
@@ -47,7 +52,7 @@ fun ForgotPasswordScreen(
         
         // Subtitle
         Text(
-            text = "Enter your email address or username",
+            text = "Enter the email address linked to your account",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
@@ -61,8 +66,8 @@ fun ForgotPasswordScreen(
         AuthTextField(
             value = email,
             onValueChange = onEmailChange,
-            label = "Email/Username",
-            placeholder = "Email/Username",
+            label = "Email",
+            placeholder = "Email address",
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,
                 imeAction = ImeAction.Done
@@ -75,11 +80,12 @@ fun ForgotPasswordScreen(
             )
         )
         Spacer(modifier = Modifier.height(Spacing.m))
-        // Continue button
+        errorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+        if (resendSeconds > 0) Text("Try again in ${resendSeconds}s")
         PrimaryButton(
-            text = "Continue",
+            text = if (isLoading) "Please wait…" else "Send recovery code",
             onClick = onContinue,
-            enabled = email.isNotBlank()
+            enabled = email.isNotBlank() && !isLoading && resendSeconds == 0L
         )
         
         Spacer(modifier = Modifier.height(Spacing.s))

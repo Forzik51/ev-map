@@ -22,6 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,6 +36,7 @@ fun ReportCreateScreen(
     onBack: () -> Unit,
     onSelectCategory: (Long) -> Unit,
     onDescriptionChange: (String) -> Unit,
+    onRetryCategories: () -> Unit,
     onSubmit: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -51,7 +53,7 @@ fun ReportCreateScreen(
             )
         }
     ) { padding ->
-        if (state.loading && state.categories.isEmpty()) {
+        if (state.loadingCategories && state.categories.isEmpty()) {
             Column(
                 modifier = Modifier.fillMaxSize().padding(padding),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -68,9 +70,19 @@ fun ReportCreateScreen(
                 item {
                     Text("Category", style = MaterialTheme.typography.titleMedium)
                 }
+                if (state.categories.isEmpty()) {
+                    item {
+                        Text(
+                            state.categoryError ?: "No report categories are available.",
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                        TextButton(onClick = onRetryCategories) { Text("Retry categories") }
+                    }
+                }
                 items(state.categories, key = { it.id }) { category ->
                     FilterChip(
                         selected = state.selectedCategoryId == category.id,
+                        enabled = !state.submitting,
                         onClick = { onSelectCategory(category.id) },
                         label = { Text(category.name) }
                     )
@@ -79,8 +91,10 @@ fun ReportCreateScreen(
                     OutlinedTextField(
                         value = state.description,
                         onValueChange = onDescriptionChange,
+                        enabled = !state.submitting,
                         modifier = Modifier.fillMaxWidth(),
                         label = { Text("Description") },
+                        supportingText = { Text("${state.description.trim().length}/100") },
                         minLines = 4,
                     )
                 }
@@ -97,10 +111,10 @@ fun ReportCreateScreen(
                     Spacer(Modifier.height(Spacing.s))
                     Button(
                         onClick = onSubmit,
-                        enabled = !state.loading,
+                        enabled = !state.submitting && !state.submitted && state.categories.isNotEmpty(),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(if (state.loading) "Submitting..." else "Submit report")
+                        Text(if (state.submitting) "Submitting…" else "Submit report")
                     }
                 }
             }

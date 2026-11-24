@@ -9,6 +9,7 @@ import androidx.navigation.compose.composable
 import com.evmap.mobileapp.feature.settings.ui.ProfileEditViewModel
 import com.evmap.mobileapp.feature.settings.ui.SettingsViewModel
 import core.navigation.FeatureEntry
+import feature.reports.ReportsFeature
 import feature.settings.ui.ProfileEditScreen
 import feature.settings.ui.SettingsScreen
 
@@ -22,13 +23,7 @@ object SettingsFeature : FeatureEntry {
     ) {
         navGraphBuilder.composable(route = route) {
             val viewModel: SettingsViewModel = hiltViewModel()
-            val state by viewModel.state.collectAsState()
-
-            LaunchedEffect(state.loggedOut) {
-                if (state.loggedOut) {
-                    onNavigateToRoute("auth/login")
-                }
-            }
+            val session by viewModel.session.collectAsState()
 
             SettingsScreen(
                 onOpenProfileEdit = {
@@ -38,13 +33,10 @@ object SettingsFeature : FeatureEntry {
                     onNavigateToRoute("saved")
                 },
                 onOpenAdmin = {
-                    onNavigateToRoute("admin/moderation")
+                    onNavigateToRoute(ReportsFeature.ModerationRoute)
                 },
-                showAdmin = state.isAdmin,
-                onOpenOthers = {
-                    // TODO: Navigate to others screen
-                    // onNavigateToRoute("others")
-                },
+                showAdmin = session?.isAdmin == true,
+                onNavigate = onNavigateToRoute,
                 onLogOut = {
                     viewModel.logout()
                 },
@@ -65,15 +57,13 @@ object SettingsFeature : FeatureEntry {
             }
 
             ProfileEditScreen(
-                username = state.username,
-                phone = state.phone,
-                title = state.title,
-                bio = state.bio,
-                onUsernameChange = { },
-                onPhoneChange = { },
-                onTitleChange = viewModel::updateTitle,
-                onBioChange = viewModel::updateBio,
+                state = state,
+                onEdit = viewModel::edit,
+                onChooseAvatar = viewModel::chooseAvatar,
+                onRemoveAvatar = viewModel::removeAvatar,
+                onUndoAvatarChange = viewModel::undoAvatarChange,
                 onApply = viewModel::save,
+                onRetry = viewModel::load,
                 onBack = onNavigateUp
             )
         }

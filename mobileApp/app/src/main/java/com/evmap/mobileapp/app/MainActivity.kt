@@ -3,6 +3,9 @@ package com.evmap.mobileapp.app
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
 import com.evmap.mobileapp.core.data.session.TokenStore
 import dagger.hilt.android.AndroidEntryPoint
@@ -17,9 +20,11 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            val navController = rememberNavController()
-            val startDestination = if (tokenStore.isLoggedIn()) FeedFeature.route else AuthFeature.route
-            app.NavGraph(navController = navController, startDestination = startDestination)
+            val session by tokenStore.sessions.collectAsStateWithLifecycle()
+            key(session?.userId) {
+                val startDestination = if (session == null) AuthFeature.route else FeedFeature.route
+                app.NavGraph(navController = rememberNavController(), startDestination = startDestination)
+            }
         }
     }
 }

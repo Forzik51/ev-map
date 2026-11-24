@@ -1,6 +1,7 @@
 package com.evmap.serverapp.features.report.application.query
 
 import com.evmap.serverapp.features.report.api.dto.ViewReport
+import com.evmap.serverapp.features.report.domian.ReportStatus
 import com.evmap.serverapp.features.report.infra.read.ReportReadRepository
 import org.springframework.stereotype.Service
 
@@ -8,5 +9,5 @@ import org.springframework.stereotype.Service
 class GetAllReports(
     private val readRepo: ReportReadRepository,
 ) {
-    fun handle(): List<ViewReport> = readRepo.findAll()
+    fun handle(status: ReportStatus?): List<ViewReport> = readRepo.findAll(status)
 }

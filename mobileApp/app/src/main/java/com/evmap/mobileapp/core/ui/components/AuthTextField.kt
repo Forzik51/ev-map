@@ -19,7 +19,9 @@ fun AuthTextField(
     placeholder: String? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
-    singleLine: Boolean = true
+    singleLine: Boolean = true,
+    enabled: Boolean = true,
+    error: String? = null,
 ) {
     OutlinedTextField(
         value = value,
@@ -30,6 +32,9 @@ fun AuthTextField(
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
         singleLine = singleLine,
+        enabled = enabled,
+        isError = error != null,
+        supportingText = error?.let { { Text(it) } },
         shape = MaterialTheme.shapes.small,
         colors = OutlinedTextFieldDefaults.colors(
             focusedContainerColor = MaterialTheme.colorScheme.surface,

@@ -5,7 +5,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.BookmarkAdd
 import androidx.compose.material.icons.outlined.ModeComment
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -17,6 +17,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.evmap.mobileapp.feature.events.ui.displayRating
 import core.designsystem.Spacing
 import core.ui.model.EventUi
 
@@ -25,7 +26,8 @@ fun EventCard(
     event: EventUi,
     onClick: (String) -> Unit,
     modifier: Modifier = Modifier,
-    onOverflow: ((String) -> Unit)? = null
+    onOverflow: ((String) -> Unit)? = null,
+    onSave: ((String) -> Unit)? = null,
 ) {
     Card(
         onClick = { onClick(event.id) },
@@ -133,15 +135,15 @@ fun EventCard(
                     imageVector = Icons.Default.Star,
                     contentDescription = "Rating",
                     modifier = Modifier.size(32.dp),
-                    tint = Color(0xFF464646)
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 
                 Spacer(modifier = Modifier.width(Spacing.s))
                 
                 Text(
-                    text = event.rating?.toString() ?: "5.0",
+                    text = event.rating.displayRating(),
                     style = MaterialTheme.typography.labelLarge,
-                    color = Color.Black
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 
                 Spacer(modifier = Modifier.width(Spacing.s))
@@ -166,26 +168,18 @@ fun EventCard(
                 Spacer(modifier = Modifier.width(Spacing.s))
                 
                 Text(
-                    text = event.reviewCount?.toString() ?: "50",
+                    text = event.reviewCount?.toString() ?: "—",
                     style = MaterialTheme.typography.labelLarge,
-                    color = Color.Black
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 
-                Spacer(modifier = Modifier.width(Spacing.s))
-                
-                Surface(
-                    modifier = Modifier.size(32.dp),
-                    shape = MaterialTheme.shapes.large,
-                    color = Color(0xFF464646)
-                ) {
-                    Box(
-                        contentAlignment = Alignment.Center
-                    ) {
+                if (onSave != null) {
+                    Spacer(modifier = Modifier.width(Spacing.s))
+                    IconButton(onClick = { onSave(event.id) }) {
                         Icon(
-                            imageVector = Icons.Outlined.Add,
-                            contentDescription = "save",
-                            tint = Color.White,
-                            modifier = Modifier.size(24.dp)
+                            imageVector = Icons.Outlined.BookmarkAdd,
+                            contentDescription = "Save event",
+                            modifier = Modifier.size(24.dp),
                         )
                     }
                 }

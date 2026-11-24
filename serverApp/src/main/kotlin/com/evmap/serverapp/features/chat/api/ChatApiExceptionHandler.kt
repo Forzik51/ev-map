@@ -3,6 +3,7 @@ package com.evmap.serverapp.features.chat.api
 import com.evmap.serverapp.features.chat.api.controller.ChatController
 import com.evmap.serverapp.features.chat.application.ChatAccessDeniedException
 import com.evmap.serverapp.features.chat.application.ChatNotFoundException
+import com.evmap.serverapp.features.user.application.UserNotFoundException
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -24,4 +25,12 @@ class ChatApiExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException::class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     fun handleDataIntegrity(): Map<String, String> = mapOf("message" to "Invalid chat payload")
+
+    @ExceptionHandler(UserNotFoundException::class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    fun handleUserNotFound(): Map<String, String> = mapOf("message" to "Recipient not found")
+
+    @ExceptionHandler(IllegalArgumentException::class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    fun handleInvalid(ex: IllegalArgumentException): Map<String, String> = mapOf("message" to (ex.message ?: "Invalid chat payload"))
 }

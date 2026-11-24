@@ -1,5 +1,11 @@
 package com.evmap.mobileapp.core.data.dto
 
+data class ForgotPasswordRequest(val email: String)
+data class ForgotPasswordResponse(val requestId: String, val resendAfterSeconds: Long, val message: String)
+data class VerifyPasswordCodeRequest(val requestId: String, val code: String)
+data class VerifyPasswordCodeResponse(val resetToken: String, val expiresInSeconds: Long)
+data class ResetPasswordRequest(val resetToken: String, val newPassword: String)
+
 data class LoginRequest(
     val usernameOrEmail: String,
     val password: String,

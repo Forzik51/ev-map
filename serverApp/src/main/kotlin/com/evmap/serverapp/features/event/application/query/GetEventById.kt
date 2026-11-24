@@ -7,4 +7,7 @@ import org.springframework.stereotype.Service
 @Service
 class GetEventById(private val readRepo: EventReadRepository) {
     fun handle(id: Long): ViewEvent = readRepo.findViewById(id)
+
+    fun handleForViewer(id: Long, viewerId: Long): ViewEvent =
+        handle(id).copy(myRating = readRepo.findUserRating(id, viewerId))
 }

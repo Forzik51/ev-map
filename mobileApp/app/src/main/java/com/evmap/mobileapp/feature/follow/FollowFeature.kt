@@ -1,15 +1,16 @@
 package feature.follow
 
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import com.evmap.mobileapp.feature.follow.ui.FollowList
 import com.evmap.mobileapp.feature.follow.ui.FollowViewModel
 import core.navigation.FeatureEntry
-import feature.follow.ui.FollowersScreen
-import feature.follow.ui.FollowingScreen
+import feature.follow.ui.FollowScreen
 
 object FollowFeature : FeatureEntry {
     override val route = "follow"
@@ -17,44 +18,26 @@ object FollowFeature : FeatureEntry {
     override fun registerGraph(
         navGraphBuilder: NavGraphBuilder,
         onNavigateToRoute: (String) -> Unit,
-        onNavigateUp: () -> Unit
+        onNavigateUp: () -> Unit,
     ) {
-        navGraphBuilder.composable(route = "profile/{userId}/followers") { backStackEntry ->
-            val userId = backStackEntry.arguments?.getString("userId") ?: return@composable
-            val viewModel: FollowViewModel = hiltViewModel()
-            val state by viewModel.state.collectAsState()
+        FollowList.entries.forEach { list ->
+            navGraphBuilder.composable(route = "profile/{userId}/${list.segment}") { entry ->
+                val userId = entry.arguments?.getString("userId") ?: return@composable
+                val viewModel: FollowViewModel = hiltViewModel()
+                val state by viewModel.state.collectAsStateWithLifecycle()
 
-            LaunchedEffect(userId) {
-                viewModel.loadFollowers(userId)
+                LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.load(userId, list) }
+
+                FollowScreen(
+                    list = list,
+                    state = state,
+                    onUserClick = { onNavigateToRoute("profile/$it") },
+                    onToggleFollow = viewModel::toggleFollow,
+                    onRetry = { viewModel.load(userId, list) },
+                    onNavigate = onNavigateToRoute,
+                    onBack = onNavigateUp,
+                )
             }
-
-            FollowersScreen(
-                users = state.users,
-                onUserClick = { clickedUserId ->
-                    onNavigateToRoute("profile/$clickedUserId")
-                },
-                onToggleFollow = viewModel::toggleFollow,
-                onBack = onNavigateUp
-            )
-        }
-
-        navGraphBuilder.composable(route = "profile/{userId}/following") { backStackEntry ->
-            val userId = backStackEntry.arguments?.getString("userId") ?: return@composable
-            val viewModel: FollowViewModel = hiltViewModel()
-            val state by viewModel.state.collectAsState()
-
-            LaunchedEffect(userId) {
-                viewModel.loadFollowing(userId)
-            }
-
-            FollowingScreen(
-                users = state.users,
-                onUserClick = { clickedUserId ->
-                    onNavigateToRoute("profile/$clickedUserId")
-                },
-                onToggleFollow = viewModel::toggleFollow,
-                onBack = onNavigateUp
-            )
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.evmap.serverapp.features.notification.application.command
 
 import com.evmap.serverapp.features.notification.api.dto.SendEmailRequest
+import com.evmap.serverapp.features.notification.api.dto.EmailDeliverySummary
 import com.evmap.serverapp.features.user.infra.read.UserReadRepository
 import com.evmap.serverapp.shared.email.application.EmailSenderPort
 import com.evmap.serverapp.shared.email.domain.EmailMessage
@@ -14,32 +15,17 @@ class SendEmailToAllUsers(
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
-    fun handle(dto: SendEmailRequest) {
+    fun handle(dto: SendEmailRequest): EmailDeliverySummary {
         val allEmails = userReadRepository.findAllEmails()
-        val totalBatches = allEmails.size.let { if (it == 0) 0 else ((it - 1) / BATCH_SIZE) + 1 }
-
-        allEmails
-            .chunked(BATCH_SIZE)
-            .forEachIndexed { batchIndex, emails ->
-                log.info("Sending email batch {}/{} with {} recipients", batchIndex + 1, totalBatches, emails.size)
-
-                emails.forEach { email ->
-                    runCatching {
-                        emailSender.send(
-                            EmailMessage(
-                                to = email,
-                                subject = dto.subject,
-                                body = dto.body,
-                            )
-                        )
-                    }.onFailure { ex ->
-                        log.warn("Failed to send email to recipient={}", email, ex)
-                    }
-                }
+        var sent = 0
+        for (email in allEmails) {
+            try {
+                emailSender.send(EmailMessage(to = email, subject = dto.subject, body = dto.body))
+                sent++
+            } catch (error: Exception) {
+                log.warn("SMTP submission failed ({})", error.javaClass.simpleName)
             }
-    }
-
-    companion object {
-        private const val BATCH_SIZE = 100
+        }
+        return EmailDeliverySummary(sent, allEmails.size - sent)
     }
 }

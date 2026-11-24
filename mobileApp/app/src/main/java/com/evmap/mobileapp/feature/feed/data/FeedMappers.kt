@@ -21,7 +21,7 @@ fun EventDto.toEventUi(): EventUi = EventUi(
     startsAt = startsAt,
     description = description,
     imageUrl = imagePath.toAbsoluteMediaUrl(),
-    rating = ratingsCount.takeIf { it > 0 }?.toFloat(),
+    rating = ratingAvg,
     reviewCount = commentsCount
 )
 

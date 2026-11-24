@@ -10,7 +10,7 @@ class CreateReport(private val repo: ReportRepositoryPort) {
     fun handle(dto: CreateReportRequest, userId: Long): Long =
         repo.save(
             Report(
-                description = dto.description,
+                description = dto.description.trim(),
                 eventId = dto.eventId,
                 categoryId = dto.categoryId,
                 userId = userId,

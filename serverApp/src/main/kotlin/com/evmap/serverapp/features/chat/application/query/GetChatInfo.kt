@@ -8,5 +8,5 @@ import org.springframework.stereotype.Service
 class GetChatInfo(
     private val readRepo: ChatReadRepository,
 ) {
-    fun handle(chatId: Long): ViewChat = readRepo.findById(chatId)
+    fun handle(chatId: Long, userId: Long): ViewChat = readRepo.findById(chatId, userId)
 }

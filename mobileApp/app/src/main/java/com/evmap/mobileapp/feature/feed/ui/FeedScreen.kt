@@ -26,7 +26,7 @@ private fun FeedScreenPreview() {
         startsAt = "000000",
         description = "Preview item",
         imageUrl = null,
-        rating = 4.6F,
+        rating = 4.6,
         reviewCount = 120
     )
     val e2 = EventUi(
@@ -36,7 +36,7 @@ private fun FeedScreenPreview() {
         startsAt = "000000",
         description = "Preview item",
         imageUrl = null,
-        rating = 4.8F,
+        rating = 4.8,
         reviewCount = 87
     )
 

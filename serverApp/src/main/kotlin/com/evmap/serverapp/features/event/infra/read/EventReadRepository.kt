@@ -40,10 +40,12 @@ class EventReadRepository(private val dsl: DSLContext) {
                    e.start_at,
                    e.end_at,
                    e.user_id,
+                   e.location_id,
                    l.name AS location_name,
                    ph.image_path AS image_path,
                    COALESCE(rp.reposts_count, 0) AS reposts_count,
                    COALESCE(rt.ratings_count, 0) AS ratings_count,
+                   rt.rating_avg,
                    COALESCE(cm.comments_count, 0) AS comments_count
             FROM event e
             LEFT JOIN location l ON l.id = e.location_id
@@ -60,7 +62,7 @@ class EventReadRepository(private val dsl: DSLContext) {
                 GROUP BY event_id
             ) rp ON rp.event_id = e.id
             LEFT JOIN (
-                SELECT event_id, COUNT(*) AS ratings_count
+                SELECT event_id, COUNT(*) AS ratings_count, AVG(rating) AS rating_avg
                 FROM rating
                 GROUP BY event_id
             ) rt ON rt.event_id = e.id
@@ -91,21 +93,24 @@ class EventReadRepository(private val dsl: DSLContext) {
                 ratingsCount = countValue(r, "ratings_count"),
                 commentsCount = countValue(r, "comments_count"),
                 categories = categoriesByEventId[id].orEmpty(),
+                locationId = requireNotNull(r.get("location_id", Long::class.java)),
+                ratingAvg = (r.get("rating_avg") as? Number)?.toDouble(),
             )
         } ?: throw EventNotFoundException(id)
 
-    fun findAllViews(pageable: Pageable): Page<ViewEvent> {
-        val sql = """
+    private val eventViewSelect = """
             SELECT e.id,
                    e.name,
                    e.description,
                    e.start_at,
                    e.end_at,
                    e.user_id,
+                   e.location_id,
                    l.name AS location_name,
                    ph.image_path AS image_path,
                    COALESCE(rp.reposts_count, 0) AS reposts_count,
                    COALESCE(rt.ratings_count, 0) AS ratings_count,
+                   rt.rating_avg,
                    COALESCE(cm.comments_count, 0) AS comments_count
             FROM event e
             LEFT JOIN location l ON l.id = e.location_id
@@ -122,7 +127,7 @@ class EventReadRepository(private val dsl: DSLContext) {
                 GROUP BY event_id
             ) rp ON rp.event_id = e.id
             LEFT JOIN (
-                SELECT event_id, COUNT(*) AS ratings_count
+                SELECT event_id, COUNT(*) AS ratings_count, AVG(rating) AS rating_avg
                 FROM rating
                 GROUP BY event_id
             ) rt ON rt.event_id = e.id
@@ -131,16 +136,35 @@ class EventReadRepository(private val dsl: DSLContext) {
                 FROM comment
                 GROUP BY event_id
             ) cm ON cm.event_id = e.id
-            ORDER BY e.start_at DESC
-            LIMIT ? OFFSET ?
-        """.trimIndent()
+    """.trimIndent()
 
-        val recs = dsl.resultQuery(sql, pageable.pageSize, pageable.offset).fetch()
+    fun findAllViews(pageable: Pageable, userId: Long? = null): Page<ViewEvent> {
+        val where = if (userId == null) "" else "WHERE e.user_id = ?"
+        val filter = listOfNotNull(userId).toTypedArray()
+        val items = mapEventViews(dsl.fetch(
+            "$eventViewSelect $where ORDER BY e.start_at DESC, e.id DESC LIMIT ? OFFSET ?",
+            *filter,
+            pageable.pageSize,
+            pageable.offset,
+        ))
+        val total = dsl.fetchOne("SELECT COUNT(*) FROM event e $where", *filter)?.get(0, Long::class.java) ?: 0L
+        return PageImpl(items, pageable, total)
+    }
 
+    fun findSavedListViews(listId: Long): List<ViewEvent> = mapEventViews(dsl.fetch(
+        """
+        $eventViewSelect
+        WHERE EXISTS (SELECT 1 FROM event_list el WHERE el.favourite_list_id = ? AND el.event_id = e.id)
+        ORDER BY e.id
+        """.trimIndent(),
+        listId,
+    ))
+
+    private fun mapEventViews(recs: List<Record>): List<ViewEvent> {
         val eventIds = recs.mapNotNull { it.get("id", Long::class.java) }
         val categoriesByEventId = findCategoriesByEventIds(eventIds)
 
-        val items = recs.map {
+        return recs.map {
             val eventId = requireNotNull(it.get("id", Long::class.java)) { "id is null for event row" }
             ViewEvent(
                 id = eventId,
@@ -156,17 +180,11 @@ class EventReadRepository(private val dsl: DSLContext) {
                 ratingsCount = countValue(it, "ratings_count"),
                 commentsCount = countValue(it, "comments_count"),
                 categories = categoriesByEventId[eventId].orEmpty(),
+                locationId = requireNotNull(it.get("location_id", Long::class.java)),
+                ratingAvg = (it.get("rating_avg") as? Number)?.toDouble(),
             )
         }
 
-        val total = dsl.fetchOne(
-            """
-            SELECT COUNT(*)
-            FROM event
-            """.trimIndent()
-        )?.get(0, Long::class.java) ?: 0L
-
-        return PageImpl(items, pageable, total)
     }
 
     fun findPersonalizedViews(userId: Long, lat: Double?, lng: Double?, pageable: Pageable): Page<ViewEvent> {
@@ -188,10 +206,12 @@ class EventReadRepository(private val dsl: DSLContext) {
                    e.start_at,
                    e.end_at,
                    e.user_id,
+                   e.location_id,
                    l.name AS location_name,
                    ph.image_path AS image_path,
                    COALESCE(rp.reposts_count, 0) AS reposts_count,
                    COALESCE(rt.ratings_count, 0) AS ratings_count,
+                   rt.rating_avg,
                    COALESCE(cm.comments_count, 0) AS comments_count,
                    $distanceSelect AS distance_meters,
                    (
@@ -216,7 +236,7 @@ class EventReadRepository(private val dsl: DSLContext) {
                 GROUP BY event_id
             ) rp ON rp.event_id = e.id
             LEFT JOIN (
-                SELECT event_id, COUNT(*) AS ratings_count
+                SELECT event_id, COUNT(*) AS ratings_count, AVG(rating) AS rating_avg
                 FROM rating
                 GROUP BY event_id
             ) rt ON rt.event_id = e.id
@@ -242,7 +262,8 @@ class EventReadRepository(private val dsl: DSLContext) {
             ) pref ON pref.event_id = e.id
             ORDER BY personalization_score DESC,
                      distance_meters ASC NULLS LAST,
-                     e.start_at DESC
+                     e.start_at DESC,
+                     e.id DESC
             LIMIT ? OFFSET ?
         """.trimIndent()
 
@@ -269,12 +290,18 @@ class EventReadRepository(private val dsl: DSLContext) {
                 ratingsCount = countValue(it, "ratings_count"),
                 commentsCount = countValue(it, "comments_count"),
                 categories = categoriesByEventId[eventId].orEmpty(),
+                locationId = requireNotNull(it.get("location_id", Long::class.java)),
+                ratingAvg = (it.get("rating_avg") as? Number)?.toDouble(),
             )
         }
 
         val total = dsl.fetchOne("SELECT COUNT(*) FROM event")?.get(0, Long::class.java) ?: 0L
         return PageImpl(items, pageable, total)
     }
+
+    fun findUserRating(eventId: Long, userId: Long): Double? =
+        (dsl.fetchOne("SELECT rating FROM rating WHERE event_id = ? AND user_id = ?", eventId, userId)?.get(0) as? Number)
+            ?.toDouble()
 
     fun findCommentsByEventId(eventId: Long, pageable: Pageable): Page<ViewEventComment> {
         ensureEventExists(eventId)
@@ -303,7 +330,7 @@ class EventReadRepository(private val dsl: DSLContext) {
                 id = requireNotNull(record.get("id", Long::class.java)) { "id is null for comment row" },
                 text = requireNotNull(record.get("text", String::class.java)) { "text is null for comment row" },
                 eventId = requireNotNull(record.get("event_id", Long::class.java)) { "event_id is null for comment row" },
-                parentCommentId = record.get("parent_comment_id", Long::class.java),
+                parentCommentId = record.get("parent_comment_id", Long::class.javaObjectType),
                 commentAt = commentAt.toInstant().toString(),
                 userId = requireNotNull(record.get("user_id", Long::class.java)) { "user_id is null for comment row" },
                 username = record.get("username", String::class.java),

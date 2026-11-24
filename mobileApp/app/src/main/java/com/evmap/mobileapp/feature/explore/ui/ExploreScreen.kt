@@ -1,269 +1,170 @@
 package feature.explore.ui
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.*
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import core.designsystem.AppTheme
 import core.designsystem.Spacing
 import core.ui.components.SearchField
 import core.ui.components.UserListItem
-import core.ui.model.EventUi
-import core.ui.model.ProfileUserUi
 import feature.events.ui.components.EventCard
+import feature.explore.ExploreSort
 import feature.explore.ExploreTab
 import feature.explore.ExploreUiState
 
-@Preview(showBackground = true, widthDp = 412, heightDp = 892)
-@Composable
-private fun ExploreScreenPreview() {
-    // --- sample users ---
-    val users = listOf(
-        ProfileUserUi(
-            id = "u1",
-            username = "alice",
-            title = "Alice Johnson",
-            bio = "Coffee, cats, and Compose.",
-            avatarUrl = null
-        ),
-        ProfileUserUi(
-            id = "u2",
-            username = "bob",
-            title = "Bob Nowak",
-            bio = "Runner • Android dev",
-            avatarUrl = null
-        )
-    )
-
-    // --- sample events ---
-    val events = listOf(
-        EventUi(
-            id = "e1",
-            title = "Open-Air Jazz",
-            location = "Łazienki Park",
-            startsAt = "startat",
-            description = "Live bands, cozy vibes.",
-            imageUrl = "https://picsum.photos/600/360?1",
-            rating = 4.7F,
-            reviewCount = 128
-        ),
-        EventUi(
-            id = "e2",
-            title = "Street Food Fest",
-            location = "Praga-Północ",
-            startsAt = "startat",
-            description = "Food trucks and DJs.",
-            imageUrl = "https://picsum.photos/600/360?2",
-            rating = 4.5F,
-            reviewCount = 89
-        )
-    )
-
-    // --- preview state (mutable so tabs/search/filter react) ---
-    var ui by remember {
-        mutableStateOf(
-            ExploreUiState(
-                query = "",
-                selectedTab = ExploreTab.EVENTS,
-                users = users,
-                events = events,
-                isFilterOpen = false,
-                sortBy = "Name",
-                selectedType = "All"
-            )
-        )
-    }
-
-    AppTheme {
-        ExploreScreen(
-            uiState = ui,
-            onQueryChange = { q -> ui = ui.copy(query = q) },
-            onSelectTab = { tab -> ui = ui.copy(selectedTab = tab) },
-            onUserClick = { /* no-op in preview */ },
-            onEventClick = { /* no-op in preview */ },
-            onOpenFilters = { ui = ui.copy(isFilterOpen = false) },
-            onCloseFilters = { ui = ui.copy(isFilterOpen = false) },
-            onApplyFilters = { ui = ui.copy(isFilterOpen = false) },
-            onBack = { /* no-op in preview */ },
-            onSave = { /* e.g., save event id */ },
-            onSortChange = { sort -> ui = ui.copy(sortBy = sort) },
-            onTypeChange = { type -> ui = ui.copy(selectedType = type) },
-            modifier = Modifier.fillMaxSize()
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExploreScreen(
     uiState: ExploreUiState,
     onQueryChange: (String) -> Unit,
+    onSearch: () -> Unit,
     onSelectTab: (ExploreTab) -> Unit,
     onUserClick: (String) -> Unit,
     onEventClick: (String) -> Unit,
     onOpenFilters: () -> Unit,
     onCloseFilters: () -> Unit,
     onApplyFilters: () -> Unit,
+    onSortChange: (ExploreSort) -> Unit,
+    onCategoryChange: (Long?) -> Unit,
+    onRetryCategories: () -> Unit,
     onBack: () -> Unit,
-    modifier: Modifier = Modifier,
-    onSave: ((String) -> Unit)? = null,
-    onSortChange: ((String) -> Unit)? = null,
-    onTypeChange: ((String) -> Unit)? = null
+    onSaveEvent: ((String) -> Unit)? = null,
 ) {
-    var isSearchActive by remember { mutableStateOf(false) }
-    
+    val focus = LocalFocusManager.current
     Scaffold(
-        modifier = modifier
-            .fillMaxSize()
-            .statusBarsPadding(),
-        containerColor = MaterialTheme.colorScheme.surface,
+        modifier = Modifier.fillMaxSize().statusBarsPadding(),
         topBar = {
-            if (isSearchActive) {
-                // Inline search field
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.s, horizontal = Spacing.s),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                }
                 SearchField(
                     value = uiState.query,
                     onValueChange = onQueryChange,
-                    placeholder = "Input text",
-                    modifier = Modifier.padding(Spacing.m)
-                )
-            } else {
-                // Top app bar
-                TopAppBar(
-                    title = {
-                        Text(
-                            text = "Text",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
+                    placeholder = "Search events or users",
+                    modifier = Modifier.weight(1f),
+                    onSearch = {
+                        focus.clearFocus()
+                        onSearch()
                     },
-                    actions = {
-                        // Search icon
-                        IconButton(onClick = { isSearchActive = true }) {
-                            Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = "Search",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        
-                        // Filter icon
-                        IconButton(onClick = onOpenFilters) {
-                            Icon(
-                                imageVector = Icons.Default.Settings,
-                                contentDescription = "Filters",
-                                tint = Color(0xFF464646)
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surface
-                    )
                 )
-            }
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            // Tabs
-            TabRow(
-                selectedTabIndex = uiState.selectedTab.ordinal,
-                containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = MaterialTheme.colorScheme.onSurface,
-                indicator = { tabPositions ->
-                    TabRowDefaults.SecondaryIndicator(
-                        modifier = Modifier.tabIndicatorOffset(tabPositions[uiState.selectedTab.ordinal]),
-                        height = 2.dp,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                },
-                divider = {
-                    HorizontalDivider(
-                        color = MaterialTheme.colorScheme.outlineVariant
-                    )
+                if (uiState.selectedTab == ExploreTab.EVENTS) {
+                    IconButton(onClick = {
+                        focus.clearFocus()
+                        onOpenFilters()
+                    }) {
+                        Icon(Icons.Outlined.Tune, contentDescription = "Filters")
+                    }
                 }
-            ) {
+            }
+        },
+    ) { padding ->
+        Column(Modifier.fillMaxSize().padding(padding)) {
+            TabRow(selectedTabIndex = uiState.selectedTab.ordinal) {
                 Tab(
                     selected = uiState.selectedTab == ExploreTab.USERS,
                     onClick = { onSelectTab(ExploreTab.USERS) },
-                    text = {
-                        Text(
-                            text = "Users",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
+                    text = { Text("Users") },
                 )
                 Tab(
                     selected = uiState.selectedTab == ExploreTab.EVENTS,
                     onClick = { onSelectTab(ExploreTab.EVENTS) },
-                    text = {
-                        Text(
-                            text = "Events",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
+                    text = { Text("Events") },
                 )
             }
-            
-            // Content
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = Spacing.s)
-            ) {
-                when (uiState.selectedTab) {
-                    ExploreTab.USERS -> {
-                        items(uiState.users) { user ->
+
+            val empty = when (uiState.selectedTab) {
+                ExploreTab.USERS -> uiState.users.isEmpty()
+                ExploreTab.EVENTS -> uiState.events.isEmpty()
+            }
+            val error = uiState.error
+            when {
+                uiState.query.isBlank() -> SearchStatus { Text("Enter a search term") }
+                uiState.loading -> SearchStatus { CircularProgressIndicator() }
+                error != null -> SearchStatus {
+                    Text(error, color = MaterialTheme.colorScheme.error)
+                    TextButton(onClick = onSearch) { Text("Retry") }
+                }
+                empty -> SearchStatus { Text("No results found") }
+                else -> LazyColumn(
+                    modifier = Modifier.fillMaxSize().padding(horizontal = Spacing.s),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.s),
+                ) {
+                    when (uiState.selectedTab) {
+                        ExploreTab.USERS -> items(uiState.users, key = { it.id }) { user ->
                             UserListItem(
                                 avatarUrl = user.avatarUrl,
                                 title = user.username,
                                 subtitle = user.bio,
-                                onClick = { onUserClick(user.id) }
+                                onClick = { onUserClick(user.id) },
                             )
                         }
-                    }
-                    ExploreTab.EVENTS -> {
-                        items(uiState.events) { event ->
-                            EventCard(
-                                event = event,
-                                onClick = onEventClick,
-                                modifier = Modifier.padding(vertical = Spacing.s),
-                                onOverflow = onSave
-                            )
+                        ExploreTab.EVENTS -> items(uiState.events, key = { it.id }) { event ->
+                            EventCard(event = event, onClick = onEventClick, onSave = onSaveEvent)
                         }
                     }
                 }
             }
         }
     }
-    
-    // Filter Sheet
-    if (uiState.isFilterOpen) {
+
+    uiState.draftFilters?.let { filters ->
         ExploreFilterSheet(
-            sortBy = uiState.sortBy,
-            sortOptions = listOf("Name", "Date", "Rating", "Popularity"),
-            type = uiState.selectedType,
-            typeOptions = listOf("All", "Music", "Art", "Food", "Technology"),
-            onSortChange = onSortChange ?: { },
-            onTypeChange = onTypeChange ?: { },
+            filters = filters,
+            categories = uiState.categories.orEmpty(),
+            loadingCategories = uiState.loadingCategories,
+            categoryLoadFailed = uiState.categoryLoadFailed,
+            onSortChange = onSortChange,
+            onCategoryChange = onCategoryChange,
+            onRetryCategories = onRetryCategories,
             onApply = onApplyFilters,
-            onDismiss = onCloseFilters
+            onDismiss = onCloseFilters,
+        )
+    }
+}
+
+@Composable
+private fun SearchStatus(content: @Composable () -> Unit) {
+    Box(Modifier.fillMaxSize().padding(Spacing.m), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) { content() }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ExploreScreenPreview() {
+    AppTheme {
+        ExploreScreen(
+            uiState = ExploreUiState(),
+            onQueryChange = {}, onSearch = {}, onSelectTab = {}, onUserClick = {}, onEventClick = {},
+            onOpenFilters = {}, onCloseFilters = {}, onApplyFilters = {}, onSortChange = {},
+            onCategoryChange = {}, onRetryCategories = {}, onBack = {},
         )
     }
 }

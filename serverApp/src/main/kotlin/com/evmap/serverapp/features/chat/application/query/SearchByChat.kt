@@ -7,5 +7,5 @@ import org.springframework.stereotype.Service
 class SearchByChat(
     private val readRepo: ChatReadRepository,
 ) {
-    fun handle(chatId: Long, query: String): List<String> = readRepo.searchByChat(chatId, query)
+    fun handle(chatId: Long, query: String, userId: Long): List<String> = readRepo.searchByChat(chatId, query, userId)
 }

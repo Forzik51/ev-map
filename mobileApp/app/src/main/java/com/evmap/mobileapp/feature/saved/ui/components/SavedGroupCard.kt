@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import core.designsystem.Spacing
 import core.ui.model.SavedGroupUi
+import feature.saved.ui.eventCountLabel
 
 @Composable
 fun SavedGroupCard(
@@ -65,5 +66,6 @@ fun SavedGroupCard(
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.fillMaxWidth()
         )
+        Text(eventCountLabel(group.count), style = MaterialTheme.typography.bodySmall)
     }
 }

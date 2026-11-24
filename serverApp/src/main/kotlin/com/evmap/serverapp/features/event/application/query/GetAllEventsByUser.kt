@@ -10,8 +10,6 @@ import org.springframework.data.domain.Pageable
 class GetAllEventsByUser(
     private val readRepo: EventReadRepository
 ) {
-    //fun handle(): List<EventView> = readRepo.findAllViews()
-
-    fun handle(pageable: Pageable): Page<ViewEvent> =
-        readRepo.findAllViews(pageable)
+    fun handle(pageable: Pageable, userId: Long? = null): Page<ViewEvent> =
+        readRepo.findAllViews(pageable, userId)
 }

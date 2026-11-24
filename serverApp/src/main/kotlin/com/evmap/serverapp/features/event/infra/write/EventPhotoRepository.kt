@@ -4,11 +4,23 @@ import com.evmap.serverapp.features.event.api.dto.ViewEventPhoto
 import com.evmap.serverapp.features.event.application.EventNotFoundException
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
+import java.util.UUID
 
 @Repository
 class EventPhotoRepository(
     private val dsl: DSLContext,
 ) {
+    fun lockEventOwner(eventId: Long): Long =
+        dsl.fetchOne("SELECT user_id FROM event WHERE id = ? FOR UPDATE", eventId)?.get(0, Long::class.java)
+            ?: throw EventNotFoundException(eventId)
+
+    fun findByUploadId(eventId: Long, uploadId: UUID): ViewEventPhoto? =
+        dsl.fetchOne(
+            "SELECT id, event_id, image_path FROM photo WHERE event_id = ? AND image_path LIKE ?",
+            eventId,
+            "/media/events/$eventId/$uploadId-%.%",
+        )?.let(::toView)
+
     fun create(eventId: Long, imagePath: String): ViewEventPhoto {
         ensureEventExists(eventId)
         val record = dsl.fetchOne(

@@ -54,6 +54,16 @@ class ListReadRepository(
         ).mapNotNull { it.get("event_id", Long::class.java) }
     }
 
+    fun findById(listId: Long): ViewList = dsl.fetchOne(
+        """
+        SELECT ul.id, ul.name, ul.user_id,
+               (SELECT COUNT(*) FROM event_list el WHERE el.favourite_list_id = ul.id) AS events_count
+        FROM user_list ul
+        WHERE ul.id = ?
+        """.trimIndent(),
+        listId,
+    )?.let(::toViewList) ?: throw ListNotFoundException(listId)
+
     private fun toViewList(record: org.jooq.Record): ViewList =
         ViewList(
             id = record.get("id", Long::class.java)!!,

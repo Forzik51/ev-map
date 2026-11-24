@@ -1,15 +1,18 @@
 package com.evmap.mobileapp.core.data.remote
 
 import com.evmap.mobileapp.core.data.dto.UserDto
+import com.evmap.mobileapp.core.data.dto.UpdateProfileRequest
 import com.evmap.mobileapp.core.data.dto.UserPhotoDto
 import com.evmap.mobileapp.core.data.dto.UserShortDto
 import okhttp3.MultipartBody
 import retrofit2.Response
+import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Multipart
 import retrofit2.http.PATCH
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -20,6 +23,9 @@ interface UsersApi {
 
     @GET("api/users/me")
     suspend fun getMe(): UserDto
+
+    @PATCH("api/users/me")
+    suspend fun updateMe(@Body profile: UpdateProfileRequest): UserDto
 
     @GET("api/users/{userId}")
     suspend fun getUser(
@@ -64,6 +70,13 @@ interface UsersApi {
     @GET("api/users/{userId}/photo")
     suspend fun getPhoto(
         @Path("userId") userId: Long,
+    ): UserPhotoDto
+
+    @Multipart
+    @PUT("api/users/{userId}/photo")
+    suspend fun replacePhoto(
+        @Path("userId") userId: Long,
+        @Part file: MultipartBody.Part,
     ): UserPhotoDto
 
     @DELETE("api/users/{userId}/photo")

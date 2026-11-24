@@ -1,31 +1,53 @@
 package feature.explore
 
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavType
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
+import com.evmap.mobileapp.core.data.dto.EventCategoryDto
 import com.evmap.mobileapp.feature.explore.ui.ExploreViewModel
 import core.navigation.FeatureEntry
 import core.ui.model.EventUi
 import core.ui.model.ProfileUserUi
 import feature.explore.ui.ExploreScreen
+import feature.saved.SavedFeature
+import java.util.Base64
 
 object ExploreFeature : FeatureEntry {
     override val route = "explore"
+    internal const val QUERY_ARGUMENT = "query"
+
+    fun routeForQuery(query: String): String {
+        if (query.isBlank()) return route
+        val encoded = Base64.getUrlEncoder().withoutPadding().encodeToString(query.encodeToByteArray())
+        return "$route?$QUERY_ARGUMENT=$encoded"
+    }
+
+    internal fun decodeQuery(argument: String?): String =
+        argument?.let { runCatching { Base64.getUrlDecoder().decode(it).decodeToString() }.getOrNull() }.orEmpty()
 
     override fun registerGraph(
         navGraphBuilder: NavGraphBuilder,
         onNavigateToRoute: (String) -> Unit,
         onNavigateUp: () -> Unit
     ) {
-        navGraphBuilder.composable(route) {
+        navGraphBuilder.composable(
+            route = "$route?$QUERY_ARGUMENT={$QUERY_ARGUMENT}",
+            arguments = listOf(navArgument(QUERY_ARGUMENT) {
+                type = NavType.StringType
+                defaultValue = ""
+            }),
+        ) {
             val viewModel: ExploreViewModel = hiltViewModel()
-            val uiState by viewModel.state.collectAsState()
+            val uiState by viewModel.state.collectAsStateWithLifecycle()
 
             ExploreScreen(
                 uiState = uiState,
                 onQueryChange = viewModel::updateQuery,
+                onSearch = viewModel::submitSearch,
                 onSelectTab = viewModel::selectTab,
                 onUserClick = { userId ->
                     onNavigateToRoute("profile/$userId")
@@ -33,15 +55,14 @@ object ExploreFeature : FeatureEntry {
                 onEventClick = { eventId ->
                     onNavigateToRoute("events/$eventId")
                 },
+                onSaveEvent = { onNavigateToRoute(SavedFeature.pickerRoute(it)) },
                 onOpenFilters = viewModel::openFilters,
                 onCloseFilters = viewModel::closeFilters,
                 onApplyFilters = viewModel::applyFilters,
                 onBack = onNavigateUp,
-                onSave = {
-                    // Saved-list picker is pending.
-                },
-                onSortChange = viewModel::updateSortBy,
-                onTypeChange = viewModel::updateSelectedType
+                onSortChange = viewModel::updateSort,
+                onCategoryChange = viewModel::updateCategory,
+                onRetryCategories = viewModel::loadCategories,
             )
         }
     }
@@ -49,14 +70,29 @@ object ExploreFeature : FeatureEntry {
 
 data class ExploreUiState(
     val query: String = "",
-    val selectedTab: ExploreTab = ExploreTab.USERS,
+    val selectedTab: ExploreTab = ExploreTab.EVENTS,
     val users: List<ProfileUserUi> = emptyList(),
     val events: List<EventUi> = emptyList(),
-    val isFilterOpen: Boolean = true,
-    val sortBy: String = "Name",
-    val selectedType: String = "All"
+    val loading: Boolean = false,
+    val error: String? = null,
+    val filters: ExploreFilters = ExploreFilters(),
+    val draftFilters: ExploreFilters? = null,
+    val categories: List<EventCategoryDto>? = null,
+    val loadingCategories: Boolean = false,
+    val categoryLoadFailed: Boolean = false,
 )
 
-enum class ExploreTab {
-    USERS, EVENTS
+data class ExploreFilters(
+    val sort: ExploreSort = ExploreSort.RELEVANCE,
+    val categoryId: Long? = null,
+)
+
+enum class ExploreTab(val apiValue: String) {
+    USERS("users"), EVENTS("events")
+}
+
+enum class ExploreSort(val apiValue: String, val label: String) {
+    RELEVANCE("relevance", "Relevance"),
+    DATE("date", "Date"),
+    RATING("rating", "Rating"),
 }

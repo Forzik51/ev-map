@@ -13,6 +13,8 @@ interface SearchApi {
         @Query("lat") lat: Double? = null,
         @Query("lng") lng: Double? = null,
         @Query("limit") limit: Int? = null,
+        @Query("sort") sort: String? = null,
+        @Query("categoryIds") categoryIds: List<Long>? = null,
     ): SearchResponseDto
 
     @GET("api/search/suggestions")
