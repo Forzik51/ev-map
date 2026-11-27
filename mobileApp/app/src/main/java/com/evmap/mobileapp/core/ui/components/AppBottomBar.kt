@@ -1,4 +1,6 @@
 package core.ui.components
+import androidx.compose.ui.res.stringResource
+import com.evmap.mobileapp.R
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -28,7 +30,7 @@ fun AppBottomBar(
         BottomNavItem(Icons.Outlined.Map, "Map", "map"),
         BottomNavItem(Icons.Outlined.Add, "Add", "events/create"),
         BottomNavItem(Icons.Outlined.ChatBubbleOutline, "Chat", "chats"),
-        BottomNavItem(Icons.Outlined.Person, "Profile", "profile")
+        BottomNavItem(Icons.Outlined.Person, stringResource(R.string.form_profile_ff4fc0), "profile")
     )
 
     Surface(

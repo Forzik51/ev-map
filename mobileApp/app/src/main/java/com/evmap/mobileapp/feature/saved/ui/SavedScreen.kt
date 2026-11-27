@@ -1,4 +1,6 @@
 package feature.saved.ui
+import androidx.compose.ui.res.stringResource
+import com.evmap.mobileapp.R
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -40,11 +42,11 @@ fun SavedScreen(
     onBack: () -> Unit,
 ) {
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Saved events") }, navigationIcon = { SavedBackButton(onBack) }) },
+        topBar = { TopAppBar(title = { Text(stringResource(R.string.form_saved_events_f9cdab)) }, navigationIcon = { SavedBackButton(onBack) }) },
         floatingActionButton = {
             if (!state.busy) {
                 FloatingActionButton(onClick = onAddGroup) {
-                    Icon(Icons.Default.Add, contentDescription = "Create list")
+                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.form_create_list_13ca88))
                 }
             }
         },
@@ -66,7 +68,7 @@ fun SavedScreen(
 
 @Composable
 internal fun SavedBackButton(onBack: () -> Unit) {
-    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back") }
+    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.form_back_b52b36)) }
 }
 
 @Composable
@@ -82,7 +84,7 @@ internal fun SavedListStatus(state: SavedUiState, emptyMessage: String?, onRetry
             state.loading -> CircularProgressIndicator()
             loadError != null -> {
                 Text(loadError, color = MaterialTheme.colorScheme.error)
-                TextButton(onClick = onRetry) { Text("Retry") }
+                TextButton(onClick = onRetry) { Text(stringResource(R.string.form_retry_9f5cd8)) }
             }
             writeError != null -> Text(writeError, color = MaterialTheme.colorScheme.error)
             emptyMessage != null -> Text(emptyMessage)

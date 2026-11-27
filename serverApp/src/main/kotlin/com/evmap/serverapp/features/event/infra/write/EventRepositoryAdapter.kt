@@ -21,6 +21,7 @@ class EventRepositoryAdapter(
 ) : EventRepositoryPort {
     @Transactional
     override fun save(event: Event): Long {
+        ensureLocation(event.locationId)
         val e = jpa.save(
             EventEntity(
                 name = event.name,
@@ -30,15 +31,18 @@ class EventRepositoryAdapter(
                 locationId = event.locationId,
                 userId = event.userId,
                 createdAt = event.createdAt,
+                dateMode = event.dateMode, startsOn = event.startsOn, endsOn = event.endsOn, timeZone = event.timeZone,
             )
         )
         val eventId = e.id!!
         replaceEventCategories(eventId, event.categoryIds)
+        replaceTags(eventId,event.tags)
         return eventId
     }
 
     @Transactional
     override fun update(eventId: Long, event: Event) {
+        ensureLocation(event.locationId)
         val updated = dsl.execute(
             """
             UPDATE event
@@ -47,19 +51,20 @@ class EventRepositoryAdapter(
                 start_at = CAST(? AS timestamptz),
                 end_at = CAST(? AS timestamptz),
                 location_id = ?,
-                user_id = ?
+                user_id = ?, date_mode = ?, starts_on = CAST(? AS date), ends_on = CAST(? AS date), time_zone = ?
             WHERE id = ?
             """.trimIndent(),
             event.name,
             event.description,
-            event.startsAt.toOffsetDateTimeUtc(),
+            event.startsAt?.toOffsetDateTimeUtc(),
             event.endsAt?.toOffsetDateTimeUtc(),
             event.locationId,
-            event.userId,
+            event.userId, event.dateMode, event.startsOn, event.endsOn, event.timeZone,
             eventId
         )
         if (updated == 0) throw EventNotFoundException(eventId)
         replaceEventCategories(eventId, event.categoryIds)
+        replaceTags(eventId,event.tags)
     }
 
     @Transactional
@@ -144,6 +149,18 @@ class EventRepositoryAdapter(
     override fun removeShare(eventId: Long, userId: Long) {
         ensureEventExists(eventId)
         dsl.execute("DELETE FROM repost WHERE event_id = ? AND user_id = ?", eventId, userId)
+    }
+
+    private fun ensureLocation(id: Long) {
+        if (dsl.fetchOne("SELECT 1 FROM location WHERE id=?",id) == null) throw com.evmap.serverapp.shared.api.FormValidationException(mapOf("locationId" to "Виберіть наявне місце"))
+    }
+    private fun replaceTags(eventId: Long, tags: List<String>) {
+        dsl.execute("DELETE FROM event_tag WHERE event_id=?",eventId)
+        tags.distinctBy { com.evmap.serverapp.features.event.application.normalizedTag(it) }.forEach { name ->
+            val normalized = com.evmap.serverapp.features.event.application.normalizedTag(name)
+            val id = dsl.fetchOne("INSERT INTO tag(name,normalized_name) VALUES(?,?) ON CONFLICT(normalized_name) DO UPDATE SET normalized_name=excluded.normalized_name RETURNING id",name,normalized)!!.get(0,Long::class.java)!!
+            dsl.execute("INSERT INTO event_tag(event_id,tag_id) VALUES(?,?)",eventId,id)
+        }
     }
 
     private fun ensureEventExists(eventId: Long) {

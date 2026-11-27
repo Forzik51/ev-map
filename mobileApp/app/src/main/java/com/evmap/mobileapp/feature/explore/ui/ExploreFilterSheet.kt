@@ -1,4 +1,6 @@
 package feature.explore.ui
+import androidx.compose.ui.res.stringResource
+import com.evmap.mobileapp.R
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -37,11 +39,12 @@ fun ExploreFilterSheet(
     categoryLoadFailed: Boolean,
     onSortChange: (ExploreSort) -> Unit,
     onCategoryChange: (Long?) -> Unit,
+    onTagsChange: (String)->Unit = {},
     onRetryCategories: () -> Unit,
     onApply: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val categoryOptions: List<Pair<Long?, String>> = listOf(null to "All categories") +
+    val categoryOptions: List<Pair<Long?, String>> = listOf(null to stringResource(R.string.form_all_categories_060be0)) +
         categories.map { it.id to it.name }
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
@@ -49,26 +52,27 @@ fun ExploreFilterSheet(
             modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(Spacing.l),
             verticalArrangement = Arrangement.spacedBy(Spacing.m),
         ) {
-            Text("Event filters", style = MaterialTheme.typography.titleLarge)
+            Text(stringResource(R.string.form_event_filters_884913), style = MaterialTheme.typography.titleLarge)
             FilterDropdown(
-                label = "Sort by",
+                label = stringResource(R.string.form_sort_by_a2a5bd),
                 value = filters.sort.label,
                 options = ExploreSort.entries.map { it to it.label },
                 onSelect = onSortChange,
             )
             FilterDropdown(
-                label = "Category",
-                value = categoryOptions.firstOrNull { it.first == filters.categoryId }?.second ?: "Selected category",
+                label = stringResource(R.string.form_category_a3c686),
+                value = categoryOptions.firstOrNull { it.first == filters.categoryId }?.second ?: stringResource(R.string.form_selected_category_fb4f11),
                 options = categoryOptions,
                 onSelect = onCategoryChange,
             )
             if (loadingCategories) {
                 CircularProgressIndicator()
             } else if (categoryLoadFailed) {
-                Text("Could not load categories.", color = MaterialTheme.colorScheme.error)
-                TextButton(onClick = onRetryCategories) { Text("Retry") }
+                Text(stringResource(R.string.form_could_not_load_categories_d1a974), color = MaterialTheme.colorScheme.error)
+                TextButton(onClick = onRetryCategories) { Text(stringResource(R.string.form_retry_9f5cd8)) }
             }
-            PrimaryButton(text = "Apply", onClick = onApply, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(filters.tagsText,onTagsChange,label={ Text(stringResource(R.string.form_label_d92fa5)) },supportingText={Text(stringResource(R.string.form_5_79f182))},modifier=Modifier.fillMaxWidth())
+            PrimaryButton(text = stringResource(R.string.form_apply_cfea41), onClick = onApply, modifier = Modifier.fillMaxWidth())
         }
     }
 }

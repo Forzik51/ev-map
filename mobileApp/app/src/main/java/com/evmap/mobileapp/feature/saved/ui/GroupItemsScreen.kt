@@ -1,4 +1,6 @@
 package feature.saved.ui
+import androidx.compose.ui.res.stringResource
+import com.evmap.mobileapp.R
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -68,21 +70,21 @@ fun GroupItemsScreen(
                 if (group != null) {
                     IconButton(onClick = onToggleView) {
                         if (group.viewMode == ViewMode.GRID) {
-                            Icon(Icons.AutoMirrored.Outlined.List, contentDescription = "List view")
+                            Icon(Icons.AutoMirrored.Outlined.List, contentDescription = stringResource(R.string.form_list_view_694bbd))
                         } else {
-                            Icon(Icons.Outlined.GridView, contentDescription = "Grid view")
+                            Icon(Icons.Outlined.GridView, contentDescription = stringResource(R.string.form_grid_view_d44ec8))
                         }
                     }
                     Box {
                         IconButton(onClick = { menuOpen = true }, enabled = !state.busy) {
-                            Icon(Icons.Default.MoreVert, contentDescription = "Manage list")
+                            Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.form_manage_list_6c7a89))
                         }
                         DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                            DropdownMenuItem(text = { Text("Rename list") }, onClick = {
+                            DropdownMenuItem(text = { Text(stringResource(R.string.form_rename_list_80b1e8)) }, onClick = {
                                 menuOpen = false
                                 onRename()
                             })
-                            DropdownMenuItem(text = { Text("Delete list") }, onClick = {
+                            DropdownMenuItem(text = { Text(stringResource(R.string.form_delete_list_a1ebff)) }, onClick = {
                                 menuOpen = false
                                 onDelete()
                             })
@@ -151,7 +153,7 @@ private fun SavedEventCard(
                 }
             }
             DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                DropdownMenuItem(text = { Text("Remove from list") }, enabled = !busy, onClick = {
+                DropdownMenuItem(text = { Text(stringResource(R.string.form_remove_from_list_23a976)) }, enabled = !busy, onClick = {
                     menuOpen = false
                     onRemove(event.id)
                 })

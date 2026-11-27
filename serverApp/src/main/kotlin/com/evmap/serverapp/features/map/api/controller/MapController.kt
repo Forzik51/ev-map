@@ -29,6 +29,7 @@ class MapController(
         @RequestParam(required = false) onlyActive: Boolean?,
         @RequestParam(required = false) sort: String?,
         @RequestParam(required = false) limit: Int?,
+        @RequestParam(required = false) tags: List<String>? = null,
     ): List<ViewMapEventItem> =
         mapQueryService.findNearby(
             lat = lat,
@@ -39,6 +40,7 @@ class MapController(
             startsFrom = startsFrom,
             startsTo = startsTo,
             onlyActive = onlyActive ?: false,
+            tags = tags.orEmpty(),
             sort = sort,
             limit = limit,
         )
@@ -56,6 +58,7 @@ class MapController(
         @RequestParam(required = false) onlyActive: Boolean?,
         @RequestParam(required = false) sort: String?,
         @RequestParam(required = false) limit: Int?,
+        @RequestParam(required = false) tags: List<String>? = null,
     ): List<ViewMapEventItem> =
         mapQueryService.findBounds(
             minLat = minLat,
@@ -67,6 +70,7 @@ class MapController(
             startsFrom = startsFrom,
             startsTo = startsTo,
             onlyActive = onlyActive ?: false,
+            tags = tags.orEmpty(),
             sort = sort,
             limit = limit,
         )
@@ -83,6 +87,7 @@ class MapController(
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) startsFrom: OffsetDateTime?,
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) startsTo: OffsetDateTime?,
         @RequestParam(required = false) onlyActive: Boolean?,
+        @RequestParam(required = false) tags: List<String>? = null,
     ): List<ViewMapCluster> =
         mapQueryService.findClusters(
             minLat = minLat,
@@ -95,6 +100,7 @@ class MapController(
             startsFrom = startsFrom,
             startsTo = startsTo,
             onlyActive = onlyActive ?: false,
+            tags = tags.orEmpty(),
         )
 
     @GetMapping("/geojson")
@@ -109,6 +115,7 @@ class MapController(
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) startsTo: OffsetDateTime?,
         @RequestParam(required = false) onlyActive: Boolean?,
         @RequestParam(required = false) limit: Int?,
+        @RequestParam(required = false) tags: List<String>? = null,
     ): Map<String, Any> =
         mapQueryService.findGeoJson(
             minLat = minLat,
@@ -120,6 +127,7 @@ class MapController(
             startsFrom = startsFrom,
             startsTo = startsTo,
             onlyActive = onlyActive ?: false,
+            tags = tags.orEmpty(),
             limit = limit,
         )
 
@@ -142,6 +150,7 @@ class MapController(
         @RequestParam(required = false) onlyActive: Boolean?,
         @RequestParam(required = false) sort: String?,
         @RequestParam(required = false) limit: Int?,
+        @RequestParam(required = false) tags: List<String>? = null,
     ): List<ViewMapEventItem> =
         mapQueryService.search(
             query = query,
@@ -155,6 +164,7 @@ class MapController(
             startsFrom = startsFrom,
             startsTo = startsTo,
             onlyActive = onlyActive ?: false,
+            tags = tags.orEmpty(),
             sort = sort,
             limit = limit,
         )

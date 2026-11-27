@@ -5,8 +5,8 @@ data class UserDto(
     val name: String,
     val surname: String?,
     val email: String,
-    val phone: String,
-    val birthdate: String,
+    val phone: String?,
+    val birthdate: String?,
     val username: String,
     val pageDescription: String,
     val path: String?,
@@ -27,6 +27,8 @@ data class UpdateProfileRequest(
     val username: String = "",
     val phone: String = "",
     val pageDescription: String = "",
+    val dateOfBirth: String? = null,
+    val updateDateOfBirth: Boolean = true,
 )
 
 data class UserPhotoDto(

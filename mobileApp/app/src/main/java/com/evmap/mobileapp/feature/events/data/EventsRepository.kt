@@ -51,6 +51,8 @@ class EventsRepository @Inject constructor(private val api: EventsApi) {
     suspend fun uploadPhoto(eventId: Long, uploadId: String, file: MultipartBody.Part) =
         change { api.uploadPhoto(eventId, uploadId, file) }
 
+    suspend fun orderPhotos(eventId: Long, ids: List<Long>) = change { api.orderPhotos(eventId,ids).requireSuccess() }
+
     suspend fun deletePhoto(eventId: Long, photoId: Long) = change {
         val response = api.deletePhoto(eventId, photoId)
         // A retry after the first DELETE was committed can find the photo already gone.

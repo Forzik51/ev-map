@@ -83,12 +83,12 @@ class UserRepositoryAdapter(
     override fun updateProfile(userId: Long, profile: UpdateProfile) {
         val updated = dsl.execute(
             """
-            UPDATE app_user u SET name = ?, surname = ?, username = ?, phone = ?, page_description = ?
+            UPDATE app_user u SET name = ?, surname = ?, username = ?, phone = ?, page_description = ?, birthdate = CASE WHEN ? THEN CAST(? AS date) ELSE birthdate END
             WHERE u.id = ? AND (LOWER(u.username) = LOWER(?) OR NOT EXISTS (
                 SELECT 1 FROM app_user other WHERE other.id <> u.id AND LOWER(other.email) = LOWER(?)
             ))
             """.trimIndent(),
-            profile.name, profile.surname, profile.username, profile.phone, profile.pageDescription, userId,
+            profile.name, profile.surname, profile.username, com.evmap.serverapp.shared.security.normalizedPhone(profile.phone), profile.pageDescription, profile.updateDateOfBirth, profile.dateOfBirth, userId,
             profile.username, profile.username,
         )
         if (updated == 0) {

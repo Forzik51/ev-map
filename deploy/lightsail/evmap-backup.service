@@ -1,0 +1,11 @@
+[Unit]
+Description=Back up Evmap database and media to private object storage
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/evmap-backup
+Nice=10
+IOSchedulingClass=idle
+TimeoutStartSec=30min

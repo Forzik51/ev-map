@@ -12,6 +12,7 @@ class EventFormStateTest {
     private val endsAt = Instant.parse("2030-03-23T00:15:00Z")
     private val existingEvent = EventFormState(
         editing = true,
+        dateEnabled = true, timeEnabled = true, timeZone = "UTC",
         title = "Original title",
         description = "Description",
         startsAt = startsAt,
@@ -35,5 +36,24 @@ class EventFormStateTest {
         assertThrows(IllegalArgumentException::class.java) {
             existingEvent.copy(endsAt = startsAt.minusSeconds(1)).toRequest()
         }
+    }
+    @Test
+    fun `disabled date sends no schedule even when a previous date was selected`() {
+        val request=existingEvent.copy(dateEnabled=false).toRequest()
+        assertEquals("UNSPECIFIED",request.dateMode)
+        assertEquals(null,request.startsAt)
+        assertEquals(null,request.endsAt)
+    }
+    @Test
+    fun `date-only schedule retains local day and does not send a time`() {
+        val request=existingEvent.copy(timeEnabled=false,timeZone="Europe/Kyiv").toRequest()
+        assertEquals("DATE",request.dateMode)
+        assertEquals("2030-03-22",request.startsOn)
+        assertEquals(null,request.startsAt)
+    }
+    @Test
+    fun `one validation pass returns every required field error`() {
+        val errors=com.evmap.mobileapp.feature.events.ui.validateEventForm(EventFormState(editing=false))
+        assertEquals(setOf("name","description","locationId","categoryIds"),errors.keys)
     }
 }

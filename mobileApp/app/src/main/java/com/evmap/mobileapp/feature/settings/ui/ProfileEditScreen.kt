@@ -1,4 +1,6 @@
 package feature.settings.ui
+import androidx.compose.ui.res.stringResource
+import com.evmap.mobileapp.R
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -62,10 +64,10 @@ fun ProfileEditScreen(
     }
     Scaffold(topBar = {
         TopAppBar(
-            title = { Text("Edit profile") },
+            title = { Text(stringResource(R.string.form_edit_profile_15141e)) },
             navigationIcon = {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.form_back_b52b36))
                 }
             },
         )
@@ -75,7 +77,7 @@ fun ProfileEditScreen(
                 if (state.loading) CircularProgressIndicator() else {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         state.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-                        TextButton(onClick = onRetry) { Text("Retry") }
+                        TextButton(onClick = onRetry) { Text(stringResource(R.string.form_retry_9f5cd8)) }
                     }
                 }
             }
@@ -97,29 +99,30 @@ fun ProfileEditScreen(
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(40.dp))
-                    AsyncImage(model = avatar, contentDescription = "Avatar", contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                    AsyncImage(model = avatar, contentDescription = stringResource(R.string.form_avatar_7631b2), contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
                 }
                 Row {
                     TextButton(
                         onClick = { picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
                         enabled = !state.saving,
-                    ) { Text(if (avatar == null) "Choose photo" else "Change photo") }
+                    ) { Text(if (avatar == null) stringResource(R.string.form_choose_photo_4a7ede) else stringResource(R.string.form_change_photo_ed5690)) }
                     if (avatar != null) {
-                        TextButton(onClick = onRemoveAvatar, enabled = !state.saving) { Text("Remove photo") }
+                        TextButton(onClick = onRemoveAvatar, enabled = !state.saving) { Text(stringResource(R.string.form_remove_photo_c8f5ed)) }
                     }
                 }
                 if (state.avatarChange != AvatarChange.Keep) {
-                    TextButton(onClick = onUndoAvatarChange, enabled = !state.saving) { Text("Undo photo change") }
+                    TextButton(onClick = onUndoAvatarChange, enabled = !state.saving) { Text(stringResource(R.string.form_undo_photo_change_e5409f)) }
                 }
             }
-            ProfileInput(state, ProfileField.NAME, state.draft.name, "First name", onEdit)
-            ProfileInput(state, ProfileField.SURNAME, state.draft.surname.orEmpty(), "Last name", onEdit)
-            ProfileInput(state, ProfileField.USERNAME, state.draft.username, "Username", onEdit)
-            ProfileInput(state, ProfileField.PHONE, state.draft.phone, "Phone", onEdit)
-            ProfileInput(state, ProfileField.BIO, state.draft.pageDescription, "Bio", onEdit)
+            ProfileInput(state, ProfileField.NAME, state.draft.name, stringResource(R.string.form_first_name_7e568a), onEdit)
+            ProfileInput(state, ProfileField.SURNAME, state.draft.surname.orEmpty(), stringResource(R.string.form_last_name_adec36), onEdit)
+            ProfileInput(state, ProfileField.USERNAME, state.draft.username, stringResource(R.string.form_username_84c290), onEdit)
+            ProfileInput(state, ProfileField.PHONE, state.draft.phone, stringResource(R.string.form_phone_77064d), onEdit)
+            ProfileInput(state, ProfileField.BIRTHDATE, state.draft.dateOfBirth.orEmpty(), "Дата народження · РРРР-ММ-ДД · необов’язково", onEdit)
+            ProfileInput(state, ProfileField.BIO, state.draft.pageDescription, stringResource(R.string.form_bio_b31fc9), onEdit)
             state.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
             PrimaryButton(
-                text = if (state.saving) "Saving…" else "Apply",
+                text = if (state.saving) "Saving…" else stringResource(R.string.form_apply_cfea41),
                 onClick = onApply,
                 enabled = state.hasChanges && !state.saving && !state.saved,
             )
@@ -139,6 +142,8 @@ private fun ProfileInput(
         value = value,
         onValueChange = { onEdit(field, it) },
         label = label,
+        required = field in setOf(ProfileField.NAME,ProfileField.USERNAME),
+        maxLength = when(field) {ProfileField.NAME,ProfileField.SURNAME,ProfileField.USERNAME->20;ProfileField.BIO->150;else->null},
         keyboardOptions = if (field == ProfileField.PHONE) KeyboardOptions(keyboardType = KeyboardType.Phone) else KeyboardOptions.Default,
         singleLine = field != ProfileField.BIO,
         enabled = !state.saving,

@@ -29,6 +29,7 @@ object NetworkModule {
             val logger = HttpLoggingInterceptor().apply {
                 level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BASIC else HttpLoggingInterceptor.Level.NONE
             }
+            addInterceptor { chain -> chain.proceed(chain.request().newBuilder().header("X-Evmap-Client-Version",BuildConfig.VERSION_CODE.toString()).build()) }
             addInterceptor(logger)
         }.build()
 
@@ -42,6 +43,7 @@ object NetworkModule {
                 level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BASIC else HttpLoggingInterceptor.Level.NONE
             }
             addInterceptor(authHeaderInterceptor)
+            addInterceptor { chain -> chain.proceed(chain.request().newBuilder().header("X-Evmap-Client-Version",BuildConfig.VERSION_CODE.toString()).build()) }
             addInterceptor(logger)
             authenticator(tokenRefreshAuthenticator)
         }.build()

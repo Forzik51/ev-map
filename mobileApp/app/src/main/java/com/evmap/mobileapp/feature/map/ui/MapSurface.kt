@@ -65,6 +65,9 @@ internal fun MapSurface(
     onBackground: () -> Unit,
     modifier: Modifier = Modifier,
     styleUrl: String = OPEN_FREE_MAP_STYLE,
+    pickerPoints: List<Pair<Double,Double>> = emptyList(),
+    selectedGeometry: String? = null,
+    onPick: ((Double,Double)->Unit)? = null,
 ) {
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
@@ -79,6 +82,7 @@ internal fun MapSurface(
     val pinClicked by rememberUpdatedState(onPins)
     val clusterClicked by rememberUpdatedState(onCluster)
     val backgroundClicked by rememberUpdatedState(onBackground)
+    val pointPicked by rememberUpdatedState(onPick)
 
     DisposableEffect(view, lifecycle) {
         var active = true
@@ -112,10 +116,11 @@ internal fun MapSurface(
                 if (active && view.width > 0 && view.height > 0) ready.reportViewport(viewportChanged)
             }.also(ready::addOnCameraIdleListener)
             click = MapLibreMap.OnMapClickListener { point ->
+                if(pointPicked!=null) { pointPicked?.invoke(point.latitude,point.longitude); return@OnMapClickListener true }
                 val pixel = ready.projection.toScreenLocation(point)
                 val margin = 8 * view.resources.displayMetrics.density
                 val hit = RectF(pixel.x - margin, pixel.y - margin, pixel.x + margin, pixel.y + margin)
-                val events = ready.queryRenderedFeatures(hit, EVENTS_SOURCE)
+                val events = ready.queryRenderedFeatures(hit, EVENTS_SOURCE, "evmap-area-fill", "evmap-area-line")
                 val ids = events.mapNotNullTo(linkedSetOf()) { it.getStringProperty("eventId") }
                 val cluster = ready.queryRenderedFeatures(hit, CLUSTERS_SOURCE).firstOrNull()?.geometry() as? Point
                 when {
@@ -149,6 +154,10 @@ internal fun MapSurface(
             readyMap.setStyle(Style.Builder().fromUri(styleUrl)) { loaded ->
                 if (active) {
                     loaded.addMapLayers()
+                    loaded.addSource(GeoJsonSource("evmap-shapes", FeatureCollection.fromFeatures(emptyList<Feature>())))
+                    loaded.addLayer(org.maplibre.android.style.layers.FillLayer("evmap-area-fill","evmap-shapes").withProperties(fillColor("#5267DF"),fillOpacity(0.2f)))
+                    loaded.addLayer(org.maplibre.android.style.layers.LineLayer("evmap-area-line","evmap-shapes").withProperties(lineColor("#5267DF"),lineWidth(3f)))
+                    loaded.addLayer(CircleLayer("evmap-area-points","evmap-shapes").withProperties(circleRadius(5f),circleColor("#5267DF")))
                     style = loaded
                     styleStatus(MapStyleStatus.READY)
                     if (view.width > 0 && view.height > 0) readyMap.reportViewport(viewportChanged)
@@ -168,6 +177,27 @@ internal fun MapSurface(
     }
     LaunchedEffect(style, pins, clusters, location) {
         style?.render(pins, clusters, location)
+    }
+    LaunchedEffect(style,pickerPoints,selectedGeometry,pins) {
+        val shapes=mutableListOf<Feature>()
+        pins.forEach { pin->pin.geometry?.let { raw->runCatching { Feature.fromJson("{\"type\":\"Feature\",\"properties\":{},\"geometry\":$raw}").apply {addStringProperty("eventId",pin.id)} }.getOrNull()?.let(shapes::add) } }
+        selectedGeometry?.let { raw->runCatching { Feature.fromJson("{\"type\":\"Feature\",\"properties\":{},\"geometry\":$raw}") }.getOrNull()?.let(shapes::add) }
+        pickerPoints.forEach { (lat,lng)->shapes.add(Feature.fromGeometry(Point.fromLngLat(lng,lat))) }
+        if(pickerPoints.size>=2) {
+            val coordinates=pickerPoints.map { org.json.JSONArray(listOf(it.second,it.first)) }.toMutableList()
+            val geometry=if(pickerPoints.size>=3) { coordinates.add(coordinates.first());org.json.JSONObject().put("type","Polygon").put("coordinates",org.json.JSONArray().put(org.json.JSONArray(coordinates))) } else org.json.JSONObject().put("type","LineString").put("coordinates",org.json.JSONArray(coordinates))
+            shapes.add(Feature.fromJson(org.json.JSONObject().put("type","Feature").put("properties",org.json.JSONObject()).put("geometry",geometry).toString()))
+        }
+        style?.getSourceAs<GeoJsonSource>("evmap-shapes")?.setGeoJson(FeatureCollection.fromFeatures(shapes))
+    }
+    LaunchedEffect(map,selectedGeometry) {
+        if(map!=null && selectedGeometry!=null) runCatching {
+            val points=mutableListOf<LatLng>()
+            fun collect(value: org.json.JSONArray) { if(value.length()>0 && value.opt(0) is Number) { points.add(LatLng(value.getDouble(1),value.getDouble(0))) } else for(i in 0 until value.length()) collect(value.getJSONArray(i)) }
+            collect(org.json.JSONObject(selectedGeometry).getJSONArray("coordinates"))
+            if(points.size==1) map?.animateCamera(CameraUpdateFactory.newLatLngZoom(points.first(),14.0))
+            else if(points.isNotEmpty()) map?.animateCamera(CameraUpdateFactory.newLatLngBounds(LatLngBounds.Builder().includes(points).build(),60))
+        }
     }
     AndroidView(factory = { view }, modifier = modifier)
 }

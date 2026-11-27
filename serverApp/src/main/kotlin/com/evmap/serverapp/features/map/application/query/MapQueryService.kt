@@ -24,6 +24,7 @@ class MapQueryService(
         onlyActive: Boolean,
         sort: String?,
         limit: Int?,
+        tags: List<String> = emptyList(),
     ): List<ViewMapEventItem> {
         val effectiveLimit = searchService.normalizeLimit(limit)
         val effectiveRadius = radiusMeters ?: 100.0
@@ -41,6 +42,7 @@ class MapQueryService(
             startsFrom = startsFrom,
             startsTo = startsTo,
             onlyActive = onlyActive,
+            tags = tags,
             sort = sort ?: "distance",
             limit = effectiveLimit,
         )
@@ -58,6 +60,7 @@ class MapQueryService(
         onlyActive: Boolean,
         sort: String?,
         limit: Int?,
+        tags: List<String> = emptyList(),
     ): List<ViewMapEventItem> {
         validateBounds(minLat, minLng, maxLat, maxLng)
         searchService.validateCategoryIds(categoryIds)
@@ -74,6 +77,7 @@ class MapQueryService(
             startsFrom = startsFrom,
             startsTo = startsTo,
             onlyActive = onlyActive,
+            tags = tags,
             sort = sort ?: "date",
             limit = searchService.normalizeLimit(limit),
         )
@@ -90,6 +94,7 @@ class MapQueryService(
         startsFrom: OffsetDateTime?,
         startsTo: OffsetDateTime?,
         onlyActive: Boolean,
+        tags: List<String> = emptyList(),
     ): List<ViewMapCluster> {
         validateBounds(minLat, minLng, maxLat, maxLng)
         if (zoom < 0 || zoom > 22) throw IllegalArgumentException("zoom must be in range 0..22")
@@ -106,6 +111,7 @@ class MapQueryService(
             startsFrom = startsFrom,
             startsTo = startsTo,
             onlyActive = onlyActive,
+            tags = tags,
         )
     }
 
@@ -120,6 +126,7 @@ class MapQueryService(
         startsTo: OffsetDateTime?,
         onlyActive: Boolean,
         limit: Int?,
+        tags: List<String> = emptyList(),
     ): Map<String, Any> =
         readRepo.toGeoJson(
             findBounds(
@@ -132,6 +139,7 @@ class MapQueryService(
                 startsFrom = startsFrom,
                 startsTo = startsTo,
                 onlyActive = onlyActive,
+            tags = tags,
                 sort = "date",
                 limit = limit,
             ),
@@ -153,6 +161,7 @@ class MapQueryService(
         onlyActive: Boolean,
         sort: String?,
         limit: Int?,
+        tags: List<String> = emptyList(),
     ): List<ViewMapEventItem> {
         val normalizedQuery = query.trim()
         if (normalizedQuery.isBlank()) throw IllegalArgumentException("query must not be blank")
@@ -180,6 +189,7 @@ class MapQueryService(
             startsFrom = startsFrom,
             startsTo = startsTo,
             onlyActive = onlyActive,
+            tags = tags,
             sort = sort ?: "relevance",
             limit = effectiveLimit,
         )

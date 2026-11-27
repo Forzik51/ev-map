@@ -9,14 +9,14 @@ import java.time.Instant
 
 data class CreateEvent(
     @field:NotBlank
-    @field:Size(max = 30)
+    @field:Size(max = 100)
     val name: String,
 
     @field:NotBlank
-    @field:Size(max = 500)
+    @field:Size(max = 2000)
     val description: String,
 
-    val startsAt: Instant,
+    val startsAt: Instant? = null,
 
     val endsAt: Instant? = null,
 
@@ -28,9 +28,16 @@ data class CreateEvent(
     val userId: Long? = null,
 
     @field:NotEmpty
+    @field:Size(max = 3)
     val categoryIds: List<@Positive Long>,
+    val dateMode: String = if (startsAt == null) "UNSPECIFIED" else "DATETIME",
+    val startsOn: java.time.LocalDate? = null,
+    val endsOn: java.time.LocalDate? = null,
+    val timeZone: String = "UTC",
+    @field:Size(max = 5) val tags: List<String> = emptyList(),
+    val clientRequestId: java.util.UUID? = null,
 ) {
     @get:AssertTrue(message = "End time must not be before the start time")
     val isTimeRangeValid: Boolean
-        get() = endsAt == null || !endsAt.isBefore(startsAt)
+        get() = endsAt == null || (startsAt != null && !endsAt.isBefore(startsAt))
 }

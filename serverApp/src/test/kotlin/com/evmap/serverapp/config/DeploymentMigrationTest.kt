@@ -22,7 +22,7 @@ class DeploymentMigrationTest {
         assertEquals("0", scalar(url, "SELECT count(*) FROM event"))
         assertEquals("2", scalar(url, "SELECT count(*) FROM report_category WHERE is_selectable"))
         assertEquals("B12__schema.sql", scalar(url, "SELECT script FROM flyway_schema_history WHERE version = '12'"))
-        assertEquals("13", migrations(url, true).info().current().version.version)
+        assertEquals("19", migrations(url, true).info().current().version.version)
     }
 
     @Test
@@ -34,7 +34,7 @@ class DeploymentMigrationTest {
         migrations(url, true).migrate()
         assertEquals(before, scalar(url, "SELECT count(*) FROM app_user"))
         assertEquals("V12__report_moderation.sql", scalar(url, "SELECT script FROM flyway_schema_history WHERE version = '12'"))
-        assertEquals("13", migrations(url, true).info().current().version.version)
+        assertEquals("19", migrations(url, true).info().current().version.version)
     }
 
     @Test
@@ -57,7 +57,7 @@ class DeploymentMigrationTest {
         Flyway.configure().dataSource(url, user, password).schemas("evmap").baselineVersion("2").load().baseline()
         migrations(url, true).migrate()
         assertEquals("Keep this chat", scalar(url, "SELECT name FROM chat WHERE id = 42"))
-        assertEquals("13", migrations(url, true).info().current().version.version)
+        assertEquals("19", migrations(url, true).info().current().version.version)
     }
 
     private fun migrations(url: String, baseline: Boolean, target: String = "latest", allowLegacySeed: Boolean = false): Flyway {

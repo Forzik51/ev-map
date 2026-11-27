@@ -38,6 +38,7 @@ class SecurityConfig(
             .authorizeHttpRequests {
                 it
                     .requestMatchers("/error").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/health").permitAll()
                     .requestMatchers("/api/auth/**").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
                     .requestMatchers("/ws/**").permitAll()

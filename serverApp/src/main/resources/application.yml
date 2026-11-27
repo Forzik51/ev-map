@@ -29,6 +29,7 @@ spring:
     locations: classpath:db/migration,classpath:db/baseline
 
 app:
+  minimum-client-version: ${APP_MIN_CLIENT_VERSION:0}
   security:
     jwt:
       issuer: ${APP_JWT_ISSUER:evmap}

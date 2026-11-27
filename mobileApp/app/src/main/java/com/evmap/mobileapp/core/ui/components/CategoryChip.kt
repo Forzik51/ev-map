@@ -1,4 +1,6 @@
 package core.ui.components
+import androidx.compose.ui.res.stringResource
+import com.evmap.mobileapp.R
 
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -37,7 +39,7 @@ fun CategoryChip(
             {
                 Icon(
                     imageVector = Icons.Default.Close,
-                    contentDescription = "Remove category",
+                    contentDescription = stringResource(R.string.form_remove_category_8c5f33),
                     modifier = Modifier.size(18.dp)
                 )
             }

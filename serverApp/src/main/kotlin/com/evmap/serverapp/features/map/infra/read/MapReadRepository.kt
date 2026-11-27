@@ -27,6 +27,7 @@ class MapReadRepository(
         onlyActive: Boolean,
         sort: String,
         limit: Int,
+        tags: List<String> = emptyList(),
     ): List<ViewMapEventItem> {
         val selectBindings = mutableListOf<Any>(lng, lat)
         val conditions = mutableListOf<String>()
@@ -34,7 +35,7 @@ class MapReadRepository(
 
         conditions += """
             ST_DWithin(
-                COALESCE(l.point, ST_PointOnSurface(l.region))::geography,
+                l.shape::geography,
                 ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography,
                 ?
             )
@@ -42,12 +43,12 @@ class MapReadRepository(
         conditionBindings += lng
         conditionBindings += lat
         conditionBindings += radiusMeters
-        addCommonFilters(conditions, conditionBindings, categoryIds, locationCategoryIds, startsFrom, startsTo, onlyActive)
+        addCommonFilters(conditions, conditionBindings, categoryIds, locationCategoryIds, startsFrom, startsTo, onlyActive, tags)
 
         val sql = eventItemSql(
             distanceExpression = """
                 ST_Distance(
-                    COALESCE(l.point, ST_PointOnSurface(l.region))::geography,
+                    l.shape::geography,
                     ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography
                 )
             """.trimIndent(),
@@ -71,10 +72,11 @@ class MapReadRepository(
         onlyActive: Boolean,
         sort: String,
         limit: Int,
+        tags: List<String> = emptyList(),
     ): List<ViewMapEventItem> {
         val conditions = mutableListOf(boundsCondition())
         val bindings = mutableListOf<Any>(minLng, minLat, maxLng, maxLat, minLng, minLat, maxLng, maxLat)
-        addCommonFilters(conditions, bindings, categoryIds, locationCategoryIds, startsFrom, startsTo, onlyActive)
+        addCommonFilters(conditions, bindings, categoryIds, locationCategoryIds, startsFrom, startsTo, onlyActive, tags)
 
         val sql = eventItemSql(
             distanceExpression = "NULL::double precision",
@@ -100,6 +102,7 @@ class MapReadRepository(
         onlyActive: Boolean,
         sort: String,
         limit: Int,
+        tags: List<String> = emptyList(),
     ): List<ViewMapEventItem> {
         val selectBindings = mutableListOf<Any>()
         val conditions = mutableListOf<String>()
@@ -114,7 +117,7 @@ class MapReadRepository(
             selectBindings += lat
             """
             ST_Distance(
-                COALESCE(l.point, ST_PointOnSurface(l.region))::geography,
+                l.shape::geography,
                 ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography
             )
             """.trimIndent()
@@ -126,12 +129,12 @@ class MapReadRepository(
         conditionBindings += like
         conditionBindings += like
         conditionBindings += like
-        addCommonFilters(conditions, conditionBindings, categoryIds, locationCategoryIds, startsFrom, startsTo, onlyActive)
+        addCommonFilters(conditions, conditionBindings, categoryIds, locationCategoryIds, startsFrom, startsTo, onlyActive, tags)
 
         if (lat != null && lng != null && distanceKm != null) {
             conditions += """
                 ST_DWithin(
-                    COALESCE(l.point, ST_PointOnSurface(l.region))::geography,
+                    l.shape::geography,
                     ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography,
                     ?
                 )
@@ -174,6 +177,7 @@ class MapReadRepository(
         startsFrom: OffsetDateTime?,
         startsTo: OffsetDateTime?,
         onlyActive: Boolean,
+        tags: List<String> = emptyList(),
     ): List<ViewMapCluster> {
         val cellSize = when {
             zoom <= 5 -> 2.0
@@ -184,17 +188,17 @@ class MapReadRepository(
         }
         val conditions = mutableListOf(boundsCondition())
         val bindings = mutableListOf<Any>(minLng, minLat, maxLng, maxLat, minLng, minLat, maxLng, maxLat)
-        addCommonFilters(conditions, bindings, categoryIds, locationCategoryIds, startsFrom, startsTo, onlyActive)
+        addCommonFilters(conditions, bindings, categoryIds, locationCategoryIds, startsFrom, startsTo, onlyActive, tags)
 
         val sql = """
             SELECT COUNT(*)::int AS count,
-                   AVG(ST_Y(COALESCE(l.point, ST_PointOnSurface(l.region)))) AS lat,
-                   AVG(ST_X(COALESCE(l.point, ST_PointOnSurface(l.region)))) AS lng
+                   AVG(ST_Y(COALESCE(l.point, ST_PointOnSurface(l.shape)))) AS lat,
+                   AVG(ST_X(COALESCE(l.point, ST_PointOnSurface(l.shape)))) AS lng
             FROM event e
             JOIN location l ON l.id = e.location_id
             WHERE ${conditions.joinToString("\n  AND ")}
-            GROUP BY FLOOR(ST_X(COALESCE(l.point, ST_PointOnSurface(l.region))) / ?),
-                     FLOOR(ST_Y(COALESCE(l.point, ST_PointOnSurface(l.region))) / ?)
+            GROUP BY FLOOR(ST_X(COALESCE(l.point, ST_PointOnSurface(l.shape))) / ?),
+                     FLOOR(ST_Y(COALESCE(l.point, ST_PointOnSurface(l.shape))) / ?)
             ORDER BY count DESC
         """.trimIndent()
 
@@ -215,17 +219,13 @@ class MapReadRepository(
             SELECT e.id AS event_id,
                    e.name AS event_name,
                    e.description,
-                   e.start_at,
+                   e.start_at, e.date_mode, e.starts_on, e.ends_on, e.time_zone,
                    e.end_at,
                    l.name AS location_name,
-                   CASE
-                       WHEN l.region IS NOT NULL THEN 'REGION'
-                       WHEN l.name IS NOT NULL AND BTRIM(l.name) <> '' THEN 'NAMED_POINT'
-                       ELSE 'POINT'
-                   END AS geometry_type,
-                   ST_Y(COALESCE(l.point, ST_PointOnSurface(l.region))) AS lat,
-                   ST_X(COALESCE(l.point, ST_PointOnSurface(l.region))) AS lng,
-                   ST_AsGeoJSON(l.region) AS region_geojson,
+                   CASE WHEN GeometryType(l.shape)='POINT' THEN 'POINT' WHEN GeometryType(l.shape) IN ('LINESTRING','MULTILINESTRING') THEN 'LINE' ELSE 'REGION' END AS geometry_type,
+                   ST_Y(COALESCE(l.point, ST_PointOnSurface(l.shape))) AS lat,
+                   ST_X(COALESCE(l.point, ST_PointOnSurface(l.shape))) AS lng,
+                   ST_AsGeoJSON(CASE WHEN GeometryType(l.shape)<>'POINT' THEN l.shape END) AS region_geojson,
                    ph.image_path AS image_path,
                    COALESCE(AVG(r.rating), 0)::double precision AS rating_avg,
                    COUNT(r.rating)::int AS ratings_count,
@@ -238,7 +238,7 @@ class MapReadRepository(
                 SELECT p.image_path
                 FROM photo p
                 WHERE p.event_id = e.id
-                ORDER BY p.id
+                ORDER BY p.sort_order,p.id
                 LIMIT 1
             ) ph ON TRUE
             LEFT JOIN (
@@ -252,19 +252,20 @@ class MapReadRepository(
                 GROUP BY event_id
             ) cm ON cm.event_id = e.id
             WHERE e.id = ?
-            GROUP BY e.id, e.name, e.description, e.start_at, e.end_at, l.name, l.point, l.region,
+            GROUP BY e.id, e.name, e.description, e.start_at, e.end_at, l.name, l.point, l.region, l.shape,
                      ph.image_path, rp.reposts_count, cm.comments_count
             """.trimIndent(),
             eventId,
         ) ?: throw EventNotFoundException(eventId)
 
         val categories = findCategoriesByEventIds(listOf(eventId))[eventId].orEmpty()
-        val startsAt = requireNotNull(record.get("start_at", Timestamp::class.java)) { "start_at is null for map details row" }
+        val startsAt = record.get("start_at", Timestamp::class.java)
         return ViewMapEventDetails(
             eventId = eventId,
             eventName = requireNotNull(record.get("event_name", String::class.java)) { "event_name is null for map details row" },
             description = requireNotNull(record.get("description", String::class.java)) { "description is null for map details row" },
-            startsAt = startsAt.toInstant().toString(),
+            startsAt = startsAt?.toInstant()?.toString(),
+            dateMode=record.get("date_mode",String::class.java),startsOn=record.get("starts_on")?.toString(),endsOn=record.get("ends_on")?.toString(),timeZone=record.get("time_zone",String::class.java),
             endsAt = record.get("end_at", Timestamp::class.java)?.toInstant()?.toString(),
             locationName = record.get("location_name", String::class.java),
             geometryType = requireNotNull(record.get("geometry_type", String::class.java)) { "geometry_type is null for map details row" },
@@ -318,14 +319,10 @@ class MapReadRepository(
             SELECT e.id AS event_id,
                    e.name AS event_name,
                    l.name AS location_name,
-                   CASE
-                       WHEN l.region IS NOT NULL THEN 'REGION'
-                       WHEN l.name IS NOT NULL AND BTRIM(l.name) <> '' THEN 'NAMED_POINT'
-                       ELSE 'POINT'
-                   END AS geometry_type,
-                   ST_Y(COALESCE(l.point, ST_PointOnSurface(l.region))) AS lat,
-                   ST_X(COALESCE(l.point, ST_PointOnSurface(l.region))) AS lng,
-                   ST_AsGeoJSON(l.region) AS region_geojson,
+                   CASE WHEN GeometryType(l.shape)='POINT' THEN 'POINT' WHEN GeometryType(l.shape) IN ('LINESTRING','MULTILINESTRING') THEN 'LINE' ELSE 'REGION' END AS geometry_type,
+                   ST_Y(COALESCE(l.point, ST_PointOnSurface(l.shape))) AS lat,
+                   ST_X(COALESCE(l.point, ST_PointOnSurface(l.shape))) AS lng,
+                   ST_AsGeoJSON(CASE WHEN GeometryType(l.shape)<>'POINT' THEN l.shape END) AS region_geojson,
                    $distanceExpression AS distance_meters,
                    COALESCE(AVG(r.rating), 0)::double precision AS rating_avg,
                    COUNT(r.rating)::int AS ratings_count
@@ -333,7 +330,7 @@ class MapReadRepository(
             JOIN location l ON l.id = e.location_id
             LEFT JOIN rating r ON r.event_id = e.id
             WHERE ${conditions.joinToString("\n  AND ")}
-            GROUP BY e.id, e.name, e.start_at, l.name, l.point, l.region
+            GROUP BY e.id, e.name, e.start_at, l.name, l.point, l.region, l.shape
             $havingSql
             ORDER BY $orderBy
             LIMIT ?
@@ -348,7 +345,9 @@ class MapReadRepository(
         startsFrom: OffsetDateTime?,
         startsTo: OffsetDateTime?,
         onlyActive: Boolean,
+        tags: List<String> = emptyList(),
     ) {
+        com.evmap.serverapp.features.event.application.addTagFilter(tags,conditions,bindings)
         if (categoryIds.isNotEmpty()) {
             val placeholders = categoryIds.joinToString(",") { "?" }
             conditions += """
@@ -375,16 +374,16 @@ class MapReadRepository(
             bindings += startsTo
         }
         if (onlyActive) {
-            conditions += "e.start_at <= now() AND (e.end_at IS NULL OR e.end_at >= now())"
+            conditions += "e.start_at <= now() AND COALESCE(e.end_at, ((e.start_at AT TIME ZONE e.time_zone)::date + 1)::timestamp AT TIME ZONE e.time_zone) > now()"
         }
     }
 
     private fun boundsCondition(): String =
         """
         (
-            (l.point IS NOT NULL AND ST_Intersects(l.point, ST_MakeEnvelope(?, ?, ?, ?, 4326)))
+            ST_Intersects(l.shape, ST_MakeEnvelope(?, ?, ?, ?, 4326))
             OR
-            (l.region IS NOT NULL AND ST_Intersects(l.region, ST_MakeEnvelope(?, ?, ?, ?, 4326)))
+            ST_Intersects(l.shape, ST_MakeEnvelope(?, ?, ?, ?, 4326))
         )
         """.trimIndent()
 

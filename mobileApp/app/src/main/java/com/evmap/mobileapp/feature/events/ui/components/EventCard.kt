@@ -1,4 +1,6 @@
 package feature.events.ui.components
+import androidx.compose.ui.res.stringResource
+import com.evmap.mobileapp.R
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -76,7 +78,7 @@ fun EventCard(
                     
                     Column {
                         Text(
-                            text = "Header",
+                            text = stringResource(R.string.form_header_31341c),
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -92,7 +94,7 @@ fun EventCard(
                     IconButton(onClick = { onOverflow(event.id) }) {
                         Icon(
                             imageVector = Icons.Default.MoreVert,
-                            contentDescription = "More options",
+                            contentDescription = stringResource(R.string.form_more_options_86c0a3),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -110,7 +112,7 @@ fun EventCard(
                 if (event.imageUrl != null) {
                     AsyncImage(
                         model = event.imageUrl,
-                        contentDescription = "Event image",
+                        contentDescription = stringResource(R.string.form_event_image_5ca338),
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
                     )
@@ -133,7 +135,7 @@ fun EventCard(
             ) {
                 Icon(
                     imageVector = Icons.Default.Star,
-                    contentDescription = "Rating",
+                    contentDescription = stringResource(R.string.form_rating_6437b7),
                     modifier = Modifier.size(32.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -158,7 +160,7 @@ fun EventCard(
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.ModeComment,
-                            contentDescription = "Add comment",
+                            contentDescription = stringResource(R.string.form_add_comment_7d3764),
                             tint = Color.White,
                             modifier = Modifier.size(20.dp)
                         )
@@ -178,7 +180,7 @@ fun EventCard(
                     IconButton(onClick = { onSave(event.id) }) {
                         Icon(
                             imageVector = Icons.Outlined.BookmarkAdd,
-                            contentDescription = "Save event",
+                            contentDescription = stringResource(R.string.form_save_event_cf926c),
                             modifier = Modifier.size(24.dp),
                         )
                     }

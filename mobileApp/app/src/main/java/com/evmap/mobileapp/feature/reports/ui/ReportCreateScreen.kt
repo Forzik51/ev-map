@@ -1,4 +1,6 @@
 package com.evmap.mobileapp.feature.reports.ui
+import androidx.compose.ui.res.stringResource
+import com.evmap.mobileapp.R
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -44,10 +46,10 @@ fun ReportCreateScreen(
         modifier = modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
-                title = { Text("Report event") },
+                title = { Text(stringResource(R.string.form_report_event_4b44fc)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.form_back_b52b36))
                     }
                 }
             )
@@ -68,7 +70,7 @@ fun ReportCreateScreen(
                 verticalArrangement = Arrangement.spacedBy(Spacing.m)
             ) {
                 item {
-                    Text("Category", style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.form_label_d50921), style = MaterialTheme.typography.titleMedium)
                 }
                 if (state.categories.isEmpty()) {
                     item {
@@ -76,9 +78,10 @@ fun ReportCreateScreen(
                             state.categoryError ?: "No report categories are available.",
                             color = MaterialTheme.colorScheme.error,
                         )
-                        TextButton(onClick = onRetryCategories) { Text("Retry categories") }
+                        TextButton(onClick = onRetryCategories) { Text(stringResource(R.string.form_retry_categories_2440b5)) }
                     }
                 }
+                if(state.fieldErrors["categoryId"]!=null) item { Text(state.fieldErrors.getValue("categoryId"),color=MaterialTheme.colorScheme.error) }
                 items(state.categories, key = { it.id }) { category ->
                     FilterChip(
                         selected = state.selectedCategoryId == category.id,
@@ -93,8 +96,9 @@ fun ReportCreateScreen(
                         onValueChange = onDescriptionChange,
                         enabled = !state.submitting,
                         modifier = Modifier.fillMaxWidth(),
-                        label = { Text("Description") },
-                        supportingText = { Text("${state.description.trim().length}/100") },
+                        label = { Text(stringResource(R.string.form_label_03278d)) },
+                        isError = state.fieldErrors["description"]!=null,
+                        supportingText = { Text(state.fieldErrors["description"] ?: "${state.description.trim().length}/100") },
                         minLines = 4,
                     )
                 }

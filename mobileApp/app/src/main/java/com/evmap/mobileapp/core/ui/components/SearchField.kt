@@ -1,4 +1,6 @@
 package core.ui.components
+import androidx.compose.ui.res.stringResource
+import com.evmap.mobileapp.R
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -40,7 +42,7 @@ fun SearchField(
             IconButton(onClick = { onSearch?.invoke() }) {
                 Icon(
                     imageVector = Icons.Default.Search,
-                    contentDescription = "Search",
+                    contentDescription = stringResource(R.string.form_search_bce064),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }

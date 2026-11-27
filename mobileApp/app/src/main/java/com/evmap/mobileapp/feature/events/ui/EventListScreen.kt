@@ -1,4 +1,6 @@
 package com.evmap.mobileapp.feature.events.ui
+import androidx.compose.ui.res.stringResource
+import com.evmap.mobileapp.R
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -54,15 +56,15 @@ fun EventListScreen(
     val events = viewModel.events.collectAsLazyPagingItems()
     Scaffold(topBar = {
         TopAppBar(
-            title = { Text("All events") },
+            title = { Text(stringResource(R.string.form_all_events_3e83af)) },
             navigationIcon = {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.form_back_b52b36))
                 }
             },
             actions = {
                 IconButton(onClick = onCreate) {
-                    Icon(Icons.Default.Add, contentDescription = "Create event")
+                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.form_create_event_b8d8b9))
                 }
             },
         )
@@ -73,8 +75,8 @@ fun EventListScreen(
                     LoadState.Loading -> CircularProgressIndicator()
                     is LoadState.Error -> CatalogError(refresh.error.eventError(), events::retry)
                     is LoadState.NotLoading -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("No events yet")
-                        TextButton(onClick = onCreate) { Text("Create an event") }
+                        Text(stringResource(R.string.form_no_events_yet_81ab95))
+                        TextButton(onClick = onCreate) { Text(stringResource(R.string.form_create_an_event_89c8ea)) }
                     }
                 }
             }
@@ -107,6 +109,6 @@ fun EventListScreen(
 private fun CatalogError(message: String, onRetry: () -> Unit) {
     Column(Modifier.padding(Spacing.m), horizontalAlignment = Alignment.CenterHorizontally) {
         Text(message, color = MaterialTheme.colorScheme.error)
-        TextButton(onClick = onRetry) { Text("Retry") }
+        TextButton(onClick = onRetry) { Text(stringResource(R.string.form_retry_9f5cd8)) }
     }
 }

@@ -1,0 +1,1 @@
+CREATE TABLE event_creation_request(user_id bigint NOT NULL REFERENCES app_user(id) ON DELETE CASCADE, request_id uuid NOT NULL, request_hash varchar(64) NOT NULL, event_id bigint REFERENCES event(id) ON DELETE SET NULL, created_at timestamptz NOT NULL DEFAULT now(), PRIMARY KEY(user_id,request_id));

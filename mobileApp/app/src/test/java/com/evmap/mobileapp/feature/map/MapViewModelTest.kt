@@ -102,21 +102,21 @@ class MapViewModelTest {
         val searches = mutableListOf<String>()
         var loadClusters: suspend () -> List<MapClusterDto> = { emptyList() }
 
-        override suspend fun nearby(lat: Double, lng: Double, radiusMeters: Double?, limit: Int?) = error("Unexpected nearby request")
+        override suspend fun nearby(lat: Double, lng: Double, radiusMeters: Double?, limit: Int?, categoryIds: List<Long>?, tags: List<String>?) = error("Unexpected nearby request")
 
-        override suspend fun bounds(minLat: Double, minLng: Double, maxLat: Double, maxLng: Double, limit: Int?): List<MapEventItemDto> {
+        override suspend fun bounds(minLat: Double, minLng: Double, maxLat: Double, maxLng: Double, limit: Int?, categoryIds: List<Long>?, tags: List<String>?): List<MapEventItemDto> {
             bounds += minLng to maxLng
             return listOf(event("Viewport event"))
         }
 
-        override suspend fun clusters(minLat: Double, minLng: Double, maxLat: Double, maxLng: Double, zoom: Int): List<MapClusterDto> {
+        override suspend fun clusters(minLat: Double, minLng: Double, maxLat: Double, maxLng: Double, zoom: Int, categoryIds: List<Long>?, tags: List<String>?): List<MapClusterDto> {
             clusterZooms += zoom
             return loadClusters()
         }
 
         override suspend fun details(eventId: Long) = error("Unexpected detail request")
 
-        override suspend fun search(query: String, lat: Double?, lng: Double?, limit: Int?): List<MapEventItemDto> {
+        override suspend fun search(query: String, lat: Double?, lng: Double?, limit: Int?, categoryIds: List<Long>?, tags: List<String>?): List<MapEventItemDto> {
             searches += query
             return listOf(event(query))
         }

@@ -19,7 +19,7 @@ import java.io.IOException
 import javax.inject.Inject
 
 enum class ProfileField(val key: String) {
-    NAME("name"), SURNAME("surname"), USERNAME("username"), PHONE("phone"), BIO("pageDescription"),
+    NAME("name"), SURNAME("surname"), USERNAME("username"), PHONE("phone"), BIO("pageDescription"), BIRTHDATE("dateOfBirth"),
 }
 
 sealed interface AvatarChange {
@@ -76,6 +76,7 @@ class ProfileEditViewModel @Inject constructor(
                 ProfileField.USERNAME -> state.draft.copy(username = value)
                 ProfileField.PHONE -> state.draft.copy(phone = value)
                 ProfileField.BIO -> state.draft.copy(pageDescription = value)
+                ProfileField.BIRTHDATE -> state.draft.copy(dateOfBirth = value.takeIf { it.isNotBlank() })
             }
             state.copy(draft = draft, fieldErrors = state.fieldErrors - field.key, error = null)
         }
@@ -146,7 +147,7 @@ class ProfileEditViewModel @Inject constructor(
     }
 }
 
-private fun UserDto.toEditRequest() = UpdateProfileRequest(name, surname, username, phone, pageDescription)
+private fun UserDto.toEditRequest() = UpdateProfileRequest(name, surname, username, phone.orEmpty(), pageDescription, birthdate)
 
 private fun UpdateProfileRequest.normalized() = copy(
     name = name.trim(),
@@ -161,7 +162,8 @@ private fun UpdateProfileRequest.validate() = buildMap {
     if (name.isBlank() || name.length > 20) put(ProfileField.NAME.key, "Enter a name up to 20 characters")
     if ((surname?.length ?: 0) > 20) put(ProfileField.SURNAME.key, "Use up to 20 characters")
     if (username.isBlank() || username.length > 20) put(ProfileField.USERNAME.key, "Enter a username up to 20 characters")
-    if (!profilePhone.matches(phone)) put(ProfileField.PHONE.key, "Enter a phone number with 7 to 15 characters")
+    if (!com.evmap.mobileapp.core.data.validation.validOptionalPhone(phone)) put(ProfileField.PHONE.key, "Enter a phone number with 7 to 15 characters")
+    if (dateOfBirth != null && runCatching { java.time.LocalDate.parse(dateOfBirth).isAfter(java.time.LocalDate.now()) }.getOrDefault(true)) put(ProfileField.BIRTHDATE.key,"Укажіть дату РРРР-ММ-ДД, яка не є майбутньою")
     if (pageDescription.length > 150) put(ProfileField.BIO.key, "Use up to 150 characters")
 }
 

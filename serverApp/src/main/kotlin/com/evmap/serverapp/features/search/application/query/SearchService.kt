@@ -25,6 +25,7 @@ class SearchService(
         onlyUpcoming: Boolean,
         sort: String?,
         limit: Int?,
+        tags: List<String> = emptyList(),
     ): ViewSearchResponse {
         val normalizedQuery = query.trim()
         if (normalizedQuery.isBlank()) throw IllegalArgumentException("query must not be blank")
@@ -59,7 +60,7 @@ class SearchService(
                 type = "all",
                 limit = effectiveLimit,
                 users = readRepo.searchUsers(normalizedQuery, effectiveLimit.coerceAtMost(10)),
-                events = searchEvents(normalizedQuery, lat, lng, distanceKm, ratingFrom, ratingTo, categoryIds, startsFrom, startsTo, onlyUpcoming, sort, effectiveLimit.coerceAtMost(10)),
+                events = searchEvents(normalizedQuery, lat, lng, distanceKm, ratingFrom, ratingTo, categoryIds, startsFrom, startsTo, onlyUpcoming, sort, effectiveLimit.coerceAtMost(10), tags),
                 locations = readRepo.searchLocations(normalizedQuery, effectiveLimit.coerceAtMost(10)),
                 categories = readRepo.searchCategories(normalizedQuery, effectiveLimit.coerceAtMost(10)),
             )
@@ -71,7 +72,7 @@ class SearchService(
             ViewSearchResponse(
                 type = "events",
                 limit = effectiveLimit,
-                events = searchEvents(normalizedQuery, lat, lng, distanceKm, ratingFrom, ratingTo, categoryIds, startsFrom, startsTo, onlyUpcoming, sort, effectiveLimit),
+                events = searchEvents(normalizedQuery, lat, lng, distanceKm, ratingFrom, ratingTo, categoryIds, startsFrom, startsTo, onlyUpcoming, sort, effectiveLimit, tags),
             )
             }
         }
@@ -136,6 +137,7 @@ class SearchService(
         onlyUpcoming: Boolean,
         sort: String?,
         limit: Int,
+        tags: List<String> = emptyList(),
     ) = readRepo.searchEvents(
         query = query,
         lat = lat,
@@ -149,6 +151,7 @@ class SearchService(
         onlyUpcoming = onlyUpcoming,
         sort = sort ?: "relevance",
         limit = limit,
+        tags = tags,
     )
 
     private fun validateSearchType(type: String?) {

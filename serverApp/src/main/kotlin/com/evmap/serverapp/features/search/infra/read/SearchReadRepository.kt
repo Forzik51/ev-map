@@ -87,12 +87,14 @@ class SearchReadRepository(
         onlyUpcoming: Boolean,
         sort: String,
         limit: Int,
+        tags: List<String> = emptyList(),
     ): List<ViewSearchEvent> {
         val selectBindings = mutableListOf<Any>()
         val conditions = mutableListOf<String>()
         val conditionBindings = mutableListOf<Any>()
         val havings = mutableListOf<String>()
         val havingBindings = mutableListOf<Any>()
+        com.evmap.serverapp.features.event.application.addTagFilter(tags,conditions,conditionBindings)
         val like = "%${query.trim()}%"
         val prefix = "${query.trim()}%"
 
@@ -101,7 +103,7 @@ class SearchReadRepository(
             selectBindings += lat
             """
             ST_Distance(
-                COALESCE(l.point, ST_PointOnSurface(l.region))::geography,
+                l.shape::geography,
                 ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography
             )
             """.trimIndent()
@@ -138,7 +140,7 @@ class SearchReadRepository(
         if (lat != null && lng != null && distanceKm != null) {
             conditions += """
                 ST_DWithin(
-                    COALESCE(l.point, ST_PointOnSurface(l.region))::geography,
+                    l.shape::geography,
                     ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography,
                     ?
                 )
@@ -174,7 +176,7 @@ class SearchReadRepository(
             SELECT e.id,
                    e.name,
                    e.description,
-                   e.start_at,
+                   e.start_at, e.date_mode, e.starts_on, e.ends_on, e.time_zone,
                    l.name AS location_name,
                    COALESCE(AVG(r.rating), 0)::double precision AS rating_avg,
                    COUNT(r.rating)::int AS ratings_count,
@@ -203,13 +205,14 @@ class SearchReadRepository(
 
         return records.map { r ->
             val eventId = requireNotNull(r.get("id", Long::class.java)) { "id is null for event search row" }
-            val startsAt = requireNotNull(r.get("start_at", Timestamp::class.java)) { "start_at is null for event search row" }
+            val startsAt = r.get("start_at", Timestamp::class.java)
             ViewSearchEvent(
                 id = eventId,
                 name = requireNotNull(r.get("name", String::class.java)) { "name is null for event search row" },
                 description = requireNotNull(r.get("description", String::class.java)) { "description is null for event search row" },
                 locationName = r.get("location_name", String::class.java),
-                startsAt = startsAt.toInstant().toString(),
+                startsAt = startsAt?.toInstant()?.toString(),
+                dateMode=r.get("date_mode",String::class.java),startsOn=r.get("starts_on")?.toString(),endsOn=r.get("ends_on")?.toString(),timeZone=r.get("time_zone",String::class.java),
                 ratingAvg = (r.get("rating_avg") as? Number)?.toDouble() ?: 0.0,
                 ratingsCount = (r.get("ratings_count") as? Number)?.toInt() ?: 0,
                 distanceMeters = (r.get("distance_meters") as? Number)?.toDouble(),

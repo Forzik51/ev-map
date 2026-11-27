@@ -4,7 +4,8 @@ data class MapPinUi(
     val id: String,
     val lat: Double,
     val lng: Double,
-    val eventTitle: String? = null
+    val eventTitle: String? = null,
+    val geometry: String? = null
 )
 
 data class MapCameraUi(

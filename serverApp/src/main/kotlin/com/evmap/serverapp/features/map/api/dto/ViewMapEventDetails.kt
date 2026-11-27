@@ -4,7 +4,7 @@ data class ViewMapEventDetails(
     val eventId: Long,
     val eventName: String,
     val description: String,
-    val startsAt: String,
+    val startsAt: String?,
     val endsAt: String?,
     val locationName: String?,
     val geometryType: String,
@@ -16,4 +16,8 @@ data class ViewMapEventDetails(
     val repostsCount: Int,
     val commentsCount: Int,
     val categories: List<ViewMapCategory>,
+    val dateMode: String = "DATETIME",
+    val startsOn: String? = null,
+    val endsOn: String? = null,
+    val timeZone: String = "UTC",
 )

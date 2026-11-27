@@ -169,7 +169,7 @@ class ExploreViewModelTest {
         var respond: suspend (String) -> SearchResponseDto = { SearchResponseDto(type = "events", limit = 30) }
 
         override suspend fun search(
-            query: String, type: String?, lat: Double?, lng: Double?, limit: Int?, sort: String?, categoryIds: List<Long>?,
+            query: String, type: String?, lat: Double?, lng: Double?, limit: Int?, sort: String?, categoryIds: List<Long>?, tags: List<String>?,
         ): SearchResponseDto {
             requests += SearchRequest(query, type, sort, categoryIds)
             return respond(query)

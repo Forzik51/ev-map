@@ -32,7 +32,7 @@ data class MapEventDetailsDto(
     val eventId: Long,
     val eventName: String,
     val description: String,
-    val startsAt: String,
+    val startsAt: String?,
     val endsAt: String?,
     val locationName: String?,
     val geometryType: String,
@@ -44,4 +44,8 @@ data class MapEventDetailsDto(
     val repostsCount: Int,
     val commentsCount: Int,
     val categories: List<MapCategoryDto>,
+    val dateMode: String = "DATETIME",
+    val startsOn: String? = null,
+    val endsOn: String? = null,
+    val timeZone: String = "UTC",
 )

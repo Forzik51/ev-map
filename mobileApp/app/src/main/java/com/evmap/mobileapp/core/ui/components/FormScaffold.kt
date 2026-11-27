@@ -1,4 +1,6 @@
 package core.ui.components
+import androidx.compose.ui.res.stringResource
+import com.evmap.mobileapp.R
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,6 +37,7 @@ fun FormScaffold(
                     .padding(horizontal = Spacing.l),
                 verticalArrangement = Arrangement.Center,
         ) {
+            androidx.compose.material3.Text(stringResource(R.string.form_label_85e3ea),style=androidx.compose.material3.MaterialTheme.typography.bodySmall)
             content()
         }
     }

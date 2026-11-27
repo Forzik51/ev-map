@@ -14,6 +14,7 @@ import javax.inject.Inject
 
 data class AuthUiState(
     val loading: Boolean = false,
+    val fieldErrors: Map<String,String> = emptyMap(),
     val error: String? = null,
     val authenticatedUserId: Long? = null,
 )
@@ -38,15 +39,17 @@ class AuthViewModel @Inject constructor(
                     _state.value = AuthUiState(authenticatedUserId = response.userId)
                 }
                 .onFailure { error ->
-                    _state.value = AuthUiState(error = error.toUserMessage())
+                    val payload=runCatching { (error as? retrofit2.HttpException)?.response()?.errorBody()?.string()?.let { org.json.JSONObject(it) } }.getOrNull()
+                    val fields=payload?.optJSONObject("fieldErrors")
+                    _state.value = AuthUiState(error = payload?.optString("message")?.takeIf {it.isNotBlank()} ?: error.toUserMessage(),fieldErrors=fields?.keys()?.asSequence()?.associateWith {fields.optString(it)}.orEmpty())
                 }
         }
     }
 
     fun register(user: CreateUserRequest) {
-        val validationError = user.validationError()
-        if (validationError != null) {
-            _state.update { it.copy(error = validationError) }
+        val validationErrors = user.validationErrors()
+        if (validationErrors.isNotEmpty()) {
+            _state.update { it.copy(error = "Перевірте позначені поля",fieldErrors=validationErrors) }
             return
         }
 
@@ -57,7 +60,9 @@ class AuthViewModel @Inject constructor(
                     _state.value = AuthUiState(authenticatedUserId = response.userId)
                 }
                 .onFailure { error ->
-                    _state.value = AuthUiState(error = error.toUserMessage())
+                    val payload=runCatching { (error as? retrofit2.HttpException)?.response()?.errorBody()?.string()?.let { org.json.JSONObject(it) } }.getOrNull()
+                    val fields=payload?.optJSONObject("fieldErrors")
+                    _state.value = AuthUiState(error = payload?.optString("message")?.takeIf {it.isNotBlank()} ?: error.toUserMessage(),fieldErrors=fields?.keys()?.asSequence()?.associateWith {fields.optString(it)}.orEmpty())
                 }
         }
     }
@@ -66,19 +71,15 @@ class AuthViewModel @Inject constructor(
         _state.update { it.copy(authenticatedUserId = null) }
     }
 
-    private fun CreateUserRequest.validationError(): String? =
-        when {
-            name.isBlank() -> "Enter name"
-            email.isBlank() -> "Enter email"
-            !EMAIL_PATTERN.matches(email) -> "Enter a valid email address"
-            phone.isBlank() -> "Enter phone"
-            !PHONE_PATTERN.matches(phone) -> "Enter a valid phone number"
-            dateOfBirth.isBlank() -> "Pick date of birth"
-            username.isBlank() -> "Enter username"
-            password.length < 6 -> "Password must be at least 6 characters"
-            password.toByteArray(Charsets.UTF_8).size > 72 -> "Password must be at most 72 UTF-8 bytes"
-            else -> null
-        }
+    private fun CreateUserRequest.validationErrors() = buildMap {
+        if(name.trim().length !in 1..20) put("name","Ім’я: від 1 до 20 символів")
+        if(surname.orEmpty().length>20) put("surname","До 20 символів")
+        if(email.length>254 || !EMAIL_PATTERN.matches(email)) put("email","Укажіть коректну email-адресу")
+        if(!com.evmap.mobileapp.core.data.validation.validOptionalPhone(phone)) put("phone","Укажіть коректний телефон або залиште поле порожнім")
+        if(dateOfBirth!=null && runCatching {java.time.LocalDate.parse(dateOfBirth).isAfter(java.time.LocalDate.now())}.getOrDefault(true)) put("dateOfBirth","Дата народження не може бути в майбутньому")
+        if(username.trim().length !in 1..20) put("username","Ім’я користувача: від 1 до 20 символів")
+        if(password.length<6 || password.toByteArray(Charsets.UTF_8).size>72 || password.isBlank()) put("password","Від 6 символів і до 72 байтів UTF-8")
+    }
 
     private companion object {
         val EMAIL_PATTERN = Regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")

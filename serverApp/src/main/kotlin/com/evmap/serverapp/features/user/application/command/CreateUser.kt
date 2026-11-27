@@ -22,7 +22,7 @@ class CreateUser(
                 name = dto.name,
                 surname = dto.surname,
                 email = dto.email,
-                phone = dto.phone,
+                phone = com.evmap.serverapp.shared.security.normalizedPhone(dto.phone),
                 birthdate = dto.dateOfBirth,
                 passwordHash = passwordEncoder.encode(dto.password),
                 username = dto.username,

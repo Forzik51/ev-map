@@ -1,4 +1,6 @@
 package feature.map.ui
+import androidx.compose.ui.res.stringResource
+import com.evmap.mobileapp.R
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -51,7 +53,11 @@ fun SearchMapScreen(
     onOpenEvent: (String) -> Unit,
     onDismissPreview: () -> Unit,
     onNavigate: (String) -> Unit,
+    onApplyFilters: (Long?,String)->Unit = {_,_->},
 ) {
+    var showFilters by remember { mutableStateOf(false) }
+    var selectedCategory by remember { mutableStateOf<Long?>(null) }
+    var filterTags by remember { mutableStateOf("") }
     var styleAttempt by remember { mutableIntStateOf(0) }
     var styleStatus by remember { mutableStateOf(MapStyleStatus.LOADING) }
     Scaffold(bottomBar = { AppBottomBar(currentRoute = "map", onNavigate = onNavigate) }) { padding ->
@@ -81,6 +87,14 @@ fun SearchMapScreen(
                 verticalArrangement = Arrangement.spacedBy(Spacing.xs),
             ) {
                 SearchField(state.query, onQueryChange, "Search events", onSearch = onRetry)
+                androidx.compose.material3.TextButton(onClick={selectedCategory=state.categoryId;filterTags=state.tagsText;showFilters=true}) { androidx.compose.material3.Text(stringResource(R.string.form_label_f0681c)) }
+                if(showFilters) androidx.compose.material3.AlertDialog(onDismissRequest={showFilters=false},title={androidx.compose.material3.Text(stringResource(R.string.form_label_196688))},text={
+                    Column(Modifier.heightIn(max=320.dp).verticalScroll(rememberScrollState())) {
+                        androidx.compose.material3.FilterChip(selectedCategory==null,{selectedCategory=null},label={androidx.compose.material3.Text(stringResource(R.string.form_label_247198))})
+                        state.categories.forEach { category->androidx.compose.material3.FilterChip(selectedCategory==category.id,{selectedCategory=category.id},label={androidx.compose.material3.Text(category.name)}) }
+                        androidx.compose.material3.OutlinedTextField(filterTags,{filterTags=it},label={androidx.compose.material3.Text(stringResource(R.string.form_label_d92fa5))})
+                    }
+                },confirmButton={androidx.compose.material3.TextButton(onClick={onApplyFilters(selectedCategory,filterTags);showFilters=false}) {androidx.compose.material3.Text(stringResource(R.string.form_label_387b53))}},dismissButton={androidx.compose.material3.TextButton(onClick={showFilters=false}) {androidx.compose.material3.Text(stringResource(R.string.form_label_8b4c20))}})
                 if (state.loading || styleStatus == MapStyleStatus.LOADING || locating) {
                     LinearProgressIndicator(Modifier.fillMaxWidth())
                 }
@@ -95,7 +109,7 @@ fun SearchMapScreen(
                 }
                 if (locating) MapNotice("Finding your location…")
                 if (locationNotice != null) {
-                    MapNotice(locationNotice, if (onLocationSettings == null) "Dismiss" else "Settings",
+                    MapNotice(locationNotice, if (onLocationSettings == null) "Dismiss" else stringResource(R.string.form_settings_c7f73b),
                         onLocationSettings ?: onDismissLocationNotice)
                 }
             }
@@ -118,7 +132,7 @@ fun SearchMapScreen(
     if (state.pinChoices.isNotEmpty()) {
         AlertDialog(
             onDismissRequest = onDismissPreview,
-            title = { Text("Events at this location") },
+            title = { Text(stringResource(R.string.form_events_at_this_location_0a4067)) },
             text = {
                 Column(Modifier.heightIn(max = 320.dp).verticalScroll(rememberScrollState())) {
                     state.pinChoices.forEach { pin ->
@@ -126,7 +140,7 @@ fun SearchMapScreen(
                     }
                 }
             },
-            confirmButton = { TextButton(onClick = onDismissPreview) { Text("Close") } },
+            confirmButton = { TextButton(onClick = onDismissPreview) { Text(stringResource(R.string.form_close_bbfa77)) } },
         )
     }
 }
@@ -142,7 +156,7 @@ private fun MapNotice(message: String, actionLabel: String? = null, action: () -
 }
 
 @Composable
-private fun MapAttribution(modifier: Modifier) {
+internal fun MapAttribution(modifier: Modifier) {
     val linkStyle = TextLinkStyles(style = SpanStyle(textDecoration = TextDecoration.Underline))
     Surface(modifier, shape = MaterialTheme.shapes.extraSmall) {
         Text(

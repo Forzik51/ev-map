@@ -111,6 +111,7 @@ private fun MapRoute(viewModel: MapViewModel, navigate: (String) -> Unit) {
         cameraCommands = viewModel.commands,
         onViewport = viewModel::cameraStopped,
         onQueryChange = viewModel::updateQuery,
+        onApplyFilters = viewModel::applyFilters,
         onPinClick = viewModel::selectPins,
         onPinChoice = viewModel::selectPin,
         onClusterClick = viewModel::selectCluster,

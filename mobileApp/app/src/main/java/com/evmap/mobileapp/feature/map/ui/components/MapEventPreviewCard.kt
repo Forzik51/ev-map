@@ -1,4 +1,6 @@
 package feature.map.ui.components
+import androidx.compose.ui.res.stringResource
+import com.evmap.mobileapp.R
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -26,7 +28,7 @@ fun MapEventPreviewCard(
         Column(Modifier.padding(Spacing.m), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(event.title, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                IconButton(onClick = onDismiss) { Icon(Icons.Default.Close, contentDescription = "Dismiss event preview") }
+                IconButton(onClick = onDismiss) { Icon(Icons.Default.Close, contentDescription = stringResource(R.string.form_dismiss_event_preview_8ef4f3)) }
             }
             event.imageUrl?.let {
                 AsyncImage(it, contentDescription = null, modifier = Modifier.fillMaxWidth().height(86.dp), contentScale = ContentScale.Crop)

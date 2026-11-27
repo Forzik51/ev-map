@@ -1,3 +1,196 @@
 <resources>
     <string name="app_name">MobileApp</string>
+
+    <string name="form_10_jpeg_png_webp_5_86955a" formatted="false">До 10 фото · JPEG, PNG, WebP · до 5 МБ кожне</string>
+    <string name="form_1_3_cf714b" formatted="false">Категорії * · від 1 до 3</string>
+    <string name="form_5_79f182" formatted="false">Збіг хоча б одного тегу · до 5 тегів</string>
+    <string name="form_8_digit_code_d86e15" formatted="false">Код із 8 цифр</string>
+    <string name="form_add_comment_7d3764" formatted="false">Додати коментар</string>
+    <string name="form_add_photo_d14349" formatted="false">Додати фото</string>
+    <string name="form_admin_moderation_e37380" formatted="false">Адміністрування</string>
+    <string name="form_all_categories_060be0" formatted="false">Усі категорії</string>
+    <string name="form_all_events_3e83af" formatted="false">Усі події</string>
+    <string name="form_already_have_an_account_e41e4c" formatted="false">Уже маєте акаунт? </string>
+    <string name="form_apply_cfea41" formatted="false">Застосувати</string>
+    <string name="form_avatar_7631b2" formatted="false">Аватар</string>
+    <string name="form_back_b52b36" formatted="false">Назад</string>
+    <string name="form_bio_b31fc9" formatted="false">Про себе · необов’язково</string>
+    <string name="form_body_718a7e" formatted="false">Текст *</string>
+    <string name="form_cancel_77dfd2" formatted="false">Скасувати</string>
+    <string name="form_category_a3c686" formatted="false">Категорія</string>
+    <string name="form_change_password_8c6842" formatted="false">Змінити пароль</string>
+    <string name="form_change_photo_ed5690" formatted="false">Змінити фото</string>
+    <string name="form_check_your_email_fab9f4" formatted="false">Перевірте пошту</string>
+    <string name="form_choose_photo_4a7ede" formatted="false">Вибрати фото</string>
+    <string name="form_confirm_new_password_f85039" formatted="false">Підтвердьте новий пароль</string>
+    <string name="form_confirm_report_4cc623" formatted="false">Підтвердити скаргу</string>
+    <string name="form_could_not_load_categories_d1a974" formatted="false">Не вдалося завантажити категорії.</string>
+    <string name="form_create_an_event_89c8ea" formatted="false">Створити подію</string>
+    <string name="form_create_event_b8d8b9" formatted="false">Створити подію</string>
+    <string name="form_create_list_13ca88" formatted="false">Створити список</string>
+    <string name="form_create_new_password_6c752f" formatted="false">Створіть новий пароль</string>
+    <string name="form_creating_account_27b8a2" formatted="false">Створюємо акаунт…</string>
+    <string name="form_date_of_birth_951842" formatted="false">Дата народження · необов’язково</string>
+    <string name="form_decisions_af2f32" formatted="false">Рішення</string>
+    <string name="form_delete_event_cb30da" formatted="false">Видалити подію</string>
+    <string name="form_delete_event_ce712d" formatted="false">Видалити подію?</string>
+    <string name="form_delete_f6fdbe" formatted="false">Видалити</string>
+    <string name="form_delete_list_35e899" formatted="false">Видалити список?</string>
+    <string name="form_delete_list_a1ebff" formatted="false">Видалити список</string>
+    <string name="form_delete_report_b29b7d" formatted="false">Видалити скаргу?</string>
+    <string name="form_delete_report_c669ce" formatted="false">Видалити скаргу</string>
+    <string name="form_deleting_event_49befd" formatted="false">Видаляємо подію…</string>
+    <string name="form_dismiss_report_004232" formatted="false">Відхилити скаргу</string>
+    <string name="form_don_t_have_an_account_yet_18d066" formatted="false">Ще не маєте акаунта? </string>
+    <string name="form_done_e9b450" formatted="false">Готово</string>
+    <string name="form_edit_event_a70284" formatted="false">Редагувати подію</string>
+    <string name="form_edit_profile_15141e" formatted="false">Редагувати профіль</string>
+    <string name="form_email_84add5" formatted="false">Email</string>
+    <string name="form_email_address_c94d31" formatted="false">Email-адреса</string>
+    <string name="form_email_notifications_b7b0bc" formatted="false">Листи користувачам</string>
+    <string name="form_email_username_bc2d6a" formatted="false">Email або ім’я користувача</string>
+    <string name="form_enter_a_search_term_9e6ace" formatted="false">Уведіть пошуковий запит</string>
+    <string name="form_enter_the_email_address_linked_to_your_2047b1" formatted="false">Уведіть email-адресу вашого акаунта</string>
+    <string name="form_event_filters_884913" formatted="false">Фільтри подій</string>
+    <string name="form_event_image_5ca338" formatted="false">Фото події</string>
+    <string name="form_event_saved_236441" formatted="false">Подію збережено</string>
+    <string name="form_events_c5497b" formatted="false">Події</string>
+    <string name="form_filters_96e578" formatted="false">Фільтри</string>
+    <string name="form_first_name_7e568a" formatted="false">Ім’я</string>
+    <string name="form_forgot_password_5ed117" formatted="false">Відновити пароль</string>
+    <string name="form_grid_view_d44ec8" formatted="false">Сітка</string>
+    <string name="form_header_31341c" formatted="false">Заголовок</string>
+    <string name="form_hide_34d8b6" formatted="false">Приховати</string>
+    <string name="form_label_01b28b" formatted="false">Місце проведення</string>
+    <string name="form_label_03278d" formatted="false">Опис *</string>
+    <string name="form_label_0665cc" formatted="false">Поля з * обов’язкові</string>
+    <string name="form_label_07d286" formatted="false">Указати дату</string>
+    <string name="form_label_1c0118" formatted="false">Опублікувати подію з минулою датою?</string>
+    <string name="form_label_1de411" formatted="false">Часовий пояс</string>
+    <string name="form_label_240247" formatted="false">Нова категорія</string>
+    <string name="form_label_2473f7" formatted="false">Прибрати завершення</string>
+    <string name="form_label_24d4b0" formatted="false">Назва *</string>
+    <string name="form_label_359293" formatted="false">Подію збережено. Залишилося завершити зміни фотографій.</string>
+    <string name="form_label_3bd9a4" formatted="false">Перевірити дату</string>
+    <string name="form_label_3e3a96" formatted="false">Джаз, просто неба, безкоштовно</string>
+    <string name="form_label_425438" formatted="false">Пошук адреси</string>
+    <string name="form_label_4ad268" formatted="false">Назва списку *</string>
+    <string name="form_label_4f7a56" formatted="false">Запропоновані категорії</string>
+    <string name="form_label_4ffa37" formatted="false">Точка</string>
+    <string name="form_label_50aa49" formatted="false">Відхилити</string>
+    <string name="form_label_50fbda" formatted="false">Пошук категорій</string>
+    <string name="form_label_5326c4" formatted="false">Чернетку відновлено. Зміни зберігаються на цьому телефоні.</string>
+    <string name="form_label_55874d" formatted="false">Обкладинка</string>
+    <string name="form_label_5749a7" formatted="false">Знайти</string>
+    <string name="form_label_5f325c" formatted="false">Скасувати останню точку</string>
+    <string name="form_label_64638b" formatted="false">Скасувати видалення фото</string>
+    <string name="form_label_6842aa" formatted="false">Підтвердити</string>
+    <string name="form_label_684b17" formatted="false">Видалити чернетку?</string>
+    <string name="form_label_6f8da4" formatted="false">Власна область</string>
+    <string name="form_label_8b4c20" formatted="false">Скасувати</string>
+    <string name="form_label_92250b" formatted="false">Теги · необов’язково</string>
+    <string name="form_label_98e1d0" formatted="false">Дата вже минула</string>
+    <string name="form_label_9bee10" formatted="false">Вибрати</string>
+    <string name="form_label_a62276" formatted="false">Закрити</string>
+    <string name="form_label_ab958f" formatted="false">Надіслати</string>
+    <string name="form_label_b1cc83" formatted="false">Введені дані та локальні фото цієї чернетки буде видалено</string>
+    <string name="form_label_b86e18" formatted="false">Видалити чернетку</string>
+    <string name="form_label_b93f8d" formatted="false">Фотографії · необов’язково</string>
+    <string name="form_label_c410e7" formatted="false">Без завершення подія вважається одноденною</string>
+    <string name="form_label_c46f45" formatted="false">Опублікувати</string>
+    <string name="form_label_c85891" formatted="false">Пошук міста або поясу</string>
+    <string name="form_label_c95c5c" formatted="false">Повторити</string>
+    <string name="form_label_d50921" formatted="false">Категорія *</string>
+    <string name="form_label_d92fa5" formatted="false">Теги через кому</string>
+    <string name="form_label_de5be1" formatted="false">Назва місця *</string>
+    <string name="form_label_eaf989" formatted="false">Видалити</string>
+    <string name="form_label_faa5cf" formatted="false">Запропонувати категорію</string>
+    <string name="form_label_faf136" formatted="false">Указати час</string>
+    <string name="form_label_fb3274" formatted="false">Місто, країна, вулиця, адреса або власна область</string>
+    <string name="form_last_name_adec36" formatted="false">Прізвище · необов’язково</string>
+    <string name="form_list_view_694bbd" formatted="false">Список</string>
+    <string name="form_load_more_comments_fcf82c" formatted="false">Завантажити ще коментарі</string>
+    <string name="form_log_in_d527bf" formatted="false">Увійти</string>
+    <string name="form_log_out_6e78c9" formatted="false">Вийти</string>
+    <string name="form_logging_in_2b01ab" formatted="false">Входимо…</string>
+    <string name="form_manage_event_529a43" formatted="false">Керування подією</string>
+    <string name="form_manage_list_6c7a89" formatted="false">Керування списком</string>
+    <string name="form_moderation_28f3eb" formatted="false">Модерація</string>
+    <string name="form_more_options_86c0a3" formatted="false">Інші дії</string>
+    <string name="form_name_709a23" formatted="false">Ім’я</string>
+    <string name="form_new_password_d850ee" formatted="false">Новий пароль</string>
+    <string name="form_no_comments_yet_d14da3" formatted="false">Коментарів поки немає</string>
+    <string name="form_no_decision_details_were_recorded_91726d" formatted="false">Подробиці рішення відсутні.</string>
+    <string name="form_no_events_yet_81ab95" formatted="false">Подій поки немає</string>
+    <string name="form_no_results_found_658e79" formatted="false">Нічого не знайдено</string>
+    <string name="form_open_event_62871b" formatted="false">Відкрити подію</string>
+    <string name="form_openstreetmap_contributors_d9f23d" formatted="false">Дані місць: © OpenStreetMap contributors</string>
+    <string name="form_password_8be3c9" formatted="false">Пароль</string>
+    <string name="form_password_changed_092a16" formatted="false">Пароль змінено</string>
+    <string name="form_phone_77064d" formatted="false">Телефон · необов’язково</string>
+    <string name="form_phone_number_8961d3" formatted="false">Телефон · необов’язково</string>
+    <string name="form_please_wait_5afeca" formatted="false">Зачекайте…</string>
+    <string name="form_profile_ff4fc0" formatted="false">Профіль</string>
+    <string name="form_rating_6437b7" formatted="false">Оцінка</string>
+    <string name="form_reason_f219cc" formatted="false">Причина *</string>
+    <string name="form_recovery_code_3cb5fd" formatted="false">Код відновлення *</string>
+    <string name="form_refresh_56e3ba" formatted="false">Оновити</string>
+    <string name="form_refresh_event_d0a191" formatted="false">Оновити подію</string>
+    <string name="form_remove_category_8c5f33" formatted="false">Прибрати категорію</string>
+    <string name="form_remove_from_list_23a976" formatted="false">Прибрати зі списку</string>
+    <string name="form_remove_image_5f94b0" formatted="false">Видалити фото</string>
+    <string name="form_remove_photo_c8f5ed" formatted="false">Видалити фото</string>
+    <string name="form_rename_list_80b1e8" formatted="false">Перейменувати список</string>
+    <string name="form_report_event_4b44fc" formatted="false">Поскаржитися</string>
+    <string name="form_resend_code_1d3cb8" formatted="false">Надіслати код повторно</string>
+    <string name="form_retry_9f5cd8" formatted="false">Повторити</string>
+    <string name="form_retry_categories_2440b5" formatted="false">Повторити завантаження категорій</string>
+    <string name="form_retry_comments_216627" formatted="false">Повторити завантаження коментарів</string>
+    <string name="form_retry_photos_e6eaff" formatted="false">Повторити завантаження фото</string>
+    <string name="form_review_report_29a1c5" formatted="false">Розглянути скаргу</string>
+    <string name="form_save_event_cf926c" formatted="false">Зберегти подію</string>
+    <string name="form_save_to_list_7931f7" formatted="false">Зберегти до списку</string>
+    <string name="form_saved_events_f9cdab" formatted="false">Збережені події</string>
+    <string name="form_saving_event_860980" formatted="false">Зберігаємо подію…</string>
+    <string name="form_saving_rating_1cd1af" formatted="false">Зберігаємо оцінку…</string>
+    <string name="form_search_bce064" formatted="false">Пошук</string>
+    <string name="form_search_events_or_users_0705f6" formatted="false">Пошук подій або користувачів</string>
+    <string name="form_select_date_b84a6e" formatted="false">Вибрати дату</string>
+    <string name="form_select_location_a33e96" formatted="false">Вибрати місце</string>
+    <string name="form_selected_category_fb4f11" formatted="false">Вибрана категорія</string>
+    <string name="form_send_to_all_b0b1fd" formatted="false">Надіслати всім</string>
+    <string name="form_send_to_user_9f55b0" formatted="false">Надіслати користувачу</string>
+    <string name="form_settings_c7f73b" formatted="false">Налаштування</string>
+    <string name="form_share_event_a02bc0" formatted="false">Поширити подію</string>
+    <string name="form_show_d97d1e" formatted="false">Показати</string>
+    <string name="form_sign_up_0b8149" formatted="false">Зареєструватися</string>
+    <string name="form_sign_up_2ba402" formatted="false">Зареєструватися</string>
+    <string name="form_sort_by_a2a5bd" formatted="false">Сортування</string>
+    <string name="form_start_again_b6fffc" formatted="false">Почати знову</string>
+    <string name="form_subject_8d183d" formatted="false">Тема *</string>
+    <string name="form_surname_77dfca" formatted="false">Прізвище · необов’язково</string>
+    <string name="form_the_report_will_be_removed_from_the_mo_681911" formatted="false">Скаргу буде видалено з черги модерації.</string>
+    <string name="form_undo_photo_change_e5409f" formatted="false">Скасувати зміну фото</string>
+    <string name="form_user_id_for_direct_email_75a4c2" formatted="false">ID одержувача</string>
+    <string name="form_username_84c290" formatted="false">Ім’я користувача</string>
+    <string name="form_users_57f2b1" formatted="false">Користувачі</string>
+    <string name="form_verify_code_91a22c" formatted="false">Перевірити код</string>
+    <string name="form_write_a_comment_9ea900" formatted="false">Напишіть коментар *</string>
+    <string name="form_your_password_has_been_updated_sign_in_873031" formatted="false">Пароль оновлено. Увійдіть із новим паролем.</string>
+
+    <string name="form_close_bbfa77" formatted="false">Close</string>
+    <string name="form_dismiss_event_preview_8ef4f3" formatted="false">Dismiss event preview</string>
+    <string name="form_events_at_this_location_0a4067" formatted="false">Events at this location</string>
+    <string name="form_label_02a689" formatted="false">Ліцензія та джерело даних</string>
+    <string name="form_label_196688" formatted="false">Фільтри карти</string>
+    <string name="form_label_247198" formatted="false">Усі категорії</string>
+    <string name="form_label_387b53" formatted="false">Застосувати</string>
+    <string name="form_label_3bd980" formatted="false">Повторити завантаження карти</string>
+    <string name="form_label_85e3ea" formatted="false">* — обов’язкове поле</string>
+    <string name="form_label_bc068e" formatted="false">Не вдалося завантажити карту. Перевірте підключення й повторіть спробу.</string>
+    <string name="form_label_f0681c" formatted="false">Фільтри категорій і тегів</string>
+    <string name="form_my_location_fba084" formatted="false">My Location</string>
+    <string name="form_recenter_da67fd" formatted="false">Recenter</string>
+    <string name="form_zoom_in_e59ac8" formatted="false">Zoom In</string>
+    <string name="form_zoom_out_87af1d" formatted="false">Zoom Out</string>
 </resources>

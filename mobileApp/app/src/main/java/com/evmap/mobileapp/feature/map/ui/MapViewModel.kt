@@ -35,6 +35,9 @@ sealed interface MapCameraCommand {
 
 data class MapUiState(
     val query: String = "",
+    val categoryId: Long? = null,
+    val tagsText: String = "",
+    val categories: List<com.evmap.mobileapp.core.data.dto.EventCategoryDto> = emptyList(),
     val pins: List<MapPinUi> = emptyList(),
     val clusters: List<MapClusterDto> = emptyList(),
     val location: DeviceLocation? = null,
@@ -52,6 +55,7 @@ data class MapUiState(
 class MapViewModel @Inject constructor(
     private val savedState: SavedStateHandle,
     private val repository: MapRepository,
+    private val events: com.evmap.mobileapp.feature.events.data.EventsRepository? = null,
 ) : ViewModel() {
     private val _state = MutableStateFlow(MapUiState())
     val state = _state.asStateFlow()
@@ -83,6 +87,9 @@ class MapViewModel @Inject constructor(
         }
     }
 
+    init { viewModelScope.launch { events?.getCategories()?.onSuccess { items->_state.update { it.copy(categories=items) } } } }
+    fun applyFilters(categoryId: Long?, tags: String) { _state.update { it.copy(categoryId=categoryId,tagsText=tags) };retry() }
+    private fun filterTags()=state.value.tagsText.split(',').map(String::trim).filter(String::isNotEmpty)
     fun updateQuery(value: String) {
         val query = value.trim()
         val changed = query != state.value.query.trim()
@@ -111,13 +118,13 @@ class MapViewModel @Inject constructor(
         _state.update { it.copy(loading = true, error = null) }
         loadJob = viewModelScope.launch {
             if (visible.showClusters) {
-                val result = repository.clusters(visible)
+                val result = repository.clusters(visible,state.value.categoryId?.let(::listOf),filterTags())
                 ensureActive()
                 result.onSuccess { clusters ->
                     _state.update { it.copy(clusters = clusters, pins = emptyList(), loading = false, loaded = true) }
                 }.onFailure(::showLoadError)
             } else {
-                val result = repository.bounds(visible)
+                val result = repository.bounds(visible,state.value.categoryId?.let(::listOf),filterTags())
                 ensureActive()
                 result.onSuccess { items ->
                     _state.update { it.copy(pins = items.map { item -> item.toMapPinUi() }, clusters = emptyList(), loading = false, loaded = true) }
@@ -131,7 +138,7 @@ class MapViewModel @Inject constructor(
         _state.update { it.copy(loading = true, error = null) }
         loadJob = viewModelScope.launch {
             if (debounce) delay(300)
-            val result = repository.search(query, camera.lat, camera.lng)
+            val result = repository.search(query, camera.lat, camera.lng,state.value.categoryId?.let(::listOf),filterTags())
             ensureActive()
             result.onSuccess { items ->
                 val pins = items.map { it.toMapPinUi() }

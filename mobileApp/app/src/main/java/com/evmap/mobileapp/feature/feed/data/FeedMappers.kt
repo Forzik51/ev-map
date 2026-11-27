@@ -9,7 +9,7 @@ import java.time.Instant
 fun EventDto.toFeedItemUi() = FeedItemUi(
     id = id.toString(),
     event = toEventUi(),
-    timestamp = startsAt.toEpochMillisOrNow(),
+    timestamp = createdAt?.let { runCatching { Instant.parse(it).toEpochMilli() }.getOrNull() } ?: 0L,
     isPromoted = false
 )
 
@@ -18,7 +18,7 @@ fun EventDto.toEventUi(): EventUi = EventUi(
     id = id.toString(),
     title = name,
     location = locationName.orEmpty(),
-    startsAt = startsAt,
+    startsAt = com.evmap.mobileapp.core.ui.formatEventSchedule(startsAt, dateMode, startsOn, endsOn, timeZone),
     description = description,
     imageUrl = imagePath.toAbsoluteMediaUrl(),
     rating = ratingAvg,

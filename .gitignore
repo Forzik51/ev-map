@@ -1,0 +1,8 @@
+# Deployment credentials and local runtime data
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+storage/
+deploy/lightsail/local/

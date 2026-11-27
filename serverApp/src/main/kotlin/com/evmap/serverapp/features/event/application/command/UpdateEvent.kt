@@ -4,6 +4,7 @@ import com.evmap.serverapp.features.event.api.dto.CreateEvent
 import com.evmap.serverapp.features.event.domain.Event
 import com.evmap.serverapp.features.event.domain.EventRepositoryPort
 import org.springframework.stereotype.Service
+import com.evmap.serverapp.features.event.application.toEvent
 
 @Service
 class UpdateEvent(
@@ -12,16 +13,7 @@ class UpdateEvent(
     fun handle(eventId: Long, dto: CreateEvent, userId: Long) {
         repo.update(
             eventId,
-            Event(
-                id = eventId,
-                name = dto.name,
-                description = dto.description,
-                startsAt = dto.startsAt,
-                endsAt = dto.endsAt,
-                locationId = dto.locationId,
-                userId = userId,
-                categoryIds = dto.categoryIds,
-            )
+            dto.toEvent(userId,eventId)
         )
     }
 }

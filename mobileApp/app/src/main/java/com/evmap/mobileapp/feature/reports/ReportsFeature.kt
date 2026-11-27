@@ -71,7 +71,8 @@ object ReportsFeature : FeatureEntry {
                 onBodyChange = viewModel::updateBody,
                 onUserIdChange = viewModel::updateUserId,
                 onSendToAll = viewModel::sendToAll,
-                onSendToUser = viewModel::sendToUser
+                onSendToUser = viewModel::sendToUser,
+                onCategoryDecision = viewModel::decideCategory
             )
         }
 

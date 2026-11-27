@@ -10,12 +10,16 @@ data class SearchEventDto(
     val name: String,
     val description: String,
     val locationName: String?,
-    val startsAt: String,
+    val startsAt: String?,
     val ratingAvg: Double,
     val ratingsCount: Int,
     val distanceMeters: Double?,
     val categories: List<SearchCategoryDto>,
     val matchedFields: List<String> = emptyList(),
+    val dateMode: String = "DATETIME",
+    val startsOn: String? = null,
+    val endsOn: String? = null,
+    val timeZone: String = "UTC",
 )
 
 data class SearchUserDto(

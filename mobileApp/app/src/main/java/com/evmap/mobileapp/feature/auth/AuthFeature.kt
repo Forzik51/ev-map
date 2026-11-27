@@ -53,6 +53,7 @@ object AuthFeature : FeatureEntry {
                 showPassword = showPassword,
                 isLoading = state.loading,
                 errorMessage = state.error,
+                fieldErrors = state.fieldErrors,
                 onEmailChange = { emailOrUsername = it },
                 onPasswordChange = { password = it },
                 onTogglePassword = { showPassword = !showPassword },
@@ -86,7 +87,10 @@ object AuthFeature : FeatureEntry {
             var password by remember { mutableStateOf("") }
             var showPassword by remember { mutableStateOf(false) }
             var showDatePicker by remember { mutableStateOf(false) }
-            val datePickerState = androidx.compose.material3.rememberDatePickerState()
+            val datePickerState = androidx.compose.material3.rememberDatePickerState(selectableDates=object: androidx.compose.material3.SelectableDates {
+                override fun isSelectableDate(utcTimeMillis: Long)=Instant.ofEpochMilli(utcTimeMillis).atZone(java.time.ZoneOffset.UTC).toLocalDate()<=java.time.LocalDate.now()
+                override fun isSelectableYear(year: Int)=year<=java.time.LocalDate.now().year
+            })
 
             LaunchedEffect(state.authenticatedUserId) {
                 if (state.authenticatedUserId != null) {
@@ -106,6 +110,7 @@ object AuthFeature : FeatureEntry {
                 showPassword = showPassword,
                 isLoading = state.loading,
                 errorMessage = state.error,
+                fieldErrors = state.fieldErrors,
                 onNameChange = { name = it },
                 onSurnameChange = { surname = it },
                 onEmailChange = { email = it },
@@ -122,10 +127,10 @@ object AuthFeature : FeatureEntry {
                             name = name.trim(),
                             surname = surname.trim().takeIf { it.isNotBlank() },
                             email = email.trim(),
-                            phone = phone.trim(),
-                            dateOfBirth = birthDate,
+                            phone = phone.trim().takeIf { it.isNotEmpty() },
+                            dateOfBirth = birthDate.takeIf { it.isNotEmpty() },
                             username = username.trim(),
-                            pageDescription = "New EvMap user",
+                            pageDescription = "",
                             password = password,
                         )
                     )
@@ -143,7 +148,7 @@ object AuthFeature : FeatureEntry {
                             onClick = {
                                 datePickerState.selectedDateMillis?.let { millis ->
                                     birthDate = Instant.ofEpochMilli(millis)
-                                        .atZone(ZoneId.systemDefault())
+                                        .atZone(java.time.ZoneOffset.UTC)
                                         .toLocalDate()
                                         .toString()
                                 }

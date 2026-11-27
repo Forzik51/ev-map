@@ -20,6 +20,7 @@ data class ReportCreateUiState(
     val categoryError: String? = null,
     val submitting: Boolean = false,
     val error: String? = null,
+    val fieldErrors: Map<String,String> = emptyMap(),
     val submitted: Boolean = false,
 )
 
@@ -35,11 +36,11 @@ class ReportCreateViewModel @Inject constructor(
     }
 
     fun selectCategory(categoryId: Long) {
-        _state.update { it.copy(selectedCategoryId = categoryId, error = null) }
+        _state.update { it.copy(selectedCategoryId = categoryId, error = null,fieldErrors=it.fieldErrors-"categoryId") }
     }
 
     fun updateDescription(value: String) {
-        _state.update { it.copy(description = value, error = null) }
+        _state.update { it.copy(description = value, error = null,fieldErrors=it.fieldErrors-"description") }
     }
 
     fun submit(eventId: Long) {
@@ -47,6 +48,10 @@ class ReportCreateViewModel @Inject constructor(
         if (current.loadingCategories || current.submitting || current.submitted) return
         val categoryId = current.selectedCategoryId
         val description = current.description.trim()
+        val errors=buildMap<String,String> {
+            if(categoryId==null) put("categoryId","Виберіть категорію скарги")
+            if(description.isBlank() || description.length>100) put("description","Опишіть проблему, до 100 символів")
+        }
         val validationError = when {
             categoryId == null -> "Select report category"
             description.isBlank() -> "Describe the issue"
@@ -54,7 +59,7 @@ class ReportCreateViewModel @Inject constructor(
             else -> null
         }
         if (validationError != null) {
-            _state.update { it.copy(error = validationError) }
+            _state.update { it.copy(error = validationError,fieldErrors=errors) }
             return
         }
 

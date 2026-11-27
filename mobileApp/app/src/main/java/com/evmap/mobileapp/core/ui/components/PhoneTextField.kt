@@ -1,4 +1,6 @@
 package core.ui.components
+import androidx.compose.ui.res.stringResource
+import com.evmap.mobileapp.R
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardActions
@@ -16,23 +18,27 @@ import androidx.compose.ui.text.input.KeyboardType
 fun PhoneTextField(
     value: String,
     onValueChange: (String) -> Unit,
-    label: String = "Phone number",
+    label: String = stringResource(R.string.form_phone_number_8961d3),
     modifier: Modifier = Modifier.fillMaxWidth(),
     placeholder: String? = null,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
-    imeAction: ImeAction = ImeAction.Default
+    imeAction: ImeAction = ImeAction.Default,
+    required: Boolean = false,
+    error: String? = null,
 ) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         modifier = modifier,
-        label = { Text(label) },
+        label = { Text(if(required && !label.endsWith("*")) "$label *" else label) },
         placeholder = placeholder?.let { { Text(it) } },
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Phone,
             imeAction = imeAction
         ),
         keyboardActions = keyboardActions,
+        isError = error != null,
+        supportingText = error?.let { { Text(it) } },
         singleLine = true,
         shape = MaterialTheme.shapes.small,
         colors = OutlinedTextFieldDefaults.colors(

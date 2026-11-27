@@ -1,4 +1,6 @@
 package com.evmap.mobileapp.feature.reports.ui
+import androidx.compose.ui.res.stringResource
+import com.evmap.mobileapp.R
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -47,20 +49,21 @@ fun AdminModerationScreen(
     onSendToAll: () -> Unit,
     onSendToUser: () -> Unit,
     modifier: Modifier = Modifier,
+    onCategoryDecision: (Long,Boolean)->Unit = {_,_->},
 ) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
-                title = { Text("Moderation") },
+                title = { Text(stringResource(R.string.form_moderation_28f3eb)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.form_back_b52b36))
                     }
                 },
                 actions = {
                     TextButton(onClick = onRefresh, enabled = !state.loading) {
-                        Text("Refresh")
+                        Text(stringResource(R.string.form_refresh_56e3ba))
                     }
                 }
             )
@@ -90,7 +93,7 @@ fun AdminModerationScreen(
             state.loadError?.let { error ->
                 item {
                     Text(error, color = MaterialTheme.colorScheme.error)
-                    TextButton(onClick = onRefresh) { Text("Retry") }
+                    TextButton(onClick = onRefresh) { Text(stringResource(R.string.form_retry_9f5cd8)) }
                 }
             }
             if (!state.loading && state.loadError == null && state.reports.isEmpty()) {
@@ -104,6 +107,18 @@ fun AdminModerationScreen(
             if (!state.message.isNullOrBlank()) {
                 item {
                     Text(state.message, color = MaterialTheme.colorScheme.primary)
+                }
+            }
+            if(state.categoryRequests.isNotEmpty()) item { Text(stringResource(R.string.form_label_4f7a56),style=MaterialTheme.typography.titleMedium) }
+            items(state.categoryRequests,key={"category-${it.id}"}) { request ->
+                Card(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(Spacing.m)) {
+                        Text(request.name)
+                        Row {
+                            TextButton(onClick={request.id?.let {onCategoryDecision(it,true)}}) {Text(stringResource(R.string.form_label_6842aa))}
+                            TextButton(onClick={request.id?.let {onCategoryDecision(it,false)}}) {Text(stringResource(R.string.form_label_50aa49))}
+                        }
+                    }
                 }
             }
             items(state.reports, key = { it.id }) { report ->
@@ -121,13 +136,13 @@ fun AdminModerationScreen(
             if (!state.accessDenied) {
                 item {
                     Spacer(Modifier.height(Spacing.m))
-                    Text("Email notifications", style = MaterialTheme.typography.titleLarge)
+                    Text(stringResource(R.string.form_email_notifications_b7b0bc), style = MaterialTheme.typography.titleLarge)
                 }
                 item {
                     OutlinedTextField(
                         value = state.subject,
                         onValueChange = onSubjectChange,
-                        label = { Text("Subject") },
+                        label = { Text(stringResource(R.string.form_subject_8d183d)) },
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -135,7 +150,7 @@ fun AdminModerationScreen(
                     OutlinedTextField(
                         value = state.body,
                         onValueChange = onBodyChange,
-                        label = { Text("Body") },
+                        label = { Text(stringResource(R.string.form_body_718a7e)) },
                         modifier = Modifier.fillMaxWidth(),
                         minLines = 4,
                     )
@@ -144,14 +159,14 @@ fun AdminModerationScreen(
                     OutlinedTextField(
                         value = state.userId,
                         onValueChange = onUserIdChange,
-                        label = { Text("User ID for direct email") },
+                        label = { Text(stringResource(R.string.form_user_id_for_direct_email_75a4c2)) },
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
                 item {
                     Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
-                        Button(onClick = onSendToAll, enabled = !state.sendingEmail) { Text("Send to all") }
-                        Button(onClick = onSendToUser, enabled = !state.sendingEmail) { Text("Send to user") }
+                        Button(onClick = onSendToAll, enabled = !state.sendingEmail) { Text(stringResource(R.string.form_send_to_all_b0b1fd)) }
+                        Button(onClick = onSendToUser, enabled = !state.sendingEmail) { Text(stringResource(R.string.form_send_to_user_9f55b0)) }
                     }
                 }
             }

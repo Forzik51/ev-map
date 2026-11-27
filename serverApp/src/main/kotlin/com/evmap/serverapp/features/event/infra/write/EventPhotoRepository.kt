@@ -25,12 +25,12 @@ class EventPhotoRepository(
         ensureEventExists(eventId)
         val record = dsl.fetchOne(
             """
-            INSERT INTO photo(event_id, image_path)
-            VALUES (?, ?)
+            INSERT INTO photo(event_id, image_path, sort_order)
+            SELECT ?, ?, COALESCE(MAX(sort_order),-1)+1 FROM photo WHERE event_id=?
             RETURNING id, event_id, image_path
             """.trimIndent(),
             eventId,
-            imagePath
+            imagePath, eventId
         ) ?: error("Failed to save event photo")
 
         return toView(record)
@@ -43,7 +43,7 @@ class EventPhotoRepository(
             SELECT id, event_id, image_path
             FROM photo
             WHERE event_id = ?
-            ORDER BY id
+            ORDER BY sort_order,id
             """.trimIndent(),
             eventId
         ).map { toView(it) }
@@ -103,6 +103,10 @@ class EventPhotoRepository(
     private fun ensureEventExists(eventId: Long) {
         val exists = dsl.fetchOne("SELECT 1 FROM event WHERE id = ?", eventId) != null
         if (!exists) throw EventNotFoundException(eventId)
+    }
+
+    fun order(eventId: Long, ids: List<Long>) {
+        ids.forEachIndexed { index,id -> dsl.execute("UPDATE photo SET sort_order=? WHERE event_id=? AND id=?",index,eventId,id) }
     }
 
     private fun toView(record: org.jooq.Record): ViewEventPhoto =

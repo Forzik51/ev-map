@@ -1,4 +1,6 @@
 package core.ui.components
+import androidx.compose.ui.res.stringResource
+import com.evmap.mobileapp.R
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -35,7 +37,7 @@ fun LocationField(
             IconButton(onClick = onClick) {
                 Icon(
                     imageVector = Icons.Default.LocationOn,
-                    contentDescription = "Select location",
+                    contentDescription = stringResource(R.string.form_select_location_a33e96),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }

@@ -69,6 +69,8 @@ class ExploreViewModel @Inject constructor(
         _state.update { it.copy(draftFilters = it.draftFilters?.copy(sort = sort)) }
     }
 
+    fun updateTags(value: String) { _state.update { it.copy(draftFilters=it.draftFilters?.copy(tagsText=value)) } }
+
     fun updateCategory(categoryId: Long?) {
         _state.update { it.copy(draftFilters = it.draftFilters?.copy(categoryId = categoryId)) }
     }
@@ -77,6 +79,7 @@ class ExploreViewModel @Inject constructor(
         val filters = state.value.draftFilters ?: return
         savedStateHandle[STATE_SORT] = filters.sort.apiValue
         savedStateHandle[STATE_CATEGORY] = filters.categoryId
+        savedStateHandle["exploreTags"] = filters.tagsText
         _state.update { it.copy(filters = filters, draftFilters = null) }
         submitSearch()
     }
@@ -128,7 +131,7 @@ class ExploreViewModel @Inject constructor(
         return ExploreUiState(
             query = query,
             selectedTab = tab,
-            filters = ExploreFilters(sort, savedStateHandle[STATE_CATEGORY]),
+            filters = ExploreFilters(sort, savedStateHandle[STATE_CATEGORY], savedStateHandle.get<String>("exploreTags").orEmpty()),
         )
     }
 

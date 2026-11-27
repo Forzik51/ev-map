@@ -62,6 +62,7 @@ object ExploreFeature : FeatureEntry {
                 onBack = onNavigateUp,
                 onSortChange = viewModel::updateSort,
                 onCategoryChange = viewModel::updateCategory,
+                onTagsChange = viewModel::updateTags,
                 onRetryCategories = viewModel::loadCategories,
             )
         }
@@ -85,6 +86,7 @@ data class ExploreUiState(
 data class ExploreFilters(
     val sort: ExploreSort = ExploreSort.RELEVANCE,
     val categoryId: Long? = null,
+    val tagsText: String = "",
 )
 
 enum class ExploreTab(val apiValue: String) {

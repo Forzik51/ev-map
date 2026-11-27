@@ -15,6 +15,7 @@ interface SearchApi {
         @Query("limit") limit: Int? = null,
         @Query("sort") sort: String? = null,
         @Query("categoryIds") categoryIds: List<Long>? = null,
+        @Query("tags") tags: List<String>? = null,
     ): SearchResponseDto
 
     @GET("api/search/suggestions")

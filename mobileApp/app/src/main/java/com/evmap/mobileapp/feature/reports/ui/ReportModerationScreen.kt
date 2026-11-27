@@ -1,4 +1,6 @@
 package com.evmap.mobileapp.feature.reports.ui
+import androidx.compose.ui.res.stringResource
+import com.evmap.mobileapp.R
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -58,15 +60,15 @@ fun ReportModerationScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Review report") },
+                title = { Text(stringResource(R.string.form_review_report_29a1c5)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.form_back_b52b36))
                     }
                 },
                 actions = {
                     TextButton(onClick = onRefresh, enabled = !state.loading && !state.saving && !state.deleting) {
-                        Text("Refresh")
+                        Text(stringResource(R.string.form_refresh_56e3ba))
                     }
                 },
             )
@@ -81,7 +83,7 @@ fun ReportModerationScreen(
             state.loadError?.let { error ->
                 item {
                     Text(error, color = MaterialTheme.colorScheme.error)
-                    TextButton(onClick = onRefresh) { Text("Retry") }
+                    TextButton(onClick = onRefresh) { Text(stringResource(R.string.form_retry_9f5cd8)) }
                 }
             }
             state.message?.let { message -> item { Text(message, color = MaterialTheme.colorScheme.primary) } }
@@ -99,7 +101,7 @@ fun ReportModerationScreen(
                         OutlinedButton(
                             onClick = { onOpenEvent(report.eventId) },
                             enabled = !state.saving && !state.deleting,
-                        ) { Text("Open event") }
+                        ) { Text(stringResource(R.string.form_open_event_62871b)) }
                     }
                 }
                 if (report.status == ReportStatus.OPEN) {
@@ -108,24 +110,24 @@ fun ReportModerationScreen(
                             Button(
                                 onClick = { onChooseOutcome(ReportStatus.RESOLVED) },
                                 enabled = state.canDecide,
-                            ) { Text("Confirm report") }
+                            ) { Text(stringResource(R.string.form_confirm_report_4cc623)) }
                             OutlinedButton(
                                 onClick = { onChooseOutcome(ReportStatus.DISMISSED) },
                                 enabled = state.canDecide,
-                            ) { Text("Dismiss report") }
+                            ) { Text(stringResource(R.string.form_dismiss_report_004232)) }
                         }
                     }
                 }
                 if (details.decisions.isNotEmpty()) {
-                    item { Text("Decisions", style = MaterialTheme.typography.titleMedium) }
+                    item { Text(stringResource(R.string.form_decisions_af2f32), style = MaterialTheme.typography.titleMedium) }
                     items(details.decisions, key = { it.id }) { decision -> DecisionCard(decision) }
                 } else if (report.status != ReportStatus.OPEN) {
-                    item { Text("No decision details were recorded.") }
+                    item { Text(stringResource(R.string.form_no_decision_details_were_recorded_91726d)) }
                 }
                 if (state.canDelete) {
                     item {
                         TextButton(onClick = { confirmDelete = true }) {
-                            Text("Delete report", color = MaterialTheme.colorScheme.error)
+                            Text(stringResource(R.string.form_delete_report_c669ce), color = MaterialTheme.colorScheme.error)
                         }
                     }
                 }
@@ -148,7 +150,7 @@ fun ReportModerationScreen(
                         enabled = !state.saving,
                         minLines = 3,
                         maxLines = 5,
-                        label = { Text("Reason") },
+                        label = { Text(stringResource(R.string.form_reason_f219cc)) },
                         supportingText = { Text("$reasonLength/$MAX_DECISION_REASON_LENGTH") },
                         isError = reasonLength > MAX_DECISION_REASON_LENGTH,
                     )
@@ -156,7 +158,7 @@ fun ReportModerationScreen(
                     if (state.loading) LinearProgressIndicator(Modifier.fillMaxWidth())
                     state.loadError?.let {
                         Text(it, color = MaterialTheme.colorScheme.error)
-                        TextButton(onClick = onRefresh) { Text("Retry") }
+                        TextButton(onClick = onRefresh) { Text(stringResource(R.string.form_retry_9f5cd8)) }
                     }
                 }
             },
@@ -167,22 +169,22 @@ fun ReportModerationScreen(
                 ) { Text(if (state.saving) "Saving…" else "Save decision") }
             },
             dismissButton = {
-                TextButton(onClick = onCancelDecision, enabled = !state.saving) { Text("Cancel") }
+                TextButton(onClick = onCancelDecision, enabled = !state.saving) { Text(stringResource(R.string.form_cancel_77dfd2)) }
             },
         )
     }
     if (confirmDelete && state.canDelete) {
         AlertDialog(
             onDismissRequest = { confirmDelete = false },
-            title = { Text("Delete report?") },
-            text = { Text("The report will be removed from the moderation queue.") },
+            title = { Text(stringResource(R.string.form_delete_report_b29b7d)) },
+            text = { Text(stringResource(R.string.form_the_report_will_be_removed_from_the_mo_681911)) },
             confirmButton = {
                 TextButton(onClick = {
                     confirmDelete = false
                     onDelete()
-                }) { Text("Delete report", color = MaterialTheme.colorScheme.error) }
+                }) { Text(stringResource(R.string.form_delete_report_c669ce), color = MaterialTheme.colorScheme.error) }
             },
-            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Cancel") } },
+            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text(stringResource(R.string.form_cancel_77dfd2)) } },
         )
     }
 }

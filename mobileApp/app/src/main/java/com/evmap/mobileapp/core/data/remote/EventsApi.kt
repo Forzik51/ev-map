@@ -13,6 +13,7 @@ import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Multipart
+import retrofit2.http.PUT
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Part
@@ -113,6 +114,9 @@ interface EventsApi {
         @Query("uploadId") uploadId: String,
         @Part file: MultipartBody.Part,
     ): EventPhotoDto
+
+    @PUT("api/events/{eventId}/photos/order")
+    suspend fun orderPhotos(@Path("eventId") eventId: Long, @Body ids: List<Long>): Response<Unit>
 
     @DELETE("api/events/{eventId}/photos/{photoId}")
     suspend fun deletePhoto(

@@ -13,9 +13,33 @@ import javax.inject.Inject
 
 class ImageMultipart @Inject constructor(@ApplicationContext context: Context) {
     private val resolver = context.contentResolver
+    private val mediaRoot = java.io.File(context.filesDir,"event-draft-media")
+    private fun type(uri: Uri) = resolver.getType(uri)?.lowercase() ?: when(uri.lastPathSegment?.substringAfterLast('.')) { "jpg","jpeg"->"image/jpeg";"png"->"image/png";"webp"->"image/webp";else->"" }
+
+    suspend fun prepare(uri: Uri,owner: Long,id: String): Uri = withContext(Dispatchers.IO) {
+        val mime=type(uri)
+        val extension=when(mime) { "image/jpeg"->"jpg";"image/png"->"png";"image/webp"->"webp";else->throw IllegalArgumentException("Виберіть JPEG, PNG або WebP") }
+        val bytes=resolver.openInputStream(uri)?.use { it.readBytesLimited() } ?: throw IllegalArgumentException("Фотографія недоступна")
+        val options=android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds=true }
+        android.graphics.BitmapFactory.decodeByteArray(bytes,0,bytes.size,options)
+        require(options.outWidth>0 && options.outHeight>0) { "Файл не є коректним зображенням" }
+        val target=java.io.File(mediaRoot,"$owner/$id.$extension");target.parentFile!!.mkdirs();target.writeBytes(bytes)
+        Uri.fromFile(target)
+    }
+    private fun java.io.InputStream.readBytesLimited(): ByteArray {
+        val output=ByteArrayOutputStream();val buffer=ByteArray(8192)
+        while(true) { val count=read(buffer);if(count<0) break;require(output.size()+count<=MAX_PHOTO_BYTES) { "Фотографія має бути до 5 МБ" };output.write(buffer,0,count) }
+        return output.toByteArray().also { require(it.isNotEmpty()) { "Файл порожній" } }
+    }
+    fun removePrepared(uri: Uri,owner: Long) {
+        if(uri.scheme!="file") return
+        val target=java.io.File(uri.path.orEmpty()).canonicalFile
+        val parent=java.io.File(mediaRoot,owner.toString()).canonicalFile
+        if(target.parentFile==parent) target.delete()
+    }
 
     suspend fun filePart(uri: Uri): MultipartBody.Part = withContext(Dispatchers.IO) {
-        val contentType = resolver.getType(uri).orEmpty().lowercase()
+        val contentType = type(uri)
         val extension = when (contentType) {
             "image/jpeg" -> "jpg"
             "image/png" -> "png"

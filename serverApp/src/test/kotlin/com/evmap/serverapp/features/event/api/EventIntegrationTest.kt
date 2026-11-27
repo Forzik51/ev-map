@@ -52,10 +52,23 @@ class EventIntegrationTest {
 
     companion object {
         @TempDir @JvmField var mediaRoot: Path? = null
+        private val geocoderRequests=java.util.concurrent.atomic.AtomicInteger()
+        private val geocoder=com.sun.net.httpserver.HttpServer.create(java.net.InetSocketAddress("127.0.0.1",0),0).apply {
+            createContext("/search") { exchange ->
+                geocoderRequests.incrementAndGet()
+                val reply="""[{"name":"Fixture country","display_name":"Fixture country address","lat":"52","lon":"21","addresstype":"country","geojson":{"type":"Polygon","coordinates":[[[20,51],[22,51],[22,53],[20,53],[20,51]]]}}]""".toByteArray()
+                exchange.responseHeaders.add("Content-Type","application/json")
+                exchange.sendResponseHeaders(200,reply.size.toLong());exchange.responseBody.use {it.write(reply)}
+            }
+            start()
+        }
+        @org.junit.jupiter.api.AfterAll @JvmStatic fun stopGeocoder() { geocoder.stop(0) }
+
 
         @JvmStatic @DynamicPropertySource
         fun properties(registry: DynamicPropertyRegistry) {
             PasswordResetIntegrationTest.database(registry)
+            registry.add("app.geocoding.url") {"http://127.0.0.1:${geocoder.address.port}"}
             registry.add("app.media.root") { checkNotNull(mediaRoot).toString() }
         }
     }
@@ -372,6 +385,129 @@ class EventIntegrationTest {
         assertEquals(204, request("DELETE", "/api/events/$id", owner).statusCode())
         assertEquals(404, request("GET", mediaPath, owner).statusCode())
         assertTrue(Files.notExists(file))
+    }
+
+    @Test
+    fun `undated creation is idempotent and can be read from every event surface`() {
+        val key=UUID.randomUUID().toString()
+        val fields=eventFields("Undated deployment").toMutableMap().apply { remove("startsAt");remove("endsAt");put("dateMode","UNSPECIFIED");put("clientRequestId",key);put("tags",listOf("Jazz","jazz")) }
+        val first=request("POST","/api/events",owner,fields)
+        assertEquals(201,first.statusCode(),first.body().decodeToString())
+        val id=body(first).asLong()
+        assertEquals(id,body(request("POST","/api/events",owner,fields)).asLong())
+        assertEquals(409,request("POST","/api/events",owner,fields+mapOf("name" to "Changed payload")).statusCode())
+        val event=body(request("GET","/api/events/$id",owner))
+        assertTrue(event["startsAt"].isNull)
+        assertEquals("UNSPECIFIED",event["dateMode"].asText())
+        assertEquals(1,event["tags"].size())
+        for(path in listOf("/api/events?page=0&size=100","/api/events/feed?page=0&size=100","/api/map/events/$id","/api/search?query=Undated&type=events&tags=jazz")) {
+            val response=request("GET",path,owner);assertEquals(200,response.statusCode(),response.body().decodeToString())
+        }
+        assertEquals(204,request("DELETE","/api/events/$id",owner).statusCode())
+        assertEquals(410,request("POST","/api/events",owner,fields).statusCode())
+    }
+
+    @Test
+    fun `date-only schedule preserves calendar day across a timezone transition`() {
+        val fields=eventFields("Date only").toMutableMap().apply {remove("startsAt");remove("endsAt");put("dateMode","DATE");put("startsOn","2027-03-28");put("timeZone","Europe/Warsaw")}
+        val response=request("POST","/api/events",owner,fields)
+        assertEquals(201,response.statusCode(),response.body().decodeToString())
+        val id=body(response).asLong()
+        val event=body(request("GET","/api/events/$id",owner))
+        assertEquals("2027-03-28",event["startsOn"].asText())
+        assertEquals("Europe/Warsaw",event["timeZone"].asText())
+        val invalid=request("PATCH","/api/events/$id",owner,fields+mapOf("endsOn" to "2027-03-27"))
+        assertEquals(400,invalid.statusCode())
+        assertTrue(body(invalid)["fieldErrors"].has("endsOn"))
+        request("DELETE","/api/events/$id",owner)
+    }
+
+    @Test
+    fun `custom area uses its entire geometry for nearby and tag filters`() {
+        val geometry="""{"type":"Polygon","coordinates":[[[20,51],[22,51],[22,53],[20,53],[20,51]]]}"""
+        val place=request("POST","/api/locations",owner,mapOf("name" to "Wide test area","kind" to "CUSTOM_AREA","geometry" to geometry))
+        assertEquals(200,place.statusCode(),place.body().decodeToString())
+        val location=body(place)["id"].asLong()
+        val response=request("POST","/api/events",owner,eventFields("Area jazz")+mapOf("locationId" to location,"tags" to listOf("Jazz")))
+        assertEquals(201,response.statusCode(),response.body().decodeToString())
+        val id=body(response).asLong()
+        val nearby=request("GET","/api/map/events/nearby?lat=52.9&lng=21.9&radiusMeters=100&tags=jazz",owner)
+        assertEquals(200,nearby.statusCode(),nearby.body().decodeToString())
+        assertTrue(body(nearby).any {it["eventId"].asLong()==id})
+        val none=body(request("GET","/api/map/events/nearby?lat=52.9&lng=21.9&radiusMeters=100&tags=unmatched",owner))
+        assertTrue(none.none {it["eventId"].asLong()==id})
+        val invalid=request("POST","/api/locations",owner,mapOf("name" to "Bad","geometry" to """{"type":"Polygon","coordinates":[[[20,51],[22,53],[22,51],[20,53],[20,51]]]}"""))
+        assertEquals(400,invalid.statusCode())
+        request("DELETE","/api/events/$id",owner)
+        db.execute("DELETE FROM location WHERE id=?",location)
+    }
+
+    @Test
+    fun `photo order controls the cover and remains owned`() {
+        val id=create("Ordered photos")
+        val a=body(upload("POST","/api/events/$id/photos",owner,png(2)))
+        val b=body(upload("POST","/api/events/$id/photos",owner,png(3)))
+        val order=listOf(b["id"].asLong(),a["id"].asLong())
+        assertEquals(403,request("PUT","/api/events/$id/photos/order",visitor,order).statusCode())
+        assertEquals(204,request("PUT","/api/events/$id/photos/order",owner,order).statusCode())
+        assertEquals(b["imagePath"].asText(),body(request("GET","/api/events/$id",owner))["imagePath"].asText())
+        assertEquals(b["id"].asLong(),body(request("GET","/api/events/$id/photos",owner)).first()["id"].asLong())
+        assertEquals(400,request("PUT","/api/events/$id/photos/order",owner,listOf(a["id"].asLong())).statusCode())
+        request("DELETE","/api/events/$id",owner)
+    }
+
+    @Test
+    fun `category proposal needs an administrator decision`() {
+        val name="Category ${UUID.randomUUID()}"
+        val proposal=request("POST","/api/event-taxonomy/category-requests",owner,mapOf("name" to name))
+        assertEquals(200,proposal.statusCode(),proposal.body().decodeToString())
+        val id=body(proposal)["id"].asLong()
+        assertEquals(403,request("POST","/api/event-taxonomy/category-requests/$id/decision",visitor,mapOf("approved" to true)).statusCode())
+        assertEquals(200,request("POST","/api/event-taxonomy/category-requests/$id/decision",admin,mapOf("approved" to true)).statusCode())
+        assertTrue(body(request("GET","/api/events/categories",owner)).any {it["name"].asText()==name})
+    }
+
+    @Test
+    fun `external place search is cached and a candidate resolves only once`() {
+        val before=geocoderRequests.get()
+        val query="fixture-${UUID.randomUUID()}"
+        val first=request("GET","/api/locations/search?query=$query",owner)
+        assertEquals(200,first.statusCode(),first.body().decodeToString())
+        val candidate=body(first).first()
+        assertEquals("COUNTRY",candidate["kind"].asText())
+        assertEquals(200,request("GET","/api/locations/search?query=$query",owner).statusCode())
+        assertEquals(before+1,geocoderRequests.get())
+        val payload=mapOf("candidateId" to candidate["candidateId"].asText())
+        val place=request("POST","/api/locations/resolve",owner,payload)
+        assertEquals(200,place.statusCode(),place.body().decodeToString())
+        val id=body(place)["id"].asLong()
+        assertEquals(id,body(request("POST","/api/locations/resolve",owner,payload))["id"].asLong())
+        assertEquals(404,request("POST","/api/locations/resolve",visitor,payload).statusCode())
+    }
+    @Test
+    fun `registration accepts missing optional contacts and validates a supplied birthday`() {
+        val suffix=UUID.randomUUID().toString().take(12)
+        val user=mapOf("name" to "Optional","surname" to null,"email" to "$suffix@example.com","phone" to null,"dateOfBirth" to null,"username" to suffix,"pageDescription" to "","password" to "valid password")
+        val registered=request("POST","/api/auth/register",null,mapOf("user" to user))
+        assertEquals(201,registered.statusCode(),registered.body().decodeToString())
+        val token=body(registered)["accessToken"].asText()
+        val profile=body(request("GET","/api/users/me",token))
+        assertTrue(profile["phone"].isNull)
+        assertTrue(profile["birthdate"].isNull)
+        val invalid=request("PATCH","/api/users/me",token,mapOf("name" to "Optional","username" to suffix,"surname" to null,"phone" to null,"pageDescription" to "","dateOfBirth" to java.time.LocalDate.now().plusDays(1).toString(),"updateDateOfBirth" to true))
+        assertEquals(400,invalid.statusCode())
+        assertTrue(body(invalid)["fieldErrors"].has("dateOfBirth"))
+        request("DELETE","/api/users/${profile["id"].asLong()}",token)
+    }
+    @Test
+    fun `simultaneous publication retries create a single event`() {
+        val fields=eventFields("Concurrent publish")+mapOf("clientRequestId" to UUID.randomUUID().toString())
+        val first=java.util.concurrent.CompletableFuture.supplyAsync {request("POST","/api/events",owner,fields)}
+        val second=java.util.concurrent.CompletableFuture.supplyAsync {request("POST","/api/events",owner,fields)}
+        val a=first.get(20,java.util.concurrent.TimeUnit.SECONDS);val b=second.get(20,java.util.concurrent.TimeUnit.SECONDS)
+        assertEquals(201,a.statusCode(),a.body().decodeToString());assertEquals(201,b.statusCode(),b.body().decodeToString())
+        assertEquals(body(a).asLong(),body(b).asLong())
+        request("DELETE","/api/events/${body(a).asLong()}",owner)
     }
 
     private fun create(name: String = "Test event", date: String = "2030-03-22", category: Long = categoryId): Long {

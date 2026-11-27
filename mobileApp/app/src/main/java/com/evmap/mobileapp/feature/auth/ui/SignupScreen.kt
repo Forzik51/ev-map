@@ -1,4 +1,6 @@
 package feature.auth.ui
+import androidx.compose.ui.res.stringResource
+import com.evmap.mobileapp.R
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -39,6 +41,7 @@ fun SignupScreen(
     showPassword: Boolean = false,
     isLoading: Boolean = false,
     errorMessage: String? = null,
+    fieldErrors: Map<String,String> = emptyMap(),
     onNameChange: (String) -> Unit = {},
     onSurnameChange: (String) -> Unit = {},
     onEmailChange: (String) -> Unit = {},
@@ -57,7 +60,7 @@ fun SignupScreen(
 
         // Title
         Text(
-            text = "Sign Up",
+            text = stringResource(R.string.form_sign_up_2ba402),
             style = MaterialTheme.typography.headlineLarge,
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
@@ -70,7 +73,10 @@ fun SignupScreen(
         AuthTextField(
             value = name,
             onValueChange = onNameChange,
-            label = "Name",
+            label = stringResource(R.string.form_name_709a23),
+            required = true,
+            error = fieldErrors["name"],
+            maxLength = 20,
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Text,
                 imeAction = ImeAction.Next
@@ -86,7 +92,10 @@ fun SignupScreen(
         AuthTextField(
             value = surname,
             onValueChange = onSurnameChange,
-            label = "Surname",
+            label = stringResource(R.string.form_surname_77dfca),
+            required = false,
+            error = fieldErrors["surname"],
+            maxLength = 20,
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Text,
                 imeAction = ImeAction.Next
@@ -102,7 +111,10 @@ fun SignupScreen(
         AuthTextField(
             value = email,
             onValueChange = onEmailChange,
-            label = "Email",
+            label = stringResource(R.string.form_email_84add5),
+            required = true,
+            error = fieldErrors["email"],
+            maxLength = 254,
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,
                 imeAction = ImeAction.Next
@@ -117,7 +129,9 @@ fun SignupScreen(
         // Date of birth field
         DateField(
             value = birthDate,
-            label = "Date of birth",
+            label = stringResource(R.string.form_date_of_birth_951842),
+            required = false,
+            error = fieldErrors["dateOfBirth"],
             onClick = onPickBirthDate
         )
 
@@ -127,7 +141,9 @@ fun SignupScreen(
         PhoneTextField(
             value = phone,
             onValueChange = onPhoneChange,
-            label = "Phone number",
+            label = stringResource(R.string.form_phone_number_8961d3),
+            required = false,
+            error = fieldErrors["phone"],
             imeAction = ImeAction.Next,
             keyboardActions = KeyboardActions(
                 onNext = { focusManager.moveFocus(FocusDirection.Down) }
@@ -140,7 +156,10 @@ fun SignupScreen(
         AuthTextField(
             value = username,
             onValueChange = onUsernameChange,
-            label = "Username",
+            label = stringResource(R.string.form_username_84c290),
+            required = true,
+            error = fieldErrors["username"],
+            maxLength = 20,
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Text,
                 imeAction = ImeAction.Next
@@ -156,7 +175,9 @@ fun SignupScreen(
         PasswordTextField(
             value = password,
             onValueChange = onPasswordChange,
-            label = "Password",
+            label = stringResource(R.string.form_password_8be3c9),
+            required = true,
+            error = fieldErrors["password"],
             show = showPassword,
             onToggleShow = onTogglePassword,
             keyboardOptions = KeyboardOptions(
@@ -186,13 +207,11 @@ fun SignupScreen(
         
         // Sign up button
         PrimaryButton(
-            text = if (isLoading) "Creating account..." else "Sign up",
+            text = if (isLoading) stringResource(R.string.form_creating_account_27b8a2) else stringResource(R.string.form_sign_up_0b8149),
             onClick = onSignup,
             enabled = !isLoading &&
                 name.isNotBlank() &&
                 email.isNotBlank() &&
-                birthDate.isNotBlank() &&
-                phone.isNotBlank() &&
                 username.isNotBlank() &&
                 password.isNotBlank()
         )
@@ -205,7 +224,7 @@ fun SignupScreen(
             horizontalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Already have an account? ",
+                text = stringResource(R.string.form_already_have_an_account_e41e4c),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )

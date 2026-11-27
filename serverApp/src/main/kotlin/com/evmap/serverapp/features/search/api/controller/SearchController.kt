@@ -32,6 +32,7 @@ class SearchController(
         @RequestParam(required = false) onlyUpcoming: Boolean?,
         @RequestParam(required = false) sort: String?,
         @RequestParam(required = false) limit: Int?,
+        @RequestParam(required = false) tags: List<String>? = null,
     ): ViewSearchResponse =
         searchService.handle(
             userId = currentUserProvider.get().id,
@@ -48,6 +49,7 @@ class SearchController(
             onlyUpcoming = onlyUpcoming ?: false,
             sort = sort,
             limit = limit,
+            tags = tags.orEmpty(),
         )
 
     @GetMapping("/suggestions")

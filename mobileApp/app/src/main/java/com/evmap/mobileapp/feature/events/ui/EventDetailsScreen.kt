@@ -1,4 +1,6 @@
 package com.evmap.mobileapp.feature.events.ui
+import androidx.compose.ui.res.stringResource
+import com.evmap.mobileapp.R
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
@@ -91,31 +93,31 @@ fun EventDetailsScreen(
                 title = { Text(event?.name ?: "Event", maxLines = 1) },
                 navigationIcon = {
                     IconButton(onClick = onBack, enabled = !state.deleting) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.form_back_b52b36))
                     }
                 },
                 actions = {
                     if (event != null) {
                         IconButton(onClick = onSave, enabled = !state.deleting) {
-                            Icon(Icons.Outlined.BookmarkAdd, contentDescription = "Save event")
+                            Icon(Icons.Outlined.BookmarkAdd, contentDescription = stringResource(R.string.form_save_event_cf926c))
                         }
                         IconButton(onClick = viewModel::share, enabled = !state.sharing && !state.deleting) {
-                            Icon(Icons.Default.Share, contentDescription = "Share event")
+                            Icon(Icons.Default.Share, contentDescription = stringResource(R.string.form_share_event_a02bc0))
                         }
                         IconButton(onClick = onReport, enabled = !state.deleting) {
-                            Icon(Icons.Default.Report, contentDescription = "Report event")
+                            Icon(Icons.Default.Report, contentDescription = stringResource(R.string.form_report_event_4b44fc))
                         }
                         if (state.canManage) {
                             Box {
                                 IconButton(onClick = { menuOpen = true }, enabled = !state.deleting) {
-                                    Icon(Icons.Default.MoreVert, contentDescription = "Manage event")
+                                    Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.form_manage_event_529a43))
                                 }
                                 DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                                    DropdownMenuItem(text = { Text("Edit event") }, onClick = {
+                                    DropdownMenuItem(text = { Text(stringResource(R.string.form_edit_event_a70284)) }, onClick = {
                                         menuOpen = false
                                         onEdit()
                                     })
-                                    DropdownMenuItem(text = { Text("Delete event") }, onClick = {
+                                    DropdownMenuItem(text = { Text(stringResource(R.string.form_delete_event_cb30da)) }, onClick = {
                                         menuOpen = false
                                         confirmDelete = true
                                     })
@@ -135,7 +137,7 @@ fun EventDetailsScreen(
                 if (state.loading) CircularProgressIndicator()
                 else Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(state.loadError.orEmpty(), color = MaterialTheme.colorScheme.error)
-                    TextButton(onClick = viewModel::load) { Text("Retry") }
+                    TextButton(onClick = viewModel::load) { Text(stringResource(R.string.form_retry_9f5cd8)) }
                 }
             }
         } else {
@@ -150,15 +152,16 @@ fun EventDetailsScreen(
                 state.photosError?.let { error ->
                     item {
                         Text(error, color = MaterialTheme.colorScheme.error)
-                        TextButton(onClick = viewModel::loadPhotos) { Text("Retry photos") }
+                        TextButton(onClick = viewModel::loadPhotos) { Text(stringResource(R.string.form_retry_photos_e6eaff)) }
                     }
                 }
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
                         event.locationName?.let { Text(it, style = MaterialTheme.typography.titleMedium) }
-                        Text(event.startsAt.displayDateTime())
-                        event.endsAt?.let { Text("Ends ${it.displayDateTime()}") }
+                        Text(com.evmap.mobileapp.core.ui.formatEventSchedule(event.startsAt,event.dateMode,event.startsOn,event.endsOn,event.timeZone))
+                        event.endsAt?.takeIf {event.dateMode=="DATETIME"}?.let { Text("Ends ${it.displayDateTime()}") }
                         Text(event.description)
+                        if(event.tags.isNotEmpty()) Text(event.tags.joinToString(" · ") { "#$it" })
                         if (event.categories.isNotEmpty()) {
                             ChipsFlowRow {
                                 event.categories.forEach { category ->
@@ -181,12 +184,12 @@ fun EventDetailsScreen(
                         enabled = !state.savingRating && !state.deleting,
                         onRate = viewModel::rate,
                     )
-                    if (state.savingRating) Text("Saving rating…")
-                    if (state.deleting) Text("Deleting event…")
+                    if (state.savingRating) Text(stringResource(R.string.form_saving_rating_1cd1af))
+                    if (state.deleting) Text(stringResource(R.string.form_deleting_event_49befd))
                     state.actionError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                     state.loadError?.let {
                         Text(it, color = MaterialTheme.colorScheme.error)
-                        TextButton(onClick = viewModel::load) { Text("Refresh event") }
+                        TextButton(onClick = viewModel::load) { Text(stringResource(R.string.form_refresh_event_d0a191)) }
                     }
                 }
                 item {
@@ -195,7 +198,7 @@ fun EventDetailsScreen(
                     OutlinedTextField(
                         value = state.commentText,
                         onValueChange = viewModel::updateComment,
-                        label = { Text("Write a comment") },
+                        label = { Text(stringResource(R.string.form_write_a_comment_9ea900)) },
                         supportingText = { Text("${state.commentText.codePointCount(0, state.commentText.length)}/100") },
                         enabled = !state.sendingComment && !state.deleting,
                         isError = state.commentError != null,
@@ -213,11 +216,11 @@ fun EventDetailsScreen(
                         state.loadingComments -> CircularProgressIndicator()
                         state.commentsError != null -> {
                             Text(state.commentsError.orEmpty(), color = MaterialTheme.colorScheme.error)
-                            TextButton(onClick = { viewModel.loadComments() }) { Text("Retry comments") }
+                            TextButton(onClick = { viewModel.loadComments() }) { Text(stringResource(R.string.form_retry_comments_216627)) }
                         }
-                        state.comments.isEmpty() -> Text("No comments yet")
+                        state.comments.isEmpty() -> Text(stringResource(R.string.form_no_comments_yet_d14da3))
                         state.nextCommentPage != null -> TextButton(onClick = { viewModel.loadComments() }) {
-                            Text("Load more comments")
+                            Text(stringResource(R.string.form_load_more_comments_fcf82c))
                         }
                     }
                 }
@@ -228,15 +231,15 @@ fun EventDetailsScreen(
     if (confirmDelete && event != null) {
         AlertDialog(
             onDismissRequest = { confirmDelete = false },
-            title = { Text("Delete event?") },
+            title = { Text(stringResource(R.string.form_delete_event_ce712d)) },
             text = { Text("Delete ${event.name} and its photos and comments?") },
             confirmButton = {
                 TextButton(onClick = {
                     confirmDelete = false
                     viewModel.delete()
-                }) { Text("Delete") }
+                }) { Text(stringResource(R.string.form_delete_f6fdbe)) }
             },
-            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Cancel") } },
+            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text(stringResource(R.string.form_cancel_77dfd2)) } },
         )
     }
 }
@@ -271,6 +274,6 @@ private fun CommentRow(comment: EventCommentDto) {
     }
 }
 
-internal fun String.displayDateTime(): String = runCatching {
+internal fun String?.displayDateTime(): String = runCatching {
     Instant.parse(this).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM))
-}.getOrDefault(this)
+}.getOrDefault(this ?: "Дату не визначено")

@@ -4,7 +4,7 @@ data class EventDto(
     val id: Long,
     val name: String,
     val description: String,
-    val startsAt: String,
+    val startsAt: String?,
     val endsAt: String? = null,
     val locationName: String? = null,
     val imagePath: String? = null,
@@ -16,15 +16,27 @@ data class EventDto(
     val locationId: Long? = null,
     val ratingAvg: Double? = null,
     val myRating: Double? = null,
+    val createdAt: String? = null,
+    val dateMode: String = "DATETIME",
+    val startsOn: String? = null,
+    val endsOn: String? = null,
+    val timeZone: String = "UTC",
+    val tags: List<String> = emptyList(),
 )
 
 data class CreateEventRequest(
     val name: String,
     val description: String,
-    val startsAt: String,
+    val startsAt: String?,
     val endsAt: String? = null,
     val locationId: Long,
     val categoryIds: List<Long>,
+    val dateMode: String = if(startsAt == null) "UNSPECIFIED" else "DATETIME",
+    val startsOn: String? = null,
+    val endsOn: String? = null,
+    val timeZone: String = "UTC",
+    val tags: List<String> = emptyList(),
+    val clientRequestId: String? = null,
 )
 
 data class EventCategoryDto(

@@ -11,10 +11,12 @@ data class UpdateProfile(
     val surname: String?,
     @field:NotBlank @field:Size(max = 20)
     val username: String,
-    @field:Pattern(regexp = PROFILE_PHONE_PATTERN, message = "Enter a phone number with 7 to 15 characters")
-    val phone: String,
+    @field:com.evmap.serverapp.shared.security.ValidOptionalPhone
+    val phone: String?,
     @field:Size(max = 150)
     val pageDescription: String,
+    @field:jakarta.validation.constraints.PastOrPresent val dateOfBirth: java.time.LocalDate? = null,
+    val updateDateOfBirth: Boolean = false,
 )
 
-internal const val PROFILE_PHONE_PATTERN = "^[+0-9 ()-]{7,15}$"
+internal const val PROFILE_PHONE_PATTERN = "^$|^[+0-9 ()-]{7,15}$"

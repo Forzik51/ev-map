@@ -11,3 +11,9 @@ spring:
 app:
   mail:
     from: ${APP_MAIL_FROM}
+
+server:
+  forward-headers-strategy: native
+  tomcat:
+    remoteip:
+      internal-proxies: '127\.0\.0\.1|0:0:0:0:0:0:0:1|::1'

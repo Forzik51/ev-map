@@ -1,4 +1,6 @@
 package core.ui.components
+import androidx.compose.ui.res.stringResource
+import com.evmap.mobileapp.R
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardActions
@@ -27,22 +29,26 @@ fun PasswordTextField(
     placeholder: String? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
-    singleLine: Boolean = true
+    singleLine: Boolean = true,
+    required: Boolean = false,
+    error: String? = null,
 ) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         modifier = modifier,
-        label = { Text(label) },
+        label = { Text(if(required && !label.endsWith("*")) "$label *" else label) },
         placeholder = placeholder?.let { { Text(it) } },
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
+        isError = error != null,
+        supportingText = error?.let { { Text(it) } },
         singleLine = singleLine,
         visualTransformation = if (show) VisualTransformation.None else PasswordVisualTransformation(),
         trailingIcon = {
             TextButton(onClick = onToggleShow) {
                 Text(
-                    text = if (show) "Hide" else "Show",
+                    text = if (show) stringResource(R.string.form_hide_34d8b6) else stringResource(R.string.form_show_d97d1e),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )

@@ -1,4 +1,6 @@
 package feature.auth.ui
+import androidx.compose.ui.res.stringResource
+import com.evmap.mobileapp.R
 
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -42,12 +44,12 @@ fun NewPasswordScreen(
     val focusManager = LocalFocusManager.current
 
     FormScaffold {
-        androidx.compose.material3.TextButton(onClick = onBack) { Text("Start again") }
+        androidx.compose.material3.TextButton(onClick = onBack) { Text(stringResource(R.string.form_start_again_b6fffc)) }
         Spacer(modifier = Modifier.height(Spacing.xxl))
         
         // Title
         Text(
-            text = "New password",
+            text = stringResource(R.string.form_new_password_d850ee),
             style = MaterialTheme.typography.headlineLarge,
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
@@ -57,7 +59,7 @@ fun NewPasswordScreen(
         
         // Subtitle
         Text(
-            text = "Create new password",
+            text = stringResource(R.string.form_create_new_password_6c752f),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
@@ -71,8 +73,8 @@ fun NewPasswordScreen(
         PasswordTextField(
             value = newPass,
             onValueChange = onNewChange,
-            label = "Create new password",
-            placeholder = "Create new password",
+            label = stringResource(R.string.form_create_new_password_6c752f),
+            placeholder = stringResource(R.string.form_create_new_password_6c752f),
             show = showNew,
             onToggleShow = onToggleShowNew,
             singleLine = true,
@@ -91,8 +93,8 @@ fun NewPasswordScreen(
         PasswordTextField(
             value = confirmPass,
             onValueChange = onConfirmChange,
-            label = "Confirm new password",
-            placeholder = "Confirm new password",
+            label = stringResource(R.string.form_confirm_new_password_f85039),
+            placeholder = stringResource(R.string.form_confirm_new_password_f85039),
             show = showConfirm,
             onToggleShow = onToggleShowConfirm,
             singleLine = true,
@@ -112,7 +114,7 @@ fun NewPasswordScreen(
         
         errorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         PrimaryButton(
-            text = if (isLoading) "Please wait…" else "Change password",
+            text = if (isLoading) stringResource(R.string.form_please_wait_5afeca) else stringResource(R.string.form_change_password_8c6842),
             onClick = onCreate,
             enabled = !isLoading && newPass.isNotBlank() && confirmPass.isNotBlank()
         )

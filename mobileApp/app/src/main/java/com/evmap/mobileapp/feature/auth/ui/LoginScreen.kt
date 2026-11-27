@@ -1,4 +1,6 @@
 package feature.auth.ui
+import androidx.compose.ui.res.stringResource
+import com.evmap.mobileapp.R
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,6 +38,7 @@ fun LoginScreen(
     showPassword: Boolean = false,
     isLoading: Boolean = false,
     errorMessage: String? = null,
+    fieldErrors: Map<String,String> = emptyMap(),
     onEmailChange: (String) -> Unit = {},
     onPasswordChange: (String) -> Unit = {},
     onTogglePassword: () -> Unit = {},
@@ -50,7 +53,7 @@ fun LoginScreen(
         
         // Title
         Text(
-            text = "Log In",
+            text = stringResource(R.string.form_log_in_d527bf),
             style = MaterialTheme.typography.headlineLarge,
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
@@ -64,8 +67,10 @@ fun LoginScreen(
         AuthTextField(
             value = emailOrUsername,
             onValueChange = onEmailChange,
-            label = "Email/Username",
-            placeholder = "Email/Username",
+            label = stringResource(R.string.form_email_username_bc2d6a),
+            required = true,
+            error = fieldErrors["usernameOrEmail"],
+            placeholder = stringResource(R.string.form_email_username_bc2d6a),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,
                 imeAction = ImeAction.Next
@@ -84,8 +89,10 @@ fun LoginScreen(
             PasswordTextField(
                 value = password,
                 onValueChange = onPasswordChange,
-                label = "Password",
-                placeholder = "Password",
+                label = stringResource(R.string.form_password_8be3c9),
+            required = true,
+            error = fieldErrors["password"],
+                placeholder = stringResource(R.string.form_password_8be3c9),
                 show = showPassword,
                 onToggleShow = onTogglePassword,
                 keyboardOptions = KeyboardOptions(
@@ -126,7 +133,7 @@ fun LoginScreen(
         
         // Login button
         PrimaryButton(
-            text = if (isLoading) "Logging in..." else "Log in",
+            text = if (isLoading) stringResource(R.string.form_logging_in_2b01ab) else "Log in",
             onClick = onLogin,
             enabled = !isLoading && emailOrUsername.isNotBlank() && password.isNotBlank()
         )
@@ -139,12 +146,12 @@ fun LoginScreen(
             horizontalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Don't have an account yet? ",
+                text = stringResource(R.string.form_don_t_have_an_account_yet_18d066),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )
             TextLink(
-                text = "Sign up",
+                text = stringResource(R.string.form_sign_up_0b8149),
                 onClick = onNavigateToSignup
             )
         }

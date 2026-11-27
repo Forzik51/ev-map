@@ -1,4 +1,6 @@
 package feature.map.ui.components
+import androidx.compose.ui.res.stringResource
+import com.evmap.mobileapp.R
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -28,14 +30,14 @@ fun MapControls(
         // Zoom In
         ActionIconButton(
             icon = Icons.Default.Add,
-            contentDescription = "Zoom In",
+            contentDescription = stringResource(R.string.form_zoom_in_e59ac8),
             onClick = onZoomIn
         )
         
         // Zoom Out
         ActionIconButton(
             icon = Icons.Default.Remove,
-            contentDescription = "Zoom Out",
+            contentDescription = stringResource(R.string.form_zoom_out_87af1d),
             onClick = onZoomOut
         )
         
@@ -44,7 +46,7 @@ fun MapControls(
         // Recenter
         ActionIconButton(
             icon = Icons.Default.CenterFocusStrong,
-            contentDescription = "Recenter",
+            contentDescription = stringResource(R.string.form_recenter_da67fd),
             onClick = onRecenter
         )
         
@@ -52,7 +54,7 @@ fun MapControls(
         onMyLocation?.let { onMyLocationClick ->
             ActionIconButton(
                 icon = Icons.Default.MyLocation,
-                contentDescription = "My Location",
+                contentDescription = stringResource(R.string.form_my_location_fba084),
                 onClick = onMyLocationClick
             )
         }

@@ -12,6 +12,7 @@ fun MapEventItemDto.toMapPinUi(): MapPinUi =
         lat = point.lat,
         lng = point.lng,
         eventTitle = eventName,
+        geometry = regionGeoJson,
     )
 
 fun MapEventDetailsDto.toEventUi(): EventUi =
@@ -19,7 +20,7 @@ fun MapEventDetailsDto.toEventUi(): EventUi =
         id = eventId.toString(),
         title = eventName,
         location = locationName.orEmpty(),
-        startsAt = startsAt,
+        startsAt = com.evmap.mobileapp.core.ui.formatEventSchedule(startsAt,dateMode,startsOn,endsOn,timeZone),
         imageUrl = imagePath.toAbsoluteMediaUrl(),
         rating = ratingAvg.takeIf { ratingsCount > 0 },
         reviewCount = ratingsCount,

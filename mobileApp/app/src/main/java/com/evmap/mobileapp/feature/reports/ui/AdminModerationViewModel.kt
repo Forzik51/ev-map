@@ -17,6 +17,7 @@ import javax.inject.Inject
 
 data class AdminModerationUiState(
     val reports: List<ReportDto> = emptyList(),
+    val categoryRequests: List<com.evmap.mobileapp.core.data.dto.CategoryRequestDto> = emptyList(),
     val filter: ReportStatus = ReportStatus.OPEN,
     val loadError: String? = null,
     val accessDenied: Boolean = false,
@@ -32,11 +33,20 @@ data class AdminModerationUiState(
 @HiltViewModel
 class AdminModerationViewModel @Inject constructor(
     private val repository: ReportsRepository,
+    private val locations: com.evmap.mobileapp.feature.events.data.LocationRepository,
 ) : ViewModel() {
     private val _state = MutableStateFlow(AdminModerationUiState(loading = true))
     val state: StateFlow<AdminModerationUiState> = _state
 
     private var loadJob: Job? = null
+
+    fun decideCategory(id: Long, approved: Boolean) {
+        viewModelScope.launch {
+            try { locations.api.decide(id,mapOf("approved" to approved));refresh() }
+            catch(ex: kotlinx.coroutines.CancellationException) { throw ex }
+            catch(ex: Exception) { _state.update { it.copy(error="Не вдалося розглянути категорію") } }
+        }
+    }
 
     fun selectFilter(status: ReportStatus) {
         if (status == state.value.filter) return
@@ -49,6 +59,7 @@ class AdminModerationViewModel @Inject constructor(
         val filter = state.value.filter
         _state.update { it.copy(loading = true, loadError = null) }
         loadJob = viewModelScope.launch {
+            runCatching { locations.api.categoryRequests(true) }.onSuccess { items -> _state.update { it.copy(categoryRequests=items.filter { it.status=="PENDING" }) } }
             repository.all(filter)
                 .onSuccess { reports ->
                     _state.update { it.copy(reports = reports, loading = false, accessDenied = false) }

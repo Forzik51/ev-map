@@ -21,6 +21,7 @@ class SearchRepository @Inject constructor(
                 limit = 30,
                 sort = eventFilters?.sort?.apiValue,
                 categoryIds = eventFilters?.categoryId?.let(::listOf),
+                tags = eventFilters?.tagsText?.split(',')?.map(String::trim)?.filter(String::isNotEmpty),
             )
         )
     } catch (error: CancellationException) {

@@ -13,22 +13,22 @@ import javax.inject.Singleton
 class MapRepository @Inject constructor(
     private val mapApi: MapApi,
 ) {
-    suspend fun bounds(viewport: MapViewport) = request {
+    suspend fun bounds(viewport: MapViewport, categoryIds: List<Long>?=null, tags: List<String>?=null) = request {
         acrossBounds(viewport) { bounds ->
-            mapApi.bounds(bounds.south, bounds.west, bounds.north, bounds.east, DEFAULT_LIMIT)
+            mapApi.bounds(bounds.south, bounds.west, bounds.north, bounds.east, DEFAULT_LIMIT, categoryIds, tags)
         }.distinctBy { it.eventId }
     }
 
-    suspend fun clusters(viewport: MapViewport) = request {
+    suspend fun clusters(viewport: MapViewport, categoryIds: List<Long>?=null, tags: List<String>?=null) = request {
         acrossBounds(viewport) { bounds ->
-            mapApi.clusters(bounds.south, bounds.west, bounds.north, bounds.east, bounds.zoom)
+            mapApi.clusters(bounds.south, bounds.west, bounds.north, bounds.east, bounds.zoom, categoryIds, tags)
         }
     }
 
     suspend fun details(eventId: Long) = request { mapApi.details(eventId) }
 
-    suspend fun search(query: String, lat: Double, lng: Double) = request {
-        mapApi.search(query = query, lat = lat, lng = lng, limit = DEFAULT_LIMIT)
+    suspend fun search(query: String, lat: Double, lng: Double, categoryIds: List<Long>?=null, tags: List<String>?=null) = request {
+        mapApi.search(query = query, lat = lat, lng = lng, limit = DEFAULT_LIMIT, categoryIds=categoryIds, tags=tags)
     }
 
     private suspend fun <T> acrossBounds(viewport: MapViewport, load: suspend (MapViewport) -> List<T>): List<T> =

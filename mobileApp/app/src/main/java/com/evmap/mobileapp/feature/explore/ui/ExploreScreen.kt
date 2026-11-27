@@ -1,4 +1,6 @@
 package feature.explore.ui
+import androidx.compose.ui.res.stringResource
+import com.evmap.mobileapp.R
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -49,6 +51,7 @@ fun ExploreScreen(
     onApplyFilters: () -> Unit,
     onSortChange: (ExploreSort) -> Unit,
     onCategoryChange: (Long?) -> Unit,
+    onTagsChange: (String)->Unit = {},
     onRetryCategories: () -> Unit,
     onBack: () -> Unit,
     onSaveEvent: ((String) -> Unit)? = null,
@@ -62,12 +65,12 @@ fun ExploreScreen(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.form_back_b52b36))
                 }
                 SearchField(
                     value = uiState.query,
                     onValueChange = onQueryChange,
-                    placeholder = "Search events or users",
+                    placeholder = stringResource(R.string.form_search_events_or_users_0705f6),
                     modifier = Modifier.weight(1f),
                     onSearch = {
                         focus.clearFocus()
@@ -79,7 +82,7 @@ fun ExploreScreen(
                         focus.clearFocus()
                         onOpenFilters()
                     }) {
-                        Icon(Icons.Outlined.Tune, contentDescription = "Filters")
+                        Icon(Icons.Outlined.Tune, contentDescription = stringResource(R.string.form_filters_96e578))
                     }
                 }
             }
@@ -90,12 +93,12 @@ fun ExploreScreen(
                 Tab(
                     selected = uiState.selectedTab == ExploreTab.USERS,
                     onClick = { onSelectTab(ExploreTab.USERS) },
-                    text = { Text("Users") },
+                    text = { Text(stringResource(R.string.form_users_57f2b1)) },
                 )
                 Tab(
                     selected = uiState.selectedTab == ExploreTab.EVENTS,
                     onClick = { onSelectTab(ExploreTab.EVENTS) },
-                    text = { Text("Events") },
+                    text = { Text(stringResource(R.string.form_events_c5497b)) },
                 )
             }
 
@@ -105,13 +108,13 @@ fun ExploreScreen(
             }
             val error = uiState.error
             when {
-                uiState.query.isBlank() -> SearchStatus { Text("Enter a search term") }
+                uiState.query.isBlank() -> SearchStatus { Text(stringResource(R.string.form_enter_a_search_term_9e6ace)) }
                 uiState.loading -> SearchStatus { CircularProgressIndicator() }
                 error != null -> SearchStatus {
                     Text(error, color = MaterialTheme.colorScheme.error)
-                    TextButton(onClick = onSearch) { Text("Retry") }
+                    TextButton(onClick = onSearch) { Text(stringResource(R.string.form_retry_9f5cd8)) }
                 }
-                empty -> SearchStatus { Text("No results found") }
+                empty -> SearchStatus { Text(stringResource(R.string.form_no_results_found_658e79)) }
                 else -> LazyColumn(
                     modifier = Modifier.fillMaxSize().padding(horizontal = Spacing.s),
                     verticalArrangement = Arrangement.spacedBy(Spacing.s),
@@ -142,6 +145,7 @@ fun ExploreScreen(
             categoryLoadFailed = uiState.categoryLoadFailed,
             onSortChange = onSortChange,
             onCategoryChange = onCategoryChange,
+            onTagsChange = onTagsChange,
             onRetryCategories = onRetryCategories,
             onApply = onApplyFilters,
             onDismiss = onCloseFilters,

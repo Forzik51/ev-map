@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RequestPart
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.multipart.MultipartFile
 import java.util.UUID
 
@@ -25,6 +26,10 @@ class EventPhotoController(
     private val eventPhotoRepository: EventPhotoRepository,
     private val eventPhotos: EventPhotoService,
 ) {
+    @PutMapping("/order")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun order(@PathVariable eventId: Long, @RequestBody ids: List<Long>) = eventPhotos.order(eventId,ids)
+
     @PostMapping(consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
     @ResponseStatus(HttpStatus.CREATED)
     fun create(

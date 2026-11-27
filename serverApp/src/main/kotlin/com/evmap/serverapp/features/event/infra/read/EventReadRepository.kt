@@ -37,7 +37,8 @@ class EventReadRepository(private val dsl: DSLContext) {
             SELECT e.id,
                    e.name,
                    e.description,
-                   e.start_at,
+                   e.start_at, e.created_at, e.date_mode, e.starts_on, e.ends_on, e.time_zone,
+                   ARRAY(SELECT t.name FROM event_tag et JOIN tag t ON t.id=et.tag_id WHERE et.event_id=e.id ORDER BY t.name) AS tags,
                    e.end_at,
                    e.user_id,
                    e.location_id,
@@ -53,7 +54,7 @@ class EventReadRepository(private val dsl: DSLContext) {
                 SELECT p.image_path
                 FROM photo p
                 WHERE p.event_id = e.id
-                ORDER BY p.id
+                ORDER BY p.sort_order, p.id
                 LIMIT 1
             ) ph ON TRUE
             LEFT JOIN (
@@ -76,7 +77,6 @@ class EventReadRepository(private val dsl: DSLContext) {
             id
         )?.let { r ->
             val startAt = r.get("start_at", Timestamp::class.java)
-                ?: throw IllegalStateException("start_at is null for id=$id")
             val endAt = r.get("end_at", Timestamp::class.java)
             val categoriesByEventId = findCategoriesByEventIds(listOf(id))
 
@@ -84,7 +84,7 @@ class EventReadRepository(private val dsl: DSLContext) {
                 id = requireNotNull(r.get("id", Long::class.java)) { "id is null for id=$id" },
                 name = requireNotNull(r.get("name", String::class.java)) { "name is null for id=$id" },
                 description = requireNotNull(r.get("description", String::class.java)) { "description is null for id=$id" },
-                startsAt = startAt.toInstant().toString(),
+                startsAt = startAt?.toInstant()?.toString(),
                 endsAt = endAt?.toInstant()?.toString(),
                 locationName = r.get("location_name", String::class.java),
                 imagePath = r.get("image_path", String::class.java),
@@ -95,6 +95,11 @@ class EventReadRepository(private val dsl: DSLContext) {
                 categories = categoriesByEventId[id].orEmpty(),
                 locationId = requireNotNull(r.get("location_id", Long::class.java)),
                 ratingAvg = (r.get("rating_avg") as? Number)?.toDouble(),
+                createdAt = r.get("created_at", Timestamp::class.java)?.toInstant()?.toString(),
+                dateMode = r.get("date_mode", String::class.java) ?: "DATETIME",
+                startsOn = r.get("starts_on")?.toString(), endsOn = r.get("ends_on")?.toString(),
+                timeZone = r.get("time_zone", String::class.java) ?: "UTC",
+                tags = (r.get("tags") as? Array<*>)?.map { it.toString() }.orEmpty(),
             )
         } ?: throw EventNotFoundException(id)
 
@@ -102,7 +107,8 @@ class EventReadRepository(private val dsl: DSLContext) {
             SELECT e.id,
                    e.name,
                    e.description,
-                   e.start_at,
+                   e.start_at, e.created_at, e.date_mode, e.starts_on, e.ends_on, e.time_zone,
+                   ARRAY(SELECT t.name FROM event_tag et JOIN tag t ON t.id=et.tag_id WHERE et.event_id=e.id ORDER BY t.name) AS tags,
                    e.end_at,
                    e.user_id,
                    e.location_id,
@@ -118,7 +124,7 @@ class EventReadRepository(private val dsl: DSLContext) {
                 SELECT p.image_path
                 FROM photo p
                 WHERE p.event_id = e.id
-                ORDER BY p.id
+                ORDER BY p.sort_order, p.id
                 LIMIT 1
             ) ph ON TRUE
             LEFT JOIN (
@@ -142,7 +148,7 @@ class EventReadRepository(private val dsl: DSLContext) {
         val where = if (userId == null) "" else "WHERE e.user_id = ?"
         val filter = listOfNotNull(userId).toTypedArray()
         val items = mapEventViews(dsl.fetch(
-            "$eventViewSelect $where ORDER BY e.start_at DESC, e.id DESC LIMIT ? OFFSET ?",
+            "$eventViewSelect $where ORDER BY e.created_at DESC, e.id DESC LIMIT ? OFFSET ?",
             *filter,
             pageable.pageSize,
             pageable.offset,
@@ -170,8 +176,7 @@ class EventReadRepository(private val dsl: DSLContext) {
                 id = eventId,
                 name = requireNotNull(it.get("name", String::class.java)) { "name is null for event row" },
                 description = requireNotNull(it.get("description", String::class.java)) { "description is null for event row" },
-                startsAt = requireNotNull(it.get("start_at", Timestamp::class.java)) { "start_at is null for event row" }
-                    .toInstant().toString(),
+                startsAt = it.get("start_at", Timestamp::class.java)?.toInstant()?.toString(),
                 endsAt = it.get("end_at", Timestamp::class.java)?.toInstant()?.toString(),
                 locationName = it.get("location_name", String::class.java),
                 imagePath = it.get("image_path", String::class.java),
@@ -182,6 +187,11 @@ class EventReadRepository(private val dsl: DSLContext) {
                 categories = categoriesByEventId[eventId].orEmpty(),
                 locationId = requireNotNull(it.get("location_id", Long::class.java)),
                 ratingAvg = (it.get("rating_avg") as? Number)?.toDouble(),
+                createdAt = it.get("created_at", Timestamp::class.java)?.toInstant()?.toString(),
+                dateMode = it.get("date_mode", String::class.java) ?: "DATETIME",
+                startsOn = it.get("starts_on")?.toString(), endsOn = it.get("ends_on")?.toString(),
+                timeZone = it.get("time_zone", String::class.java) ?: "UTC",
+                tags = (it.get("tags") as? Array<*>)?.map { it.toString() }.orEmpty(),
             )
         }
 
@@ -191,7 +201,7 @@ class EventReadRepository(private val dsl: DSLContext) {
         val distanceSelect = if (lat != null && lng != null) {
             """
             ST_Distance(
-                COALESCE(l.point, ST_PointOnSurface(l.region))::geography,
+                l.shape::geography,
                 ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography
             )
             """.trimIndent()
@@ -203,7 +213,8 @@ class EventReadRepository(private val dsl: DSLContext) {
             SELECT e.id,
                    e.name,
                    e.description,
-                   e.start_at,
+                   e.start_at, e.created_at, e.date_mode, e.starts_on, e.ends_on, e.time_zone,
+                   ARRAY(SELECT t.name FROM event_tag et JOIN tag t ON t.id=et.tag_id WHERE et.event_id=e.id ORDER BY t.name) AS tags,
                    e.end_at,
                    e.user_id,
                    e.location_id,
@@ -227,7 +238,7 @@ class EventReadRepository(private val dsl: DSLContext) {
                 SELECT p.image_path
                 FROM photo p
                 WHERE p.event_id = e.id
-                ORDER BY p.id
+                ORDER BY p.sort_order, p.id
                 LIMIT 1
             ) ph ON TRUE
             LEFT JOIN (
@@ -262,7 +273,7 @@ class EventReadRepository(private val dsl: DSLContext) {
             ) pref ON pref.event_id = e.id
             ORDER BY personalization_score DESC,
                      distance_meters ASC NULLS LAST,
-                     e.start_at DESC,
+                     e.created_at DESC,
                      e.id DESC
             LIMIT ? OFFSET ?
         """.trimIndent()
@@ -280,8 +291,7 @@ class EventReadRepository(private val dsl: DSLContext) {
                 id = eventId,
                 name = requireNotNull(it.get("name", String::class.java)) { "name is null for event row" },
                 description = requireNotNull(it.get("description", String::class.java)) { "description is null for event row" },
-                startsAt = requireNotNull(it.get("start_at", Timestamp::class.java)) { "start_at is null for event row" }
-                    .toInstant().toString(),
+                startsAt = it.get("start_at", Timestamp::class.java)?.toInstant()?.toString(),
                 endsAt = it.get("end_at", Timestamp::class.java)?.toInstant()?.toString(),
                 locationName = it.get("location_name", String::class.java),
                 imagePath = it.get("image_path", String::class.java),
@@ -292,6 +302,11 @@ class EventReadRepository(private val dsl: DSLContext) {
                 categories = categoriesByEventId[eventId].orEmpty(),
                 locationId = requireNotNull(it.get("location_id", Long::class.java)),
                 ratingAvg = (it.get("rating_avg") as? Number)?.toDouble(),
+                createdAt = it.get("created_at", Timestamp::class.java)?.toInstant()?.toString(),
+                dateMode = it.get("date_mode", String::class.java) ?: "DATETIME",
+                startsOn = it.get("starts_on")?.toString(), endsOn = it.get("ends_on")?.toString(),
+                timeZone = it.get("time_zone", String::class.java) ?: "UTC",
+                tags = (it.get("tags") as? Array<*>)?.map { it.toString() }.orEmpty(),
             )
         }
 

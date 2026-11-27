@@ -1,0 +1,29 @@
+[Unit]
+Description=Evmap Spring Boot API
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=evmap
+Group=evmap
+WorkingDirectory=/opt/evmap
+EnvironmentFile=/etc/evmap/app.env
+ExecStart=/usr/bin/java -Xms128m -Xmx384m -XX:MaxMetaspaceSize=192m -XX:ReservedCodeCacheSize=64m -XX:+UseSerialGC -Xss512k -jar /opt/evmap/current.jar
+SuccessExitStatus=143
+Restart=on-failure
+RestartSec=10
+TimeoutStopSec=60
+UMask=0027
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/evmap/media
+MemoryHigh=700M
+MemoryMax=850M
+TasksMax=150
+LimitNOFILE=8192
+
+[Install]
+WantedBy=multi-user.target

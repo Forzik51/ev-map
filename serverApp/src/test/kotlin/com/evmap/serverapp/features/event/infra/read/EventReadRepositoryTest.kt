@@ -163,7 +163,7 @@ class EventReadRepositoryTest {
             fields.imagePath,
             fields.repostsCount,
             fields.ratingsCount,
-            fields.commentsCount
+            fields.commentsCount, DSL.field("created_at",Timestamp::class.java), DSL.field("date_mode",String::class.java), DSL.field("starts_on",String::class.java), DSL.field("ends_on",String::class.java), DSL.field("time_zone",String::class.java), DSL.field("tags",Array<String>::class.java)
         )
         val record = dsl.newRecord(
             fields.id,
@@ -178,7 +178,7 @@ class EventReadRepositoryTest {
             fields.imagePath,
             fields.repostsCount,
             fields.ratingsCount,
-            fields.commentsCount
+            fields.commentsCount, DSL.field("created_at",Timestamp::class.java), DSL.field("date_mode",String::class.java), DSL.field("starts_on",String::class.java), DSL.field("ends_on",String::class.java), DSL.field("time_zone",String::class.java), DSL.field("tags",Array<String>::class.java)
         )
 
         record.set(fields.id, id)
@@ -215,7 +215,7 @@ class EventReadRepositoryTest {
             fields.imagePath,
             fields.repostsCount,
             fields.ratingsCount,
-            fields.commentsCount
+            fields.commentsCount, DSL.field("created_at",Timestamp::class.java), DSL.field("date_mode",String::class.java), DSL.field("starts_on",String::class.java), DSL.field("ends_on",String::class.java), DSL.field("time_zone",String::class.java), DSL.field("tags",Array<String>::class.java)
         )
         return MockResult(0, result)
     }
@@ -236,7 +236,7 @@ class EventReadRepositoryTest {
             fields.imagePath,
             fields.repostsCount,
             fields.ratingsCount,
-            fields.commentsCount
+            fields.commentsCount, DSL.field("created_at",Timestamp::class.java), DSL.field("date_mode",String::class.java), DSL.field("starts_on",String::class.java), DSL.field("ends_on",String::class.java), DSL.field("time_zone",String::class.java), DSL.field("tags",Array<String>::class.java)
         )
         val record = dsl.newRecord(
             fields.id,
@@ -251,7 +251,7 @@ class EventReadRepositoryTest {
             fields.imagePath,
             fields.repostsCount,
             fields.ratingsCount,
-            fields.commentsCount
+            fields.commentsCount, DSL.field("created_at",Timestamp::class.java), DSL.field("date_mode",String::class.java), DSL.field("starts_on",String::class.java), DSL.field("ends_on",String::class.java), DSL.field("time_zone",String::class.java), DSL.field("tags",Array<String>::class.java)
         )
 
         record.set(fields.id, 1L)

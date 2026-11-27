@@ -1,4 +1,6 @@
 package com.evmap.mobileapp.feature.auth.ui
+import androidx.compose.ui.res.stringResource
+import com.evmap.mobileapp.R
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Spacer
@@ -51,9 +53,9 @@ fun PasswordResetRoute(onBack: () -> Unit, onLogin: () -> Unit, viewModel: Passw
             )
         }
         PasswordResetStep.SUCCESS -> FormScaffold {
-            Text("Password changed", style = MaterialTheme.typography.headlineLarge)
+            Text(stringResource(R.string.form_password_changed_092a16), style = MaterialTheme.typography.headlineLarge)
             Spacer(Modifier.height(Spacing.m))
-            Text("Your password has been updated. Sign in with your new password.")
+            Text(stringResource(R.string.form_your_password_has_been_updated_sign_in_873031))
             Spacer(Modifier.height(Spacing.l))
             PrimaryButton("Back to login", onLogin)
         }
@@ -66,21 +68,21 @@ private fun VerifyPasswordCodeScreen(
 ) {
     val focus = LocalFocusManager.current
     FormScaffold {
-        TextButton(onClick = onBack) { Text("Back") }
-        Text("Check your email", style = MaterialTheme.typography.headlineLarge)
+        TextButton(onClick = onBack) { Text(stringResource(R.string.form_back_b52b36)) }
+        Text(stringResource(R.string.form_check_your_email_fab9f4), style = MaterialTheme.typography.headlineLarge)
         Spacer(Modifier.height(Spacing.m))
         Text("If an account exists for ${state.email}, an 8-digit recovery code will arrive shortly. Check your spam folder too.")
         Spacer(Modifier.height(Spacing.m))
         AuthTextField(
-            value = state.code, onValueChange = onCodeChange, label = "Recovery code", placeholder = "8-digit code",
+            value = state.code, onValueChange = onCodeChange, label = stringResource(R.string.form_recovery_code_3cb5fd), placeholder = stringResource(R.string.form_8_digit_code_d86e15),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword, imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { focus.clearFocus(); onVerify() }),
         )
         state.error?.let { Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.fillMaxWidth()) }
         Spacer(Modifier.height(Spacing.m))
-        PrimaryButton(if (state.loading) "Please wait…" else "Verify code", onVerify, enabled = !state.loading && state.code.length == 8)
+        PrimaryButton(if (state.loading) stringResource(R.string.form_please_wait_5afeca) else stringResource(R.string.form_verify_code_91a22c), onVerify, enabled = !state.loading && state.code.length == 8)
         TextButton(onClick = onResend, enabled = !state.loading && state.resendSeconds == 0L) {
-            Text(if (state.resendSeconds > 0) "Resend in ${state.resendSeconds}s" else "Resend code")
+            Text(if (state.resendSeconds > 0) "Resend in ${state.resendSeconds}s" else stringResource(R.string.form_resend_code_1d3cb8))
         }
     }
 }

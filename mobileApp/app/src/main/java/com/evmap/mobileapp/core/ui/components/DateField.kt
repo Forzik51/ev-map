@@ -1,4 +1,6 @@
 package core.ui.components
+import androidx.compose.ui.res.stringResource
+import com.evmap.mobileapp.R
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,24 +18,28 @@ import androidx.compose.ui.Modifier
 @Composable
 fun DateField(
     value: String,
-    label: String = "Date of birth",
+    label: String = stringResource(R.string.form_date_of_birth_951842),
     onClick: () -> Unit,
     modifier: Modifier = Modifier.fillMaxWidth(),
-    placeholder: String? = null
+    placeholder: String? = null,
+    required: Boolean = false,
+    error: String? = null,
 ) {
     OutlinedTextField(
         value = value,
         onValueChange = { },
         modifier = modifier.clickable { onClick() },
-        label = { Text(label) },
+        label = { Text(if(required && !label.endsWith("*")) "$label *" else label) },
         placeholder = placeholder?.let { { Text(it) } },
         readOnly = true,
+        isError = error != null,
+        supportingText = error?.let { { Text(it) } },
         singleLine = true,
         trailingIcon = {
             IconButton(onClick = onClick) {
                 Icon(
                     imageVector = Icons.Default.CalendarToday,
-                    contentDescription = "Select date",
+                    contentDescription = stringResource(R.string.form_select_date_b84a6e),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }

@@ -1,4 +1,6 @@
 package feature.settings.ui
+import androidx.compose.ui.res.stringResource
+import com.evmap.mobileapp.R
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -56,12 +58,12 @@ fun SettingsScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Back",
+                            text = stringResource(R.string.form_back_b52b36),
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Settings",
+                            text = stringResource(R.string.form_settings_c7f73b),
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.onSurface,
                             textAlign = TextAlign.Center,
@@ -73,7 +75,7 @@ fun SettingsScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.form_back_b52b36),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -91,24 +93,24 @@ fun SettingsScreen(
                 .padding(paddingValues)
         ) {
             SettingsRow(
-                label = "Profile",
+                label = stringResource(R.string.form_profile_ff4fc0),
                 onClick = onOpenProfileEdit
             )
             
             SettingsRow(
-                label = "Saved events",
+                label = stringResource(R.string.form_saved_events_f9cdab),
                 onClick = onOpenSaved
             )
 
             if (showAdmin) {
                 SettingsRow(
-                    label = "Admin moderation",
+                    label = stringResource(R.string.form_admin_moderation_e37380),
                     onClick = onOpenAdmin
                 )
             }
             
             SettingsRow(
-                label = "Log out",
+                label = stringResource(R.string.form_log_out_6e78c9),
                 onClick = onLogOut
             )
         }

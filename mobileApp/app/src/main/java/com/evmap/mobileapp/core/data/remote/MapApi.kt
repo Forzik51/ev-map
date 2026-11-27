@@ -14,6 +14,8 @@ interface MapApi {
         @Query("lng") lng: Double,
         @Query("radiusMeters") radiusMeters: Double? = null,
         @Query("limit") limit: Int? = null,
+        @Query("categoryIds") categoryIds: List<Long>? = null,
+        @Query("tags") tags: List<String>? = null,
     ): List<MapEventItemDto>
 
     @GET("api/map/events/bounds")
@@ -23,6 +25,8 @@ interface MapApi {
         @Query("maxLat") maxLat: Double,
         @Query("maxLng") maxLng: Double,
         @Query("limit") limit: Int? = null,
+        @Query("categoryIds") categoryIds: List<Long>? = null,
+        @Query("tags") tags: List<String>? = null,
     ): List<MapEventItemDto>
 
     @GET("api/map/events/clusters")
@@ -32,6 +36,8 @@ interface MapApi {
         @Query("maxLat") maxLat: Double,
         @Query("maxLng") maxLng: Double,
         @Query("zoom") zoom: Int,
+        @Query("categoryIds") categoryIds: List<Long>? = null,
+        @Query("tags") tags: List<String>? = null,
     ): List<MapClusterDto>
 
     @GET("api/map/events/{eventId}")
@@ -45,5 +51,7 @@ interface MapApi {
         @Query("lat") lat: Double? = null,
         @Query("lng") lng: Double? = null,
         @Query("limit") limit: Int? = null,
+        @Query("categoryIds") categoryIds: List<Long>? = null,
+        @Query("tags") tags: List<String>? = null,
     ): List<MapEventItemDto>
 }

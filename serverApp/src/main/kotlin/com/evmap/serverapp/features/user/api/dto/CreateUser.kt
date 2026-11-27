@@ -16,20 +16,21 @@ data class CreateUser(
     @field:Size(max = 20)
     val surname: String?,
 
+    @field:NotBlank
     @field:Email
     @field:Size(max = 254)
     val email: String,
 
-    @field:Pattern(regexp = PROFILE_PHONE_PATTERN)
-    val phone: String,
+    @field:com.evmap.serverapp.shared.security.ValidOptionalPhone
+    val phone: String? = null,
 
-    val dateOfBirth: LocalDate,
+    @field:jakarta.validation.constraints.PastOrPresent
+    val dateOfBirth: LocalDate? = null,
 
     @field:NotBlank
     @field:Size(max = 20)
     val username: String,
 
-    @field:NotBlank
     @field:Size(max = 150)
     val pageDescription: String,
 

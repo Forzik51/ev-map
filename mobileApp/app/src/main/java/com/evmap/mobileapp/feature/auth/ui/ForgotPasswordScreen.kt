@@ -1,4 +1,6 @@
 package feature.auth.ui
+import androidx.compose.ui.res.stringResource
+import com.evmap.mobileapp.R
 
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -36,12 +38,12 @@ fun ForgotPasswordScreen(
     FormScaffold(
 
     ) {
-        androidx.compose.material3.TextButton(onClick = onBack) { Text("Back") }
+        androidx.compose.material3.TextButton(onClick = onBack) { Text(stringResource(R.string.form_back_b52b36)) }
         Spacer(modifier = Modifier.height(Spacing.s))
         
         // Title
         Text(
-            text = "Forgot password",
+            text = stringResource(R.string.form_forgot_password_5ed117),
             style = MaterialTheme.typography.headlineLarge,
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
@@ -52,7 +54,7 @@ fun ForgotPasswordScreen(
         
         // Subtitle
         Text(
-            text = "Enter the email address linked to your account",
+            text = stringResource(R.string.form_enter_the_email_address_linked_to_your_2047b1),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
@@ -66,8 +68,10 @@ fun ForgotPasswordScreen(
         AuthTextField(
             value = email,
             onValueChange = onEmailChange,
-            label = "Email",
-            placeholder = "Email address",
+            label = stringResource(R.string.form_email_84add5),
+            required = true,
+            error = errorMessage,
+            placeholder = stringResource(R.string.form_email_address_c94d31),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,
                 imeAction = ImeAction.Done
@@ -83,7 +87,7 @@ fun ForgotPasswordScreen(
         errorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         if (resendSeconds > 0) Text("Try again in ${resendSeconds}s")
         PrimaryButton(
-            text = if (isLoading) "Please wait…" else "Send recovery code",
+            text = if (isLoading) stringResource(R.string.form_please_wait_5afeca) else "Send recovery code",
             onClick = onContinue,
             enabled = email.isNotBlank() && !isLoading && resendSeconds == 0L
         )
